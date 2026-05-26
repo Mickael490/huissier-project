@@ -1,0 +1,338 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<!-- TOOLBAR -->
+<div style="background: white; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; justify-content: space-between; align-items: center;">
+  <div style="display: flex; align-items: center; gap: 12px;">
+    <div style="background: linear-gradient(135deg, #1e3a5f, #2d6a9f); border-radius: 10px; padding: 10px 14px;">
+      <i class="pi pi-credit-card" style="color: white; font-size: 18px;"></i>
+    </div>
+    <div>
+      <div style="font-size: 20px; font-weight: 700; color: #1e3a5f;">Gestion des paiements</div>
+      <div style="font-size: 12px; color: #94a3b8;">Suivi des acomptes, provisions et soldes de dossiers</div>
+    </div>
+  </div>
+  <div style="display: flex; gap: 10px; align-items: center;">
+    <span style="position: relative;">
+      <i class="pi pi-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; z-index: 1;"></i>
+      <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Rechercher un règlement..."
+        style="padding-left: 36px; border-radius: 8px; border: 1px solid #e2e8f0; height: 38px; width: 240px;" />
+    </span>
+    <p-button label="Nouveau paiement" icon="pi pi-plus" (click)="openNew()"
+      [ngStyle]="{'background': 'linear-gradient(135deg, #1e3a5f, #2d6a9f)'}"
+      styleClass="border-0"></p-button>
+    <p-button label="Journal PDF" icon="pi pi-file-pdf" severity="danger" (click)="exportExcel()"></p-button>
+  </div>
+</div>
+
+<!-- STATS -->
+<div style="display: flex; gap: 16px; margin-bottom: 20px;">
+  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #4f46e5;">
+    <div style="background:#ede9fe; border-radius:10px; padding:10px 12px;">
+      <i class="pi pi-dollar" style="color:#4f46e5; font-size:18px;"></i>
+    </div>
+    <div>
+      <div style="font-size:20px; font-weight:700; color:#1e293b;">{{ totalEncaisse() | number:'1.0-0' }}</div>
+      <div style="font-size:12px; color:#94a3b8;">Total encaissé (FCFA)</div>
+    </div>
+  </div>
+  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #10b981;">
+    <div style="background:#d1fae5; border-radius:10px; padding:10px 12px;">
+      <i class="pi pi-check-circle" style="color:#10b981; font-size:18px;"></i>
+    </div>
+    <div>
+      <div style="font-size:20px; font-weight:700; color:#1e293b;">{{ paiements().length }}</div>
+      <div style="font-size:12px; color:#94a3b8;">Total paiements</div>
+    </div>
+  </div>
+  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #f97316;">
+    <div style="background:#fff7ed; border-radius:10px; padding:10px 12px;">
+      <i class="pi pi-clock" style="color:#f97316; font-size:18px;"></i>
+    </div>
+    <div>
+      <div style="font-size:20px; font-weight:700; color:#1e293b;">{{ totalEnAttente() }}</div>
+      <div style="font-size:12px; color:#94a3b8;">En attente</div>
+    </div>
+  </div>
+  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #06b6d4;">
+    <div style="background:#cffafe; border-radius:10px; padding:10px 12px;">
+      <i class="pi pi-chart-bar" style="color:#06b6d4; font-size:18px;"></i>
+    </div>
+    <div>
+      <div style="font-size:20px; font-weight:700; color:#1e293b;">{{ moyennePaiement() | number:'1.0-0' }}</div>
+      <div style="font-size:12px; color:#94a3b8;">Montant moyen (FCFA)</div>
+    </div>
+  </div>
+</div>
+
+<!-- TABLE -->
+<div style="background:white; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,0.08); overflow:hidden;">
+  <p-table #dt [value]="paiements()" dataKey="id" [paginator]="true" [rows]="10"
+    [rowHover]="true" [globalFilterFields]="['type_paiement','mode_paiement','note_caisse']">
+    <ng-template #header>
+      <tr style="background:#f8fafc;">
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">DATE</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">DOSSIER</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">TYPE</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">LIBELLÉ</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">MODE</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">MONTANT</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">ACTIONS</th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-paiement>
+      <tr style="border-bottom:1px solid #f1f5f9;">
+        <td style="padding:14px;">
+          <div style="font-weight:600; color:#1e293b; font-size:13px;">{{ paiement.date_paiement | date:'dd/MM/yyyy' }}</div>
+        </td>
+        <td style="padding:14px;">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <i class="pi pi-folder" style="color:#4f46e5; font-size:12px;"></i>
+            <span style="font-weight:600; color:#4f46e5; font-size:13px;">{{ getDossierLabel(paiement.id_dossier) }}</span>
+          </div>
+        </td>
+        <td style="padding:14px;">
+          <p-tag [value]="getTypeLabel(paiement.type_paiement)" [severity]="getTypeSeverity(paiement.type_paiement)"></p-tag>
+        </td>
+        <td style="padding:14px; font-size:13px; color:#475569;">{{ paiement.note_caisse || paiement.libelle || '—' }}</td>
+        <td style="padding:14px;">
+          <div [style]="'display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:600; ' + getModeStyle(paiement.mode_paiement)">
+            <i [class]="getModeIcon(paiement.mode_paiement)" style="font-size:11px;"></i>
+            {{ getModeLabel(paiement.mode_paiement) }}
+          </div>
+        </td>
+        <td style="padding:14px;">
+          <span style="font-size:15px; font-weight:700; color:#10b981;">{{ paiement.montant | number:'1.0-0' }} FCFA</span>
+        </td>
+        <td style="padding:14px;">
+          <div style="display:flex; gap:6px;">
+            <button type="button" pTooltip="Voir détails" (click)="voirDetails(paiement)"
+              style="width:34px; height:34px; border-radius:50%; border:1.5px solid #2d6a9f; background:transparent; color:#2d6a9f; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+              <i class="pi pi-eye" style="font-size:13px;"></i>
+            </button>
+            <button type="button" pTooltip="Imprimer reçu" (click)="imprimerRecu(paiement)"
+              style="width:34px; height:34px; border-radius:50%; border:1.5px solid #ef4444; background:transparent; color:#ef4444; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+              <i class="pi pi-print" style="font-size:13px;"></i>
+            </button>
+            <button type="button" pTooltip="Modifier" (click)="editPaiement(paiement)"
+              style="width:34px; height:34px; border-radius:50%; border:1.5px solid #0ea5e9; background:transparent; color:#0ea5e9; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+              <i class="pi pi-pencil" style="font-size:13px;"></i>
+            </button>
+            <button type="button" pTooltip="Supprimer" (click)="deletePaiement(paiement)"
+              style="width:34px; height:34px; border-radius:50%; border:1.5px solid #ef4444; background:transparent; color:#ef4444; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+              <i class="pi pi-trash" style="font-size:13px;"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #empty>
+      <tr>
+        <td colspan="7" style="text-align:center; padding:40px; color:#94a3b8;">
+          <i class="pi pi-credit-card" style="font-size:36px; display:block; margin-bottom:8px;"></i>
+          Aucun paiement enregistré
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- DIALOG CREATION/MODIFICATION -->
+<p-dialog [(visible)]="paiementDialog" [header]="isEditMode ? 'Modifier le paiement' : 'Nouveau paiement'" [modal]="true" [style]="{ width: '650px' }">
+  <div class="grid grid-cols-12 gap-4">
+    <div class="col-span-12">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:8px;">Mode de paiement *</label>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <div *ngFor="let m of modeOptions" (click)="paiement.mode_paiement = m.value"
+          [style]="'flex:1; min-width:100px; padding:10px; border-radius:10px; cursor:pointer; text-align:center; border:2px solid ' + (paiement.mode_paiement === m.value ? '#1e3a5f' : '#e2e8f0') + '; background:' + (paiement.mode_paiement === m.value ? '#eff6ff' : 'white')">
+          <i [class]="m.icon" style="font-size:18px; display:block; margin-bottom:4px; color:#1e3a5f;"></i>
+          <div style="font-size:11px; font-weight:600; color:#1e3a5f;">{{ m.label }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-span-6">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Dossier *</label>
+      <select [(ngModel)]="paiement.id_dossier" class="w-full p-inputtext" style="border-radius:8px;">
+        <option [ngValue]="undefined">-- Sélectionner --</option>
+        <option *ngFor="let d of dossiers" [ngValue]="d.id">{{ d.numero }} — {{ d.objet }}</option>
+      </select>
+      <small class="p-error" *ngIf="submitted && !paiement.id_dossier">Obligatoire</small>
+    </div>
+    <div class="col-span-6">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Type de paiement *</label>
+      <select [(ngModel)]="paiement.type_paiement" class="w-full p-inputtext" style="border-radius:8px;">
+        <option value="">-- Sélectionner --</option>
+        <option *ngFor="let t of typeOptions" [value]="t.value">{{ t.label }}</option>
+      </select>
+    </div>
+    <div class="col-span-6">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Montant (FCFA) *</label>
+      <input pInputText type="number" [(ngModel)]="paiement.montant" class="w-full" style="border-radius:8px;" placeholder="0" />
+      <small class="p-error" *ngIf="submitted && !paiement.montant">Obligatoire</small>
+    </div>
+    <div class="col-span-6">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Date de paiement</label>
+      <input pInputText type="date" [(ngModel)]="paiement.date_paiement" class="w-full" style="border-radius:8px;" />
+    </div>
+    <div class="col-span-6">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Référence (chèque/virement)</label>
+      <input pInputText [(ngModel)]="paiement.reference" class="w-full" style="border-radius:8px;" placeholder="N° chèque ou virement" />
+    </div>
+    <div class="col-span-6">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Reversé au client</label>
+      <select [(ngModel)]="paiement.reverse_au_client" class="w-full p-inputtext" style="border-radius:8px;">
+        <option [ngValue]="false">Non</option>
+        <option [ngValue]="true">Oui</option>
+      </select>
+    </div>
+    <div class="col-span-12">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Note de caisse / Libellé</label>
+      <textarea pInputTextarea [(ngModel)]="paiement.note_caisse" rows="2" class="w-full" style="border-radius:8px;" placeholder="Description du paiement..."></textarea>
+    </div>
+  </div>
+  
+    <!-- Securisation optionnelle -->
+    <div class="col-span-12">
+      <div style="background:#f8fafc; border-radius:10px; padding:14px 16px; border-left:4px solid #f97316; margin-top:8px;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+          <input type="checkbox" [(ngModel)]="protegerParMotDePasse" style="width:16px; height:16px; cursor:pointer;" />
+          <label style="font-weight:700; color:#1e3a5f; font-size:13px; cursor:pointer;">
+            <i class="pi pi-lock" style="color:#f97316; margin-right:4px;"></i>
+            Proteger ce paiement par mot de passe
+          </label>
+        </div>
+        <div *ngIf="protegerParMotDePasse" style="display:flex; gap:10px; align-items:center;">
+          <input pInputText type="password" [(ngModel)]="paiement.mot_de_passe"
+            placeholder="Entrez un mot de passe..."
+            style="flex:1; border-radius:8px; border:1.5px solid #f97316;" />
+          <i class="pi pi-shield" style="color:#f97316; font-size:18px;"></i>
+        </div>
+      </div>
+    </div>
+
+<ng-template pTemplate="footer">
+    <p-button label="Annuler" icon="pi pi-times" text (click)="hideDialog()" />
+    <p-button [label]="isEditMode ? 'Mettre à jour' : 'Enregistrer'" icon="pi pi-check" (click)="savePaiement()" />
+  </ng-template>
+</p-dialog>
+
+<!-- DIALOG DETAILS -->
+<p-dialog [(visible)]="detailsDialog" [modal]="true" [style]="{ width: '600px' }" [showHeader]="false">
+  <div *ngIf="paiementSelectionne" style="border-radius:12px; overflow:hidden; margin:-1.25rem;">
+
+    <!-- En-tête -->
+    <div style="background:linear-gradient(135deg, #1e3a5f, #2d6a9f); padding:24px 28px 20px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div>
+          <div style="color:rgba(255,255,255,0.7); font-size:11px; font-weight:600; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px;">REÇU DE PAIEMENT</div>
+          <div style="color:white; font-size:24px; font-weight:700;">{{ paiementSelectionne.montant | number:'1.0-0' }} FCFA</div>
+          <div style="color:rgba(255,255,255,0.8); font-size:13px; margin-top:4px;">{{ paiementSelectionne.date_paiement | date:'dd MMMM yyyy' }}</div>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+          <p-tag [value]="getTypeLabel(paiementSelectionne.type_paiement)" [severity]="getTypeSeverity(paiementSelectionne.type_paiement)"></p-tag>
+          <button type="button" (click)="detailsDialog = false"
+            style="background:rgba(255,255,255,0.15); border:none; border-radius:6px; color:white; cursor:pointer; padding:5px 10px; font-size:12px;">
+            <i class="pi pi-times" style="margin-right:4px;"></i>Fermer
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Corps -->
+    <div style="padding:24px 28px; background:#f8fafc;">
+      <div class="grid grid-cols-12 gap-4">
+
+        <!-- Infos paiement -->
+        <div class="col-span-6">
+          <div style="background:white; border:1px solid #e2e8f0; border-radius:10px; padding:18px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px; padding-bottom:10px; border-bottom:2px solid #eff6ff;">
+              <div style="background:#eff6ff; border-radius:8px; padding:6px 8px;">
+                <i class="pi pi-credit-card" style="color:#1e3a5f; font-size:14px;"></i>
+              </div>
+              <span style="font-weight:700; color:#1e3a5f; font-size:14px;">Détails</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b; font-size:13px;">Mode</span>
+                <div [style]="'display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:12px; font-size:11px; font-weight:600; ' + getModeStyle(paiementSelectionne.mode_paiement)">
+                  {{ getModeLabel(paiementSelectionne.mode_paiement) }}
+                </div>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b; font-size:13px;">Référence</span>
+                <span style="font-weight:600; color:#1e293b; font-size:13px;">{{ paiementSelectionne.reference || '—' }}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b; font-size:13px;">Reversé client</span>
+                <span style="font-weight:600; font-size:13px;" [style.color]="paiementSelectionne.reverse_au_client ? '#10b981' : '#ef4444'">
+                  {{ paiementSelectionne.reverse_au_client ? 'Oui' : 'Non' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dossier -->
+        <div class="col-span-6">
+          <div style="background:white; border:1px solid #e2e8f0; border-radius:10px; padding:18px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px; padding-bottom:10px; border-bottom:2px solid #f0fdf4;">
+              <div style="background:#f0fdf4; border-radius:8px; padding:6px 8px;">
+                <i class="pi pi-folder" style="color:#16a34a; font-size:14px;"></i>
+              </div>
+              <span style="font-weight:700; color:#1e3a5f; font-size:14px;">Dossier</span>
+            </div>
+            <div style="font-weight:700; color:#4f46e5; font-size:14px;">{{ getDossierLabel(paiementSelectionne.id_dossier) }}</div>
+          </div>
+        </div>
+
+        <!-- Note caisse -->
+        <div class="col-span-12" *ngIf="paiementSelectionne.note_caisse">
+          <div style="background:white; border:1px solid #e2e8f0; border-radius:10px; padding:18px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+              <div style="background:#fff7ed; border-radius:8px; padding:6px 8px;">
+                <i class="pi pi-file-edit" style="color:#f97316; font-size:14px;"></i>
+              </div>
+              <span style="font-weight:700; color:#1e3a5f; font-size:14px;">Note de caisse</span>
+            </div>
+            <p style="font-size:13px; color:#475569; margin:0;">{{ paiementSelectionne.note_caisse }}</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="padding:16px 28px; background:white; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; gap:10px;">
+      <p-button label="Fermer" icon="pi pi-times" [outlined]="true" severity="secondary" (click)="detailsDialog = false" />
+      <p-button label="Imprimer reçu" icon="pi pi-print" severity="danger" (click)="imprimerRecu(paiementSelectionne)" />
+      <p-button label="Modifier" icon="pi pi-pencil" severity="info" (click)="editFromDetails()" />
+    </div>
+
+  </div>
+</p-dialog>
+
+
+<!-- DIALOG MOT DE PASSE PAIEMENT -->
+<p-dialog [(visible)]="motDePasseDialog" [modal]="true" [style]="{ width: '400px' }" [showHeader]="false">
+  <div style="border-radius:12px; overflow:hidden; margin:-1.25rem;">
+    <div style="background:linear-gradient(135deg, #1e3a5f, #2d6a9f); padding:28px; text-align:center;">
+      <div style="width:60px; height:60px; border-radius:50%; background:rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; margin:0 auto 14px;">
+        <i class="pi pi-lock" style="color:white; font-size:26px;"></i>
+      </div>
+      <div style="color:white; font-size:18px; font-weight:700; margin-bottom:6px;">Paiement securise</div>
+      <div style="color:rgba(255,255,255,0.7); font-size:13px;">Ce paiement est protege par mot de passe</div>
+    </div>
+    <div style="padding:24px; background:#f8fafc;">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:8px;">Mot de passe *</label>
+      <input pInputText type="password" [(ngModel)]="motDePasseSaisi"
+        (keyup.enter)="verifierMotDePasse()"
+        placeholder="Entrez le mot de passe..."
+        class="w-full" style="border-radius:8px; border:2px solid #e2e8f0; margin-bottom:16px;" />
+      <p-button label="Confirmer" icon="pi pi-check" (click)="verifierMotDePasse()" styleClass="w-full" />
+      <div style="margin-top:10px;">
+        <p-button label="Annuler" icon="pi pi-times" [outlined]="true" severity="secondary"
+          (click)="motDePasseDialog = false; motDePasseSaisi = ''" styleClass="w-full" />
+      </div>
+    </div>
+  </div>
+</p-dialog>

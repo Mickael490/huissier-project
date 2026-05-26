@@ -1,0 +1,282 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<!-- TOOLBAR -->
+<div style="background:white; border-radius:12px; padding:16px 20px; margin-bottom:20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; justify-content:space-between; align-items:center;">
+  <div style="display:flex; align-items:center; gap:12px;">
+    <div style="background:linear-gradient(135deg, #1e3a5f, #2d6a9f); border-radius:10px; padding:10px 14px;">
+      <i class="pi pi-inbox" style="color:white; font-size:18px;"></i>
+    </div>
+    <div>
+      <div style="font-size:20px; font-weight:700; color:#1e3a5f;">Gestion des archives</div>
+      <div style="font-size:12px; color:#94a3b8;">Conservation et traçabilité des dossiers archivés</div>
+    </div>
+  </div>
+  <div style="display:flex; gap:10px; align-items:center;">
+    <p-button label="Nouvelle archive" icon="pi pi-plus" (click)="openNew()"
+      [ngStyle]="{'background': 'linear-gradient(135deg, #1e3a5f, #2d6a9f)'}"
+      styleClass="border-0"></p-button>
+    <p-button label="Export PDF" icon="pi pi-file-pdf" severity="danger" (click)="exportListePDF()"></p-button>
+  </div>
+</div>
+
+<!-- STATS -->
+<div style="display:flex; gap:16px; margin-bottom:20px;">
+  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #4f46e5;">
+    <div style="background:#ede9fe; border-radius:10px; padding:10px 12px;">
+      <i class="pi pi-inbox" style="color:#4f46e5; font-size:18px;"></i>
+    </div>
+    <div>
+      <div style="font-size:22px; font-weight:700; color:#1e293b;">{{ totalArchives() }}</div>
+      <div style="font-size:12px; color:#94a3b8;">Total archives</div>
+    </div>
+  </div>
+  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #3b82f6;">
+    <div style="background:#dbeafe; border-radius:10px; padding:10px 12px;">
+      <i class="pi pi-folder" style="color:#3b82f6; font-size:18px;"></i>
+    </div>
+    <div>
+      <div style="font-size:22px; font-weight:700; color:#1e293b;">{{ archivesDossier() }}</div>
+      <div style="font-size:12px; color:#94a3b8;">Dossiers archivés</div>
+    </div>
+  </div>
+  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #f97316;">
+    <div style="background:#fff7ed; border-radius:10px; padding:10px 12px;">
+      <i class="pi pi-file-edit" style="color:#f97316; font-size:18px;"></i>
+    </div>
+    <div>
+      <div style="font-size:22px; font-weight:700; color:#1e293b;">{{ archivesActe() }}</div>
+      <div style="font-size:12px; color:#94a3b8;">Actes archivés</div>
+    </div>
+  </div>
+</div>
+
+<!-- TABLE -->
+<div style="background:white; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,0.08); overflow:hidden;">
+  <p-table [value]="archives()" dataKey="id" [paginator]="true" [rows]="10" [rowHover]="true">
+    <ng-template #header>
+      <tr style="background:#f8fafc;">
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">TYPE</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">DOSSIER</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">RAISON ARCHIVAGE</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">DATE ARCHIVAGE</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">SUPPRESSION PRÉVUE</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">ACTIONS</th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-archive>
+      <tr style="border-bottom:1px solid #f1f5f9;">
+        <td style="padding:14px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div [style]="'width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:' + (archive.type_archive === 'DOSSIER' ? '#ede9fe' : archive.type_archive === 'ACTE' ? '#fff7ed' : archive.type_archive === 'DOCUMENT' ? '#d1fae5' : '#fef2f2')">
+              <i [class]="getTypeInfo(archive.type_archive)?.icon" [style]="'font-size:15px; color:' + getTypeInfo(archive.type_archive)?.color"></i>
+            </div>
+            <p-tag [value]="getTypeLabel(archive.type_archive)" [severity]="getTypeSeverity(archive.type_archive)"></p-tag>
+          </div>
+        </td>
+        <td style="padding:14px;">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <i class="pi pi-folder" style="color:#4f46e5; font-size:12px;"></i>
+            <span style="font-weight:600; color:#4f46e5; font-size:13px;">{{ getDossierLabel(archive.dossier_id) }}</span>
+          </div>
+        </td>
+        <td style="padding:14px; font-size:13px; color:#475569;">{{ archive.raison_archivage || '—' }}</td>
+        <td style="padding:14px; font-size:13px; color:#64748b;">{{ archive.date_archivage | date:'dd/MM/yyyy HH:mm' }}</td>
+        <td style="padding:14px;">
+          <span *ngIf="archive.date_suppression_prevue" style="font-size:13px; color:#ef4444; font-weight:600;">
+            {{ archive.date_suppression_prevue | date:'dd/MM/yyyy' }}
+          </span>
+          <span *ngIf="!archive.date_suppression_prevue" style="color:#94a3b8; font-size:13px;">Non définie</span>
+        </td>
+        <td style="padding:14px;">
+          <div style="display:flex; gap:6px;">
+            <button type="button" pTooltip="Voir détails" (click)="voirDetails(archive)"
+              style="width:34px; height:34px; border-radius:50%; border:1.5px solid #2d6a9f; background:transparent; color:#2d6a9f; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+              <i class="pi pi-eye" style="font-size:13px;"></i>
+            </button>
+            <button type="button" pTooltip="Modifier" (click)="editArchive(archive)"
+              style="width:34px; height:34px; border-radius:50%; border:1.5px solid #0ea5e9; background:transparent; color:#0ea5e9; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+              <i class="pi pi-pencil" style="font-size:13px;"></i>
+            </button>
+            <button type="button" pTooltip="Supprimer" (click)="deleteArchive(archive)"
+              style="width:34px; height:34px; border-radius:50%; border:1.5px solid #ef4444; background:transparent; color:#ef4444; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+              <i class="pi pi-trash" style="font-size:13px;"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #empty>
+      <tr>
+        <td colspan="6" style="text-align:center; padding:40px; color:#94a3b8;">
+          <i class="pi pi-inbox" style="font-size:36px; display:block; margin-bottom:8px;"></i>
+          Aucune archive disponible
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- DIALOG CREATION -->
+<p-dialog [(visible)]="archiveDialog" header="Nouvelle archive" [modal]="true" [style]="{ width: '600px' }">
+  <div class="grid grid-cols-12 gap-4">
+    <div class="col-span-12">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:8px;">Type d'archive *</label>
+      <div style="display:flex; gap:10px;">
+        <div *ngFor="let t of typeOptions" (click)="archive.type_archive = t.value"
+          [style]="'flex:1; padding:12px; border-radius:10px; cursor:pointer; text-align:center; border:2px solid ' + (archive.type_archive === t.value ? t.color : '#e2e8f0') + '; background:' + (archive.type_archive === t.value ? '#f8faff' : 'white')">
+          <i [class]="t.icon" [style]="'font-size:18px; display:block; margin-bottom:4px; color:' + t.color"></i>
+          <div style="font-size:11px; font-weight:600; color:#1e3a5f;">{{ t.label }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-span-12">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Dossier à archiver *</label>
+      <select [(ngModel)]="archive.dossier_id" class="w-full p-inputtext" style="border-radius:8px;">
+        <option [ngValue]="undefined">-- Sélectionner un dossier --</option>
+        <option *ngFor="let d of dossiers" [ngValue]="d.id">{{ d.numero }} — {{ d.objet }}</option>
+      </select>
+      <small class="p-error" *ngIf="submitted && !archive.dossier_id">Obligatoire</small>
+    </div>
+    <div class="col-span-6">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Date suppression prévue</label>
+      <input pInputText type="date" [(ngModel)]="archive.date_suppression_prevue" class="w-full" style="border-radius:8px;" />
+    </div>
+    <div class="col-span-12">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Raison d'archivage</label>
+      <textarea pInputTextarea [(ngModel)]="archive.raison_archivage" rows="3" class="w-full" style="border-radius:8px;"
+        placeholder="Motif de l'archivage..."></textarea>
+    </div>
+  </div>
+  
+    <!-- Securisation optionnelle -->
+    <div class="col-span-12">
+      <div style="background:#f8fafc; border-radius:10px; padding:14px 16px; border-left:4px solid #f97316; margin-top:8px;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+          <input type="checkbox" [(ngModel)]="protegerParMotDePasse" style="width:16px; height:16px; cursor:pointer;" />
+          <label style="font-weight:700; color:#1e3a5f; font-size:13px; cursor:pointer;">
+            <i class="pi pi-lock" style="color:#f97316; margin-right:4px;"></i>
+            Proteger cette archive par mot de passe
+          </label>
+        </div>
+        <div *ngIf="protegerParMotDePasse" style="display:flex; gap:10px; align-items:center;">
+          <input pInputText type="password" [(ngModel)]="archive.mot_de_passe"
+            placeholder="Entrez un mot de passe..."
+            style="flex:1; border-radius:8px; border:1.5px solid #f97316;" />
+          <i class="pi pi-shield" style="color:#f97316; font-size:18px;"></i>
+        </div>
+      </div>
+    </div>
+
+<ng-template pTemplate="footer">
+    <p-button label="Annuler" icon="pi pi-times" text (click)="hideDialog()" />
+    <p-button label="Archiver" icon="pi pi-inbox" (click)="saveArchive()" />
+  </ng-template>
+</p-dialog>
+
+<!-- DIALOG DETAILS -->
+<p-dialog [(visible)]="detailsDialog" [modal]="true" [style]="{ width: '560px' }" [showHeader]="false">
+  <div *ngIf="archiveSelectionnee" style="border-radius:12px; overflow:hidden; margin:-1.25rem;">
+
+    <!-- En-tête -->
+    <div style="background:linear-gradient(135deg, #1e3a5f, #2d6a9f); padding:24px 28px 20px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div style="width:50px; height:50px; border-radius:12px; background:rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center;">
+            <i [class]="getTypeInfo(archiveSelectionnee.type_archive)?.icon" style="font-size:22px; color:white;"></i>
+          </div>
+          <div>
+            <div style="color:rgba(255,255,255,0.7); font-size:11px; font-weight:600; letter-spacing:2px; text-transform:uppercase; margin-bottom:4px;">FICHE ARCHIVE</div>
+            <div style="color:white; font-size:18px; font-weight:700;">{{ getTypeLabel(archiveSelectionnee.type_archive) }}</div>
+            <div style="color:rgba(255,255,255,0.7); font-size:12px; margin-top:2px;">{{ archiveSelectionnee.date_archivage | date:'dd/MM/yyyy HH:mm' }}</div>
+          </div>
+        </div>
+        <button type="button" (click)="detailsDialog = false"
+          style="background:rgba(255,255,255,0.15); border:none; border-radius:6px; color:white; cursor:pointer; padding:5px 10px; font-size:12px;">
+          <i class="pi pi-times" style="margin-right:4px;"></i>Fermer
+        </button>
+      </div>
+    </div>
+
+    <!-- Corps -->
+    <div style="padding:24px 28px; background:#f8fafc;">
+      <div class="grid grid-cols-12 gap-4">
+        <div class="col-span-6">
+          <div style="background:white; border:1px solid #e2e8f0; border-radius:10px; padding:18px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px; padding-bottom:10px; border-bottom:2px solid #eff6ff;">
+              <div style="background:#eff6ff; border-radius:8px; padding:6px 8px;">
+                <i class="pi pi-folder" style="color:#1e3a5f; font-size:14px;"></i>
+              </div>
+              <span style="font-weight:700; color:#1e3a5f; font-size:14px;">Dossier</span>
+            </div>
+            <div style="font-weight:700; color:#4f46e5; font-size:14px;">{{ getDossierLabel(archiveSelectionnee.dossier_id) }}</div>
+          </div>
+        </div>
+        <div class="col-span-6">
+          <div style="background:white; border:1px solid #e2e8f0; border-radius:10px; padding:18px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px; padding-bottom:10px; border-bottom:2px solid #fef2f2;">
+              <div style="background:#fef2f2; border-radius:8px; padding:6px 8px;">
+                <i class="pi pi-calendar" style="color:#ef4444; font-size:14px;"></i>
+              </div>
+              <span style="font-weight:700; color:#1e3a5f; font-size:14px;">Dates</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b; font-size:12px;">Archivage</span>
+                <span style="font-weight:600; color:#1e293b; font-size:12px;">{{ archiveSelectionnee.date_archivage | date:'dd/MM/yyyy' }}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b; font-size:12px;">Suppression prévue</span>
+                <span style="font-weight:600; font-size:12px;" [style.color]="archiveSelectionnee.date_suppression_prevue ? '#ef4444' : '#94a3b8'">
+                  {{ archiveSelectionnee.date_suppression_prevue ? (archiveSelectionnee.date_suppression_prevue | date:'dd/MM/yyyy') : 'Non définie' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-span-12" *ngIf="archiveSelectionnee.raison_archivage">
+          <div style="background:white; border:1px solid #e2e8f0; border-radius:10px; padding:18px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+              <div style="background:#fff7ed; border-radius:8px; padding:6px 8px;">
+                <i class="pi pi-file-edit" style="color:#f97316; font-size:14px;"></i>
+              </div>
+              <span style="font-weight:700; color:#1e3a5f; font-size:14px;">Raison d'archivage</span>
+            </div>
+            <p style="font-size:13px; color:#475569; margin:0;">{{ archiveSelectionnee.raison_archivage }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="padding:16px 28px; background:white; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; gap:10px;">
+      <p-button label="Fermer" icon="pi pi-times" [outlined]="true" severity="secondary" (click)="detailsDialog = false" />
+      <p-button label="Exporter fiche" icon="pi pi-file-pdf" severity="danger" (click)="exportFicheArchivePDF()" />
+    </div>
+  </div>
+</p-dialog>
+
+<!-- DIALOG MOT DE PASSE ARCHIVE -->
+<p-dialog [(visible)]="motDePasseDialog" [modal]="true" [style]="{ width: '400px' }" [showHeader]="false">
+  <div style="border-radius:12px; overflow:hidden; margin:-1.25rem;">
+    <div style="background:linear-gradient(135deg, #1e3a5f, #2d6a9f); padding:28px; text-align:center;">
+      <div style="width:60px; height:60px; border-radius:50%; background:rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; margin:0 auto 14px;">
+        <i class="pi pi-lock" style="color:white; font-size:26px;"></i>
+      </div>
+      <div style="color:white; font-size:18px; font-weight:700; margin-bottom:6px;">Archive securisee</div>
+      <div style="color:rgba(255,255,255,0.7); font-size:13px;">Cette archive est protegee par mot de passe</div>
+    </div>
+    <div style="padding:24px; background:#f8fafc;">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:8px;">Mot de passe *</label>
+      <input pInputText type="password" [(ngModel)]="motDePasseSaisi"
+        (keyup.enter)="verifierMotDePasse()"
+        placeholder="Entrez le mot de passe..."
+        class="w-full" style="border-radius:8px; border:2px solid #e2e8f0; margin-bottom:16px;" />
+      <p-button label="Confirmer" icon="pi pi-check" (click)="verifierMotDePasse()" styleClass="w-full" />
+      <div style="margin-top:10px;">
+        <p-button label="Annuler" icon="pi pi-times" [outlined]="true" severity="secondary"
+          (click)="motDePasseDialog = false; motDePasseSaisi = ''" styleClass="w-full" />
+      </div>
+    </div>
+  </div>
+</p-dialog>

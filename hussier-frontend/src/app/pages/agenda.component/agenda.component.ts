@@ -1,0 +1,263 @@
+import { Component, OnInit, signal, computed } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { TableModule } from 'primeng/table';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { ToastModule } from 'primeng/toast';
+import { InputTextModule } from 'primeng/inputtext';
+import { ToolbarModule } from 'primeng/toolbar';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { TagModule } from 'primeng/tag';
+import { TextareaModule } from 'primeng/textarea';
+import { MessageService, ConfirmationService } from 'primeng/api';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { environment } from 'src/environments/environment';
+import { PdfService } from 'src/services/pdf.service';
+
+@Component({
+  selector: 'app-agenda',
+  standalone: true,
+  imports: [
+    CommonModule, FormsModule, TableModule, ButtonModule,
+    DialogModule, ToastModule, ToolbarModule, InputTextModule,
+    ConfirmDialogModule, TagModule, TextareaModule
+  ],
+  templateUrl: './agenda.component.html',
+  providers: [MessageService, ConfirmationService]
+})
+export class AgendaComponent implements OnInit {
+  agendas = signal<any[]>([]);
+  dossiers: any[] = [];
+  utilisateurs: any[] = [];
+  clients: any[] = [];
+  agenda: any = {};
+  agendaDialog = false;
+  detailsDialog = false;
+  submitted = false;
+  isEditMode = false;
+  agendaSelectionne: any = null;
+  private apiUrl = `${environment.apiUrl}/agendas`;
+
+  readonly rdvAujourdhui = computed(() => {
+    const today = new Date().toDateString();
+    return this.agendas().filter(a => new Date(a.date_debut).toDateString() === today).length;
+  });
+
+  readonly rdvPlanifies = computed(() =>
+    this.agendas().filter(a => a.statut === 'planifie' || a.statut === 'confirme').length
+  );
+
+  readonly rdvUrgents = computed(() =>
+    this.agendas().filter(a => a.priorite === 'urgente' && a.statut !== 'termine' && a.statut !== 'annule').length
+  );
+
+  typeOptions = [
+    { label: 'Signification', value: 'signification', icon: 'pi pi-send', color: '#4f46e5' },
+    { label: 'Constat', value: 'constat', icon: 'pi pi-eye', color: '#0ea5e9' },
+    { label: 'Saisie', value: 'saisie', icon: 'pi pi-lock', color: '#f97316' },
+    { label: 'Audience', value: 'audience', icon: 'pi pi-users', color: '#8b5cf6' },
+    { label: 'Client', value: 'client', icon: 'pi pi-user', color: '#10b981' },
+    { label: 'Interne', value: 'interne', icon: 'pi pi-building', color: '#64748b' },
+    { label: 'Autre', value: 'autre', icon: 'pi pi-calendar', color: '#94a3b8' }
+  ];
+
+  statutOptions = [
+    { label: 'Planifié', value: 'planifie' },
+    { label: 'Confirmé', value: 'confirme' },
+    { label: 'En cours', value: 'en_cours' },
+    { label: 'Terminé', value: 'termine' },
+    { label: 'Annulé', value: 'annule' },
+    { label: 'Reporté', value: 'reporte' }
+  ];
+
+  prioriteOptions = [
+    { label: 'Basse', value: 'basse', color: '#10b981' },
+    { label: 'Normale', value: 'normale', color: '#3b82f6' },
+    { label: 'Haute', value: 'haute', color: '#f97316' },
+    { label: 'Urgente', value: 'urgente', color: '#ef4444' }
+  ];
+
+  constructor(
+    private http: HttpClient,
+    private messageService: MessageService,
+    private confirmationService: ConfirmationService,
+    private pdfService: PdfService
+  ) {}
+
+  ngOnInit(): void {
+    this.loadAgendas();
+    this.loadDossiers();
+    this.loadUtilisateurs();
+    this.loadClients();
+  }
+
+  private getHeaders(): HttpHeaders {
+    const token = localStorage.getItem('token');
+    return new HttpHeaders({ Authorization: `Bearer ${token}` });
+  }
+
+  loadDossiers(): void {
+    this.http.get<any>(`${environment.apiUrl}/dossiers`, { headers: this.getHeaders() }).subscribe({
+      next: (data) => this.dossiers = (data.dossiers || []),
+      error: () => {}
+    });
+  }
+
+  loadUtilisateurs(): void {
+    this.http.get<any[]>(`${environment.apiUrl}/utilisateurs`, { headers: this.getHeaders() }).subscribe({
+      next: (data) => this.utilisateurs = data,
+      error: () => {}
+    });
+  }
+
+  loadClients(): void {
+    this.http.get<any[]>(`${environment.apiUrl}/clients`, { headers: this.getHeaders() }).subscribe({
+      next: (data) => this.clients = data,
+      error: () => {}
+    });
+  }
+
+  loadAgendas(): void {
+    this.http.get<any[]>(this.apiUrl, { headers: this.getHeaders() }).subscribe({
+      next: (data) => this.agendas.set(data),
+      error: () => this.messageService.add({ severity: 'error', summary: 'Erreur', detail: 'Erreur chargement agenda' })
+    });
+  }
+
+  openNew(): void {
+    const now = new Date();
+    const end = new Date(now.getTime() + 60 * 60 * 1000);
+    this.agenda = {
+      type_rdv: 'autre',
+      statut: 'planifie',
+      priorite: 'normale',
+      date_debut: now.toISOString().slice(0, 16),
+      date_fin: end.toISOString().slice(0, 16),
+      duree_minutes: 60,
+      rappel_active: true,
+      rappel_minutes_avant: 60
+    };
+    this.isEditMode = false;
+    this.agendaDialog = true;
+    this.submitted = false;
+  }
+
+  editAgenda(agenda: any): void {
+    this.agenda = { ...agenda };
+    this.isEditMode = true;
+    this.agendaDialog = true;
+  }
+
+  voirDetails(agenda: any): void {
+    this.agendaSelectionne = agenda;
+    this.detailsDialog = true;
+  }
+
+  editFromDetails(): void {
+    this.detailsDialog = false;
+    this.editAgenda(this.agendaSelectionne);
+  }
+
+  hideDialog(): void {
+    this.agendaDialog = false;
+    this.submitted = false;
+  }
+
+  saveAgenda(): void {
+    this.submitted = true;
+    if (!this.agenda.titre || !this.agenda.date_debut || !this.agenda.date_fin || !this.agenda.id_utilisateur) {
+      this.messageService.add({ severity: 'warn', summary: 'Attention', detail: 'Veuillez remplir les champs obligatoires' });
+      return;
+    }
+    if (this.isEditMode && this.agenda.id) {
+      this.http.put(`${this.apiUrl}/${this.agenda.id}`, this.agenda, { headers: this.getHeaders() }).subscribe({
+        next: () => {
+          this.loadAgendas();
+          this.messageService.add({ severity: 'success', summary: 'Succès', detail: 'Rendez-vous mis à jour' });
+          this.hideDialog();
+        },
+        error: (err) => this.messageService.add({ severity: 'error', summary: 'Erreur', detail: JSON.stringify(err.error) })
+      });
+    } else {
+      this.http.post(this.apiUrl, this.agenda, { headers: this.getHeaders() }).subscribe({
+        next: () => {
+          this.loadAgendas();
+          this.messageService.add({ severity: 'success', summary: 'Succès', detail: 'Rendez-vous créé' });
+          this.hideDialog();
+        },
+        error: (err) => this.messageService.add({ severity: 'error', summary: 'Erreur', detail: JSON.stringify(err.error) })
+      });
+    }
+  }
+
+  deleteAgenda(agenda: any): void {
+    this.confirmationService.confirm({
+      message: `Supprimer le rendez-vous "${agenda.titre}" ?`,
+      accept: () => {
+        this.http.delete(`${this.apiUrl}/${agenda.id}`, { headers: this.getHeaders() }).subscribe({
+          next: () => {
+            this.loadAgendas();
+            this.messageService.add({ severity: 'success', summary: 'Succès', detail: 'Rendez-vous supprimé' });
+          },
+          error: (err) => this.messageService.add({ severity: 'error', summary: 'Erreur', detail: JSON.stringify(err.error) })
+        });
+      }
+    });
+  }
+
+  getTypeInfo(type: string): any {
+    return this.typeOptions.find(t => t.value === type) || this.typeOptions[6];
+  }
+
+  getTypeLabel(type: string): string {
+    return this.getTypeInfo(type)?.label || type;
+  }
+
+  getPrioriteInfo(p: string): any {
+    return this.prioriteOptions.find(x => x.value === p) || this.prioriteOptions[1];
+  }
+
+  getStatutSeverity(statut: string): string {
+    switch (statut) {
+      case 'planifie': return 'info';
+      case 'confirme': return 'success';
+      case 'en_cours': return 'warning';
+      case 'termine': return 'success';
+      case 'annule': return 'danger';
+      case 'reporte': return 'secondary';
+      default: return 'secondary';
+    }
+  }
+
+  getStatutLabel(statut: string): string {
+    return this.statutOptions.find(s => s.value === statut)?.label || statut;
+  }
+
+  getDossierLabel(id: number): string {
+    const d = this.dossiers.find(x => x.id === id);
+    return d ? `${d.numero_dossier} — ${d.objet}` : `#${id}`;
+  }
+
+  getUtilisateurLabel(id: number): string {
+    const u = this.utilisateurs.find(x => x.id === id);
+    return u ? `${u.prenom} ${u.nom}` : `#${id}`;
+  }
+
+  getClientLabel(id: number): string {
+    const c = this.clients.find(x => x.id === id);
+    return c ? c.nom : `#${id}`;
+  }
+
+  getDuree(agenda: any): string {
+    if (!agenda.date_debut || !agenda.date_fin) return '';
+    const diff = new Date(agenda.date_fin).getTime() - new Date(agenda.date_debut).getTime();
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    return h > 0 ? `${h}h${m > 0 ? m + 'min' : ''}` : `${m}min`;
+  }
+
+  exportListePDF(): void {
+    this.pdfService.exportAgendas(this.agendas());
+  }
+}

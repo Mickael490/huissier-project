@@ -1,0 +1,247 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<!-- TOOLBAR -->
+<div style="background:white; border-radius:12px; padding:16px 20px; margin-bottom:20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; justify-content:space-between; align-items:center;">
+  <div style="display:flex; align-items:center; gap:12px;">
+    <div style="background:linear-gradient(135deg, #1e3a5f, #2d6a9f); border-radius:10px; padding:10px 14px;">
+      <i class="pi pi-folder-open" style="color:white; font-size:18px;"></i>
+    </div>
+    <div>
+      <div style="font-size:20px; font-weight:700; color:#1e3a5f;">Gestion des documents</div>
+      <div style="font-size:12px; color:#94a3b8;">Archivage numérique des actes et pièces juridiques</div>
+    </div>
+  </div>
+  <div style="display:flex; gap:10px; align-items:center;">
+    <p-button label="Déposer un document" icon="pi pi-upload" (click)="openNew()"
+      [ngStyle]="{'background': 'linear-gradient(135deg, #1e3a5f, #2d6a9f)'}"
+      styleClass="border-0"></p-button>
+    <p-button label="Export PDF" icon="pi pi-file-pdf" severity="danger" (click)="exportListePDF()"></p-button>
+  </div>
+</div>
+
+<!-- STATS -->
+<div style="display:flex; gap:16px; margin-bottom:20px;">
+  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #4f46e5;">
+    <div style="background:#ede9fe; border-radius:10px; padding:10px 12px;">
+      <i class="pi pi-file" style="color:#4f46e5; font-size:18px;"></i>
+    </div>
+    <div>
+      <div style="font-size:22px; font-weight:700; color:#1e293b;">{{ totalDocuments() }}</div>
+      <div style="font-size:12px; color:#94a3b8;">Total documents</div>
+    </div>
+  </div>
+  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #10b981;">
+    <div style="background:#d1fae5; border-radius:10px; padding:10px 12px;">
+      <i class="pi pi-database" style="color:#10b981; font-size:18px;"></i>
+    </div>
+    <div>
+      <div style="font-size:22px; font-weight:700; color:#1e293b;">{{ totalTaille() }}</div>
+      <div style="font-size:12px; color:#94a3b8;">Espace utilisé</div>
+    </div>
+  </div>
+  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #f97316;">
+    <div style="background:#fff7ed; border-radius:10px; padding:10px 12px;">
+      <i class="pi pi-file-pdf" style="color:#f97316; font-size:18px;"></i>
+    </div>
+    <div>
+      <div style="font-size:22px; font-weight:700; color:#1e293b;">{{ documents().length }}</div>
+      <div style="font-size:12px; color:#94a3b8;">Fichiers déposés</div>
+    </div>
+  </div>
+</div>
+
+<!-- TABLE -->
+<div style="background:white; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,0.08); overflow:hidden;">
+  <p-table [value]="documents()" dataKey="id" [paginator]="true" [rows]="10" [rowHover]="true">
+    <ng-template #header>
+      <tr style="background:#f8fafc;">
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">DOCUMENT</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">TYPE</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">DOSSIER</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">TAILLE</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">DATE DÉPÔT</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">ACTIONS</th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-document>
+      <tr style="border-bottom:1px solid #f1f5f9;">
+        <td style="padding:14px;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div [style]="'width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:#f8fafc; border:1px solid #e2e8f0;'">
+              <i [class]="getMimeIcon(document.mime_type)" [style]="'font-size:18px; color:' + getMimeColor(document.mime_type)"></i>
+            </div>
+            <div>
+              <div style="font-weight:700; color:#1e293b; font-size:13px;">{{ document.nom_original }}</div>
+              <div style="font-size:11px; color:#94a3b8;">{{ document.mime_type }}</div>
+            </div>
+          </div>
+        </td>
+        <td style="padding:14px;">
+          <p-tag [value]="getTypeLabel(document.type_document)" [severity]="getTypeSeverity(document.type_document)"></p-tag>
+        </td>
+        <td style="padding:14px;">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <i class="pi pi-folder" style="color:#4f46e5; font-size:12px;"></i>
+            <span style="font-weight:600; color:#4f46e5; font-size:13px;">{{ getDossierLabel(document.id_dossier) }}</span>
+          </div>
+        </td>
+        <td style="padding:14px; font-size:13px; color:#64748b;">{{ document.taille_lisible }}</td>
+        <td style="padding:14px; font-size:13px; color:#64748b;">{{ document.date_upload | date:'dd/MM/yyyy' }}</td>
+        <td style="padding:14px;">
+          <div style="display:flex; gap:6px;">
+            <button type="button" pTooltip="Voir détails" (click)="voirDetails(document)"
+              style="width:34px; height:34px; border-radius:50%; border:1.5px solid #2d6a9f; background:transparent; color:#2d6a9f; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+              <i class="pi pi-eye" style="font-size:13px;"></i>
+            </button>
+            <button type="button" pTooltip="Télécharger" (click)="telechargerDocument(document)"
+              style="width:34px; height:34px; border-radius:50%; border:1.5px solid #10b981; background:transparent; color:#10b981; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+              <i class="pi pi-download" style="font-size:13px;"></i>
+            </button>
+            <button type="button" pTooltip="Supprimer" (click)="deleteDocument(document)"
+              style="width:34px; height:34px; border-radius:50%; border:1.5px solid #ef4444; background:transparent; color:#ef4444; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+              <i class="pi pi-trash" style="font-size:13px;"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #empty>
+      <tr>
+        <td colspan="6" style="text-align:center; padding:40px; color:#94a3b8;">
+          <i class="pi pi-folder-open" style="font-size:36px; display:block; margin-bottom:8px;"></i>
+          Aucun document déposé
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- DIALOG UPLOAD -->
+<p-dialog [(visible)]="documentDialog" header="Déposer un document juridique" [modal]="true" [style]="{ width: '600px' }">
+  <div class="grid grid-cols-12 gap-4">
+    <div class="col-span-12">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:8px;">Type de document *</label>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <div *ngFor="let t of typeOptions" (click)="typeDocument = t.value"
+          [style]="'flex:1; min-width:80px; padding:10px 8px; border-radius:10px; cursor:pointer; text-align:center; border:2px solid ' + (typeDocument === t.value ? t.color : '#e2e8f0') + '; background:' + (typeDocument === t.value ? '#f8faff' : 'white')">
+          <i [class]="t.icon" [style]="'font-size:16px; display:block; margin-bottom:4px; color:' + t.color"></i>
+          <div style="font-size:10px; font-weight:600; color:#1e3a5f;">{{ t.label }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-span-6">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Dossier associé *</label>
+      <select [(ngModel)]="dossierId" class="w-full p-inputtext" style="border-radius:8px;">
+        <option [ngValue]="undefined">-- Sélectionner un dossier --</option>
+        <option *ngFor="let d of dossiers" [ngValue]="d.id">{{ d.numero }} — {{ d.objet }}</option>
+      </select>
+      <small class="p-error" *ngIf="submitted && !dossierId">Obligatoire</small>
+    </div>
+    <div class="col-span-6">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Fichier *</label>
+      <div style="border:2px dashed #e2e8f0; border-radius:8px; padding:12px; text-align:center; cursor:pointer; position:relative;"
+        [style.border-color]="selectedFile ? '#4f46e5' : '#e2e8f0'"
+        [style.background]="selectedFile ? '#f8f7ff' : 'white'">
+        <input type="file" (change)="onFileSelected($event)" style="position:absolute; inset:0; opacity:0; cursor:pointer;"
+          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx" />
+        <i class="pi" [class.pi-upload]="!selectedFile" [class.pi-check-circle]="selectedFile"
+          [style.color]="selectedFile ? '#4f46e5' : '#94a3b8'" style="font-size:20px; display:block; margin-bottom:4px;"></i>
+        <div style="font-size:12px; color:#64748b;">{{ selectedFile ? selectedFile.name : 'Cliquer ou glisser un fichier' }}</div>
+        <div style="font-size:10px; color:#94a3b8; margin-top:2px;">PDF, Word, Excel, Image (max 10MB)</div>
+      </div>
+      <small class="p-error" *ngIf="submitted && !selectedFile">Obligatoire</small>
+    </div>
+    <div class="col-span-12">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Description</label>
+      <textarea pInputTextarea [(ngModel)]="description" rows="2" class="w-full" style="border-radius:8px;"
+        placeholder="Description du document..."></textarea>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Annuler" icon="pi pi-times" text (click)="hideDialog()" />
+    <p-button label="Déposer le document" icon="pi pi-upload" (click)="saveDocument()" />
+  </ng-template>
+</p-dialog>
+
+<!-- DIALOG DETAILS -->
+<p-dialog [(visible)]="detailsDialog" [modal]="true" [style]="{ width: '580px' }" [showHeader]="false">
+  <div *ngIf="documentSelectionne" style="border-radius:12px; overflow:hidden; margin:-1.25rem;">
+
+    <!-- En-tête -->
+    <div style="background:linear-gradient(135deg, #1e3a5f, #2d6a9f); padding:24px 28px 20px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div style="width:50px; height:50px; border-radius:12px; background:rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center;">
+            <i [class]="getMimeIcon(documentSelectionne.mime_type)" [style]="'font-size:22px; color:white'"></i>
+          </div>
+          <div>
+            <div style="color:rgba(255,255,255,0.7); font-size:11px; font-weight:600; letter-spacing:2px; text-transform:uppercase; margin-bottom:4px;">FICHE DOCUMENT</div>
+            <div style="color:white; font-size:16px; font-weight:700;">{{ documentSelectionne.nom_original }}</div>
+            <div style="color:rgba(255,255,255,0.7); font-size:12px; margin-top:2px;">{{ documentSelectionne.taille_lisible }}</div>
+          </div>
+        </div>
+        <button type="button" (click)="detailsDialog = false"
+          style="background:rgba(255,255,255,0.15); border:none; border-radius:6px; color:white; cursor:pointer; padding:5px 10px; font-size:12px;">
+          <i class="pi pi-times" style="margin-right:4px;"></i>Fermer
+        </button>
+      </div>
+    </div>
+
+    <!-- Corps -->
+    <div style="padding:24px 28px; background:#f8fafc;">
+      <div class="grid grid-cols-12 gap-4">
+        <div class="col-span-6">
+          <div style="background:white; border:1px solid #e2e8f0; border-radius:10px; padding:18px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px; padding-bottom:10px; border-bottom:2px solid #eff6ff;">
+              <div style="background:#eff6ff; border-radius:8px; padding:6px 8px;">
+                <i class="pi pi-info-circle" style="color:#1e3a5f; font-size:14px;"></i>
+              </div>
+              <span style="font-weight:700; color:#1e3a5f; font-size:14px;">Informations</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b; font-size:13px;">Type</span>
+                <p-tag [value]="getTypeLabel(documentSelectionne.type_document)" [severity]="getTypeSeverity(documentSelectionne.type_document)"></p-tag>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b; font-size:13px;">Format</span>
+                <span style="font-weight:600; color:#1e293b; font-size:12px;">{{ documentSelectionne.mime_type }}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b; font-size:13px;">Taille</span>
+                <span style="font-weight:600; color:#1e293b; font-size:13px;">{{ documentSelectionne.taille_lisible }}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b; font-size:13px;">Date dépôt</span>
+                <span style="font-weight:600; color:#1e293b; font-size:13px;">{{ documentSelectionne.date_upload | date:'dd/MM/yyyy' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-span-6">
+          <div style="background:white; border:1px solid #e2e8f0; border-radius:10px; padding:18px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px; padding-bottom:10px; border-bottom:2px solid #f0fdf4;">
+              <div style="background:#f0fdf4; border-radius:8px; padding:6px 8px;">
+                <i class="pi pi-folder" style="color:#16a34a; font-size:14px;"></i>
+              </div>
+              <span style="font-weight:700; color:#1e3a5f; font-size:14px;">Dossier associé</span>
+            </div>
+            <div style="font-weight:700; color:#4f46e5; font-size:14px;">{{ getDossierLabel(documentSelectionne.id_dossier) }}</div>
+            <div *ngIf="documentSelectionne.description" style="margin-top:12px; font-size:12px; color:#64748b; font-style:italic;">
+              {{ documentSelectionne.description }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="padding:16px 28px; background:white; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; gap:10px;">
+      <p-button label="Fermer" icon="pi pi-times" [outlined]="true" severity="secondary" (click)="detailsDialog = false" />
+      <p-button label="Exporter fiche" icon="pi pi-file-pdf" severity="danger" (click)="exportFicheDocumentPDF()" />
+      <p-button label="Télécharger" icon="pi pi-download" severity="info" (click)="telechargerDocument(documentSelectionne)" />
+    </div>
+
+  </div>
+</p-dialog>

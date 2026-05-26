@@ -1,0 +1,285 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<!-- TOOLBAR -->
+<div style="background:white; border-radius:12px; padding:16px 20px; margin-bottom:20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; justify-content:space-between; align-items:center;">
+  <div style="display:flex; align-items:center; gap:12px;">
+    <div style="background:linear-gradient(135deg, #1e3a5f, #2d6a9f); border-radius:10px; padding:10px 14px;">
+      <i class="pi pi-sitemap" style="color:white; font-size:18px;"></i>
+    </div>
+    <div>
+      <div style="font-size:20px; font-weight:700; color:#1e3a5f;">Gestion des affectations</div>
+      <div style="font-size:12px; color:#94a3b8;">Attribution des missions aux agents du cabinet</div>
+    </div>
+  </div>
+  <div style="display:flex; gap:10px; align-items:center;">
+    <span style="position:relative;">
+      <i class="pi pi-search" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#94a3b8; z-index:1;"></i>
+      <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Rechercher une affectation..."
+        style="padding-left:36px; border-radius:8px; border:1px solid #e2e8f0; height:38px; width:240px;" />
+    </span>
+    <p-button label="Nouvelle affectation" icon="pi pi-plus" (click)="openNew()"
+      [ngStyle]="{'background': 'linear-gradient(135deg, #1e3a5f, #2d6a9f)'}"
+      styleClass="border-0"></p-button>
+  </div>
+</div>
+
+<!-- STATS -->
+<div style="display:flex; gap:16px; margin-bottom:20px;">
+  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #4f46e5;">
+    <div style="background:#ede9fe; border-radius:10px; padding:10px 12px;">
+      <i class="pi pi-list" style="color:#4f46e5; font-size:18px;"></i>
+    </div>
+    <div>
+      <div style="font-size:22px; font-weight:700; color:#1e293b;">{{ affectations().length }}</div>
+      <div style="font-size:12px; color:#94a3b8;">Total affectations</div>
+    </div>
+  </div>
+  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #f97316;">
+    <div style="background:#fff7ed; border-radius:10px; padding:10px 12px;">
+      <i class="pi pi-clock" style="color:#f97316; font-size:18px;"></i>
+    </div>
+    <div>
+      <div style="font-size:22px; font-weight:700; color:#1e293b;">{{ nbEnCours() }}</div>
+      <div style="font-size:12px; color:#94a3b8;">En cours</div>
+    </div>
+  </div>
+  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #10b981;">
+    <div style="background:#d1fae5; border-radius:10px; padding:10px 12px;">
+      <i class="pi pi-check-circle" style="color:#10b981; font-size:18px;"></i>
+    </div>
+    <div>
+      <div style="font-size:22px; font-weight:700; color:#1e293b;">{{ nbTerminees() }}</div>
+      <div style="font-size:12px; color:#94a3b8;">Terminées</div>
+    </div>
+  </div>
+  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #ef4444;">
+    <div style="background:#fef2f2; border-radius:10px; padding:10px 12px;">
+      <i class="pi pi-exclamation-triangle" style="color:#ef4444; font-size:18px;"></i>
+    </div>
+    <div>
+      <div style="font-size:22px; font-weight:700; color:#1e293b;">{{ nbUrgentes() }}</div>
+      <div style="font-size:12px; color:#94a3b8;">Urgentes</div>
+    </div>
+  </div>
+</div>
+
+<!-- TABLE -->
+<div style="background:white; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,0.08); overflow:hidden;">
+  <p-table #dt [value]="affectations()" dataKey="id" [paginator]="true" [rows]="10" [rowHover]="true"
+    [globalFilterFields]="['notes', 'statut', 'priorite']">
+    <ng-template #header>
+      <tr style="background:#f8fafc;">
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">ACTE / MISSION</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">DOSSIER</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">AGENT</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">PRIORITÉ</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">STATUT</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">DATE</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">ACTIONS</th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-affectation>
+      <tr style="border-bottom:1px solid #f1f5f9;">
+        <td style="padding:14px;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div [style]="'width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:' + (affectation.priorite === 'haute' ? '#fef2f2' : '#eff6ff')">
+              <i class="pi pi-file-edit" [style]="'font-size:16px; color:' + (affectation.priorite === 'haute' ? '#ef4444' : '#4f46e5')"></i>
+            </div>
+            <div>
+              <div style="font-weight:700; color:#1e293b; font-size:14px;">{{ getActeLabel(affectation.id_acte) }}</div>
+              <div style="font-size:12px; color:#94a3b8;">{{ affectation.notes || '—' }}</div>
+            </div>
+          </div>
+        </td>
+        <td style="padding:14px;">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <i class="pi pi-folder" style="color:#4f46e5; font-size:12px;"></i>
+            <span style="font-weight:600; color:#4f46e5; font-size:13px;">{{ getDossierNumeroParActe(affectation.id_acte) }}</span>
+          </div>
+        </td>
+        <td style="padding:14px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div style="width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg, #1e3a5f, #2d6a9f); display:flex; align-items:center; justify-content:center; color:white; font-size:12px; font-weight:700;">
+              {{ getUtilisateurNom(affectation.id_utilisateur).charAt(0) }}
+            </div>
+            <span style="font-size:13px; color:#1e293b; font-weight:600;">{{ getUtilisateurNom(affectation.id_utilisateur) }}</span>
+          </div>
+        </td>
+        <td style="padding:14px;">
+          <p-tag [value]="getPrioriteLabel(affectation.priorite)" [severity]="getPrioriteSeverity(affectation.priorite)"></p-tag>
+        </td>
+        <td style="padding:14px;">
+          <p-tag [value]="getStatutLabel(affectation.statut)" [severity]="getStatutSeverity(affectation.statut)"></p-tag>
+        </td>
+        <td style="padding:14px; font-size:13px; color:#64748b;">
+          {{ affectation.date_affectation | date:'dd/MM/yyyy' }}
+        </td>
+        <td style="padding:14px;">
+          <div style="display:flex; gap:6px;">
+            <button type="button" pTooltip="Voir détails" (click)="voirDetails(affectation)"
+              style="width:34px; height:34px; border-radius:50%; border:1.5px solid #2d6a9f; background:transparent; color:#2d6a9f; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+              <i class="pi pi-eye" style="font-size:13px;"></i>
+            </button>
+            <button type="button" pTooltip="Modifier" (click)="editAffectation(affectation)"
+              style="width:34px; height:34px; border-radius:50%; border:1.5px solid #0ea5e9; background:transparent; color:#0ea5e9; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+              <i class="pi pi-pencil" style="font-size:13px;"></i>
+            </button>
+            <button type="button" pTooltip="Retirer" (click)="supprimerAffectation(affectation)"
+              style="width:34px; height:34px; border-radius:50%; border:1.5px solid #ef4444; background:transparent; color:#ef4444; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+              <i class="pi pi-trash" style="font-size:13px;"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #empty>
+      <tr>
+        <td colspan="7" style="text-align:center; padding:40px; color:#94a3b8;">
+          <i class="pi pi-sitemap" style="font-size:36px; display:block; margin-bottom:8px;"></i>
+          Aucune affectation enregistrée
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- DIALOG CREATION/MODIFICATION -->
+<p-dialog [(visible)]="affectationDialog" [header]="isEditMode ? 'Modifier l\'affectation' : 'Nouvelle affectation de mission'" [modal]="true" [style]="{ width: '650px' }">
+  <div class="grid grid-cols-12 gap-4">
+    <div class="col-span-12">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:8px;">Priorité</label>
+      <div style="display:flex; gap:10px;">
+        <div (click)="affectation.priorite = 'normale'"
+          [style]="'flex:1; padding:12px; border-radius:10px; cursor:pointer; text-align:center; border:2px solid ' + (affectation.priorite === 'normale' ? '#4f46e5' : '#e2e8f0') + '; background:' + (affectation.priorite === 'normale' ? '#eff6ff' : 'white')">
+          <i class="pi pi-circle" style="font-size:18px; display:block; margin-bottom:4px; color:#4f46e5;"></i>
+          <div style="font-size:12px; font-weight:600; color:#4f46e5;">Normale</div>
+        </div>
+        <div (click)="affectation.priorite = 'haute'"
+          [style]="'flex:1; padding:12px; border-radius:10px; cursor:pointer; text-align:center; border:2px solid ' + (affectation.priorite === 'haute' ? '#ef4444' : '#e2e8f0') + '; background:' + (affectation.priorite === 'haute' ? '#fef2f2' : 'white')">
+          <i class="pi pi-exclamation-triangle" style="font-size:18px; display:block; margin-bottom:4px; color:#ef4444;"></i>
+          <div style="font-size:12px; font-weight:600; color:#ef4444;">Urgente</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-span-6">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Acte à affecter *</label>
+      <select [(ngModel)]="affectation.id_acte" class="w-full p-inputtext" style="border-radius:8px;">
+        <option [ngValue]="undefined">-- Sélectionner un acte --</option>
+        <option *ngFor="let a of actesDisponibles" [ngValue]="a.id">{{ getActeLabel(a.id) }} - {{ getDossierNumeroParActe(a.id) }}</option>
+      </select>
+      <small class="p-error" *ngIf="submitted && !affectation.id_acte">Obligatoire</small>
+    </div>
+    <div class="col-span-6">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Agent assigné *</label>
+      <select [(ngModel)]="affectation.id_utilisateur" class="w-full p-inputtext" style="border-radius:8px;">
+        <option [ngValue]="undefined">-- Sélectionner un agent --</option>
+        <option *ngFor="let u of utilisateurs" [ngValue]="u.id">{{ u.nom }} ({{ u.role }})</option>
+      </select>
+      <small class="p-error" *ngIf="submitted && !affectation.id_utilisateur">Obligatoire</small>
+    </div>
+    <div class="col-span-6">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Date affectation *</label>
+      <input pInputText type="date" [(ngModel)]="affectation.date_affectation" class="w-full" style="border-radius:8px;" />
+      <small class="p-error" *ngIf="submitted && !affectation.date_affectation">Obligatoire</small>
+    </div>
+    <div class="col-span-6">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Date limite</label>
+      <input pInputText type="date" [(ngModel)]="affectation.date_limite" class="w-full" style="border-radius:8px;" />
+    </div>
+    <div class="col-span-6" *ngIf="isEditMode">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Statut</label>
+      <select [(ngModel)]="affectation.statut" class="w-full p-inputtext" style="border-radius:8px;">
+        <option value="en_cours">En cours</option>
+        <option value="termine">Terminé</option>
+        <option value="annule">Annulé</option>
+      </select>
+    </div>
+    <div class="col-span-12">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Instructions / Notes</label>
+      <textarea pInputTextarea [(ngModel)]="affectation.notes" rows="3" class="w-full" style="border-radius:8px;" placeholder="Instructions particulières pour cet agent..."></textarea>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Annuler" icon="pi pi-times" text (click)="hideDialog()" />
+    <p-button [label]="isEditMode ? 'Mettre à jour' : 'Affecter la mission'" icon="pi pi-check" (click)="saveAffectation()" />
+  </ng-template>
+</p-dialog>
+
+<!-- DIALOG DETAILS -->
+<p-dialog [(visible)]="detailsDialog" [modal]="true" [style]="{ width: '600px' }" [showHeader]="false">
+  <div *ngIf="affectationSelectionnee" style="border-radius:12px; overflow:hidden; margin:-1.25rem;">
+
+    <!-- En-tête -->
+    <div [style]="'padding:24px 28px 20px; background:' + (affectationSelectionnee.priorite === 'haute' ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'linear-gradient(135deg, #1e3a5f, #2d6a9f)')">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div>
+          <div style="color:rgba(255,255,255,0.7); font-size:11px; font-weight:600; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px;">FICHE AFFECTATION</div>
+          <div style="color:white; font-size:20px; font-weight:700;">{{ getActeLabel(affectationSelectionnee.id_acte) }}</div>
+          <div style="color:rgba(255,255,255,0.8); font-size:13px; margin-top:4px;">{{ affectationSelectionnee.date_affectation | date:'dd/MM/yyyy' }}</div>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+          <p-tag [value]="getPrioriteLabel(affectationSelectionnee.priorite)" [severity]="getPrioriteSeverity(affectationSelectionnee.priorite)"></p-tag>
+          <p-tag [value]="getStatutLabel(affectationSelectionnee.statut)" [severity]="getStatutSeverity(affectationSelectionnee.statut)"></p-tag>
+          <button type="button" (click)="detailsDialog = false"
+            style="background:rgba(255,255,255,0.15); border:none; border-radius:6px; color:white; cursor:pointer; padding:5px 10px; font-size:12px;">
+            <i class="pi pi-times" style="margin-right:4px;"></i>Fermer
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Corps -->
+    <div style="padding:24px 28px; background:#f8fafc;">
+      <div class="grid grid-cols-12 gap-4">
+        <div class="col-span-6">
+          <div style="background:white; border:1px solid #e2e8f0; border-radius:10px; padding:18px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px; padding-bottom:10px; border-bottom:2px solid #eff6ff;">
+              <div style="background:#eff6ff; border-radius:8px; padding:6px 8px;">
+                <i class="pi pi-user" style="color:#1e3a5f; font-size:14px;"></i>
+              </div>
+              <span style="font-weight:700; color:#1e3a5f; font-size:14px;">Agent assigné</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div style="width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg, #1e3a5f, #2d6a9f); display:flex; align-items:center; justify-content:center; color:white; font-size:16px; font-weight:700;">
+                {{ getUtilisateurNom(affectationSelectionnee.id_utilisateur).charAt(0) }}
+              </div>
+              <div>
+                <div style="font-weight:700; color:#1e293b; font-size:14px;">{{ getUtilisateurNom(affectationSelectionnee.id_utilisateur) }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-span-6">
+          <div style="background:white; border:1px solid #e2e8f0; border-radius:10px; padding:18px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px; padding-bottom:10px; border-bottom:2px solid #f0fdf4;">
+              <div style="background:#f0fdf4; border-radius:8px; padding:6px 8px;">
+                <i class="pi pi-folder" style="color:#16a34a; font-size:14px;"></i>
+              </div>
+              <span style="font-weight:700; color:#1e3a5f; font-size:14px;">Dossier</span>
+            </div>
+            <div style="font-weight:700; color:#4f46e5; font-size:14px;">{{ getDossierNumeroParActe(affectationSelectionnee.id_acte) }}</div>
+            <div style="font-size:12px; color:#94a3b8; margin-top:4px;">Date limite : {{ affectationSelectionnee.date_limite ? (affectationSelectionnee.date_limite | date:'dd/MM/yyyy') : 'Non définie' }}</div>
+          </div>
+        </div>
+        <div class="col-span-12" *ngIf="affectationSelectionnee.notes">
+          <div style="background:white; border:1px solid #e2e8f0; border-radius:10px; padding:18px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+              <div style="background:#fff7ed; border-radius:8px; padding:6px 8px;">
+                <i class="pi pi-file-edit" style="color:#f97316; font-size:14px;"></i>
+              </div>
+              <span style="font-weight:700; color:#1e3a5f; font-size:14px;">Instructions</span>
+            </div>
+            <p style="font-size:13px; color:#475569; margin:0;">{{ affectationSelectionnee.notes }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="padding:16px 28px; background:white; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; gap:10px;">
+      <p-button label="Fermer" icon="pi pi-times" [outlined]="true" severity="secondary" (click)="detailsDialog = false" />
+      <p-button label="Modifier" icon="pi pi-pencil" severity="info" (click)="editFromDetails()" />
+    </div>
+  </div>
+</p-dialog>

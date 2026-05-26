@@ -1,0 +1,266 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<!-- TOOLBAR -->
+<div style="background: white; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; justify-content: space-between; align-items: center;">
+  <div style="display: flex; align-items: center; gap: 12px;">
+    <div style="background: linear-gradient(135deg, #1e3a5f, #2d6a9f); border-radius: 10px; padding: 10px 14px;">
+      <i class="pi pi-sitemap" style="color: white; font-size: 18px;"></i>
+    </div>
+    <div>
+      <div style="font-size: 20px; font-weight: 700; color: #1e3a5f;">Gestion des parties</div>
+      <div style="font-size: 12px; color: #94a3b8;">Débiteurs, créanciers et autres parties</div>
+    </div>
+  </div>
+  <div style="display: flex; gap: 10px; align-items: center;">
+    <span style="position: relative;">
+      <i class="pi pi-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; z-index: 1;"></i>
+      <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Rechercher..."
+        style="padding-left: 36px; border-radius: 8px; border: 1px solid #e2e8f0; height: 38px; width: 220px;" />
+    </span>
+    <p-button label="Nouvelle partie" icon="pi pi-plus" (click)="openNew()"
+      [ngStyle]="{'background': 'linear-gradient(135deg, #1e3a5f, #2d6a9f)'}"
+      styleClass="border-0"></p-button>
+    <p-button label="Export PDF" icon="pi pi-file-pdf" severity="danger" (click)="exportListePDF()"></p-button>
+  </div>
+</div>
+
+<!-- STATS -->
+<div style="display: flex; gap: 16px; margin-bottom: 20px;">
+  <div style="flex: 1; background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 14px;">
+    <div style="background: #fef2f2; border-radius: 10px; padding: 10px 12px;">
+      <i class="pi pi-arrow-down-left" style="color: #ef4444; font-size: 18px;"></i>
+    </div>
+    <div>
+      <div style="font-size: 22px; font-weight: 700; color: #1e293b;">{{ getNombreDebiteurs() }}</div>
+      <div style="font-size: 12px; color: #94a3b8;">Débiteurs</div>
+    </div>
+  </div>
+  <div style="flex: 1; background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 14px;">
+    <div style="background: #eff6ff; border-radius: 10px; padding: 10px 12px;">
+      <i class="pi pi-arrow-up-right" style="color: #3b82f6; font-size: 18px;"></i>
+    </div>
+    <div>
+      <div style="font-size: 22px; font-weight: 700; color: #1e293b;">{{ getNombreDestinataires() }}</div>
+      <div style="font-size: 12px; color: #94a3b8;">Créanciers</div>
+    </div>
+  </div>
+  <div style="flex: 1; background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 14px;">
+    <div style="background: #f0fdf4; border-radius: 10px; padding: 10px 12px;">
+      <i class="pi pi-users" style="color: #22c55e; font-size: 18px;"></i>
+    </div>
+    <div>
+      <div style="font-size: 22px; font-weight: 700; color: #1e293b;">{{ getNombreAutres() }}</div>
+      <div style="font-size: 12px; color: #94a3b8;">Autres parties</div>
+    </div>
+  </div>
+  <div style="flex: 1; background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 14px;">
+    <div style="background: #fdf4ff; border-radius: 10px; padding: 10px 12px;">
+      <i class="pi pi-list" style="color: #9333ea; font-size: 18px;"></i>
+    </div>
+    <div>
+      <div style="font-size: 22px; font-weight: 700; color: #1e293b;">{{ parties().length }}</div>
+      <div style="font-size: 12px; color: #94a3b8;">Total parties</div>
+    </div>
+  </div>
+</div>
+
+<!-- TABLE -->
+<div style="background: white; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: hidden;">
+  <p-table #dt [value]="parties()" dataKey="id" [paginator]="true" [rows]="10"
+    [rowHover]="true" [globalFilterFields]="['nom','role','contact','adresse']">
+    <ng-template #header>
+      <tr style="background: #f8fafc;">
+        <th style="padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">PARTIE</th>
+        <th style="padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">RÔLE</th>
+        <th style="padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">DOSSIER</th>
+        <th style="padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">CONTACT</th>
+        <th style="padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">ACTIONS</th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-partie>
+      <tr style="border-bottom: 1px solid #f1f5f9;">
+        <td style="padding: 14px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div [style]="'width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:14px; background:' + (partie.role === 'debiteur' ? '#ef4444' : partie.role === 'destinataire' ? '#3b82f6' : '#6b7280')">
+              {{ partie.nom?.charAt(0)?.toUpperCase() }}
+            </div>
+            <div>
+              <div style="font-weight: 700; color: #1e293b; font-size: 14px;">{{ partie.nom }}</div>
+              <div style="font-size: 12px; color: #94a3b8;">{{ partie.adresse || '—' }}</div>
+            </div>
+          </div>
+        </td>
+        <td style="padding: 14px;">
+          <p-tag [value]="getRoleLabel(partie.role)" [severity]="getRoleSeverity(partie.role)"></p-tag>
+        </td>
+        <td style="padding: 14px; font-size: 13px; color: #475569;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <i class="pi pi-folder" style="color: #94a3b8; font-size: 12px;"></i>
+            {{ getDossierLabel(partie.id_dossier) }}
+          </div>
+        </td>
+        <td style="padding: 14px; font-size: 13px; color: #475569;">
+          <div style="display: flex; align-items: center; gap: 6px;" *ngIf="partie.contact">
+            <i class="pi pi-phone" style="color: #94a3b8; font-size: 12px;"></i>
+            {{ partie.contact }}
+          </div>
+          <span *ngIf="!partie.contact" style="color: #cbd5e1;">—</span>
+        </td>
+        <td style="padding: 14px;">
+          <div style="display: flex; gap: 6px;">
+            <button type="button" pTooltip="Voir fiche" (click)="voirDetails(partie)"
+              style="width:34px; height:34px; border-radius:50%; border:1.5px solid #2d6a9f; background:transparent; color:#2d6a9f; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+              <i class="pi pi-eye" style="font-size:13px;"></i>
+            </button>
+            <button type="button" pTooltip="Modifier" (click)="editPartie(partie)"
+              style="width:34px; height:34px; border-radius:50%; border:1.5px solid #0ea5e9; background:transparent; color:#0ea5e9; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+              <i class="pi pi-pencil" style="font-size:13px;"></i>
+            </button>
+            <button type="button" pTooltip="Supprimer" (click)="deletePartie(partie)"
+              style="width:34px; height:34px; border-radius:50%; border:1.5px solid #ef4444; background:transparent; color:#ef4444; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+              <i class="pi pi-trash" style="font-size:13px;"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #empty>
+      <tr>
+        <td colspan="5" style="text-align:center; padding:40px; color:#94a3b8;">
+          <i class="pi pi-sitemap" style="font-size:36px; display:block; margin-bottom:8px;"></i>
+          Aucune partie enregistrée
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- DIALOG CREATION/MODIFICATION -->
+<p-dialog [(visible)]="partieDialog" [header]="isEditMode ? 'Modifier la partie' : 'Nouvelle partie'" [modal]="true" [style]="{ width: '600px' }">
+  <div class="grid grid-cols-12 gap-4">
+    <div class="col-span-12">
+      <label class="font-bold block mb-2">Rôle *</label>
+      <div style="display: flex; gap: 10px;">
+        <div *ngFor="let r of roleOptions" (click)="partie.role = r.value"
+          [style]="'flex:1; padding:12px; border-radius:10px; cursor:pointer; text-align:center; border:2px solid ' + (partie.role === r.value ? '#1e3a5f' : '#e2e8f0') + '; background:' + (partie.role === r.value ? '#eff6ff' : 'white')">
+          <div style="font-weight:700; font-size:13px; color:#1e3a5f;">{{ r.label }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-span-12">
+      <label class="font-bold block mb-2">Nom complet / Raison sociale *</label>
+      <input pInputText [(ngModel)]="partie.nom" class="w-full" placeholder="Nom de la partie" />
+      <small class="p-error" *ngIf="submitted && !partie.nom">Obligatoire</small>
+    </div>
+    <div class="col-span-12">
+      <label class="font-bold block mb-2">Dossier associé *</label>
+      <select [(ngModel)]="partie.id_dossier" class="w-full p-inputtext">
+        <option [ngValue]="undefined">-- Sélectionner un dossier --</option>
+        <option *ngFor="let d of dossiers" [ngValue]="d.id">{{ d.numero_dossier }} — {{ d.objet }}</option>
+      </select>
+      <small class="p-error" *ngIf="submitted && !partie.id_dossier">Obligatoire</small>
+    </div>
+    <div class="col-span-6">
+      <label class="font-bold block mb-2">Contact (téléphone)</label>
+      <input pInputText [(ngModel)]="partie.contact" class="w-full" placeholder="+226 70 00 00 00" />
+    </div>
+    <div class="col-span-6">
+      <label class="font-bold block mb-2">Adresse</label>
+      <input pInputText [(ngModel)]="partie.adresse" class="w-full" placeholder="Adresse complète" />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Annuler" icon="pi pi-times" text (click)="hideDialog()" />
+    <p-button [label]="isEditMode ? 'Mettre à jour' : 'Enregistrer'" icon="pi pi-check" (click)="savePartie()" />
+  </ng-template>
+</p-dialog>
+
+<!-- DIALOG DETAILS -->
+<p-dialog [(visible)]="detailsDialog" [modal]="true" [style]="{ width: '600px' }" [showHeader]="false">
+  <div *ngIf="partieSelectionnee" style="border-radius: 12px; overflow: hidden; margin: -1.25rem;">
+
+    <!-- En-tête coloré selon le rôle -->
+    <div [style]="'padding: 24px 28px 20px; background:' + (partieSelectionnee.role === 'debiteur' ? 'linear-gradient(135deg, #ef4444, #dc2626)' : partieSelectionnee.role === 'destinataire' ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)' : 'linear-gradient(135deg, #6b7280, #4b5563)')">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div style="width:54px; height:54px; border-radius:50%; background:rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; color:white; font-size:22px; font-weight:700;">
+            {{ partieSelectionnee.nom?.charAt(0)?.toUpperCase() }}
+          </div>
+          <div>
+            <div style="color:rgba(255,255,255,0.7); font-size:11px; font-weight:600; letter-spacing:2px; text-transform:uppercase; margin-bottom:4px;">FICHE PARTIE</div>
+            <div style="color:white; font-size:20px; font-weight:700; margin-bottom:4px;">{{ partieSelectionnee.nom }}</div>
+            <p-tag [value]="getRoleLabel(partieSelectionnee.role)" severity="secondary"></p-tag>
+          </div>
+        </div>
+        <button type="button" (click)="detailsDialog = false"
+          style="background:rgba(255,255,255,0.15); border:none; border-radius:6px; color:white; cursor:pointer; padding:5px 10px; font-size:12px;">
+          <i class="pi pi-times" style="margin-right:4px;"></i>Fermer
+        </button>
+      </div>
+    </div>
+
+    <!-- Corps -->
+    <div style="padding: 24px 28px; background: #f8fafc;">
+      <div class="grid grid-cols-12 gap-4">
+
+        <!-- Coordonnées -->
+        <div class="col-span-6">
+          <div style="background:white; border:1px solid #e2e8f0; border-radius:10px; padding:18px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px; padding-bottom:10px; border-bottom:2px solid #eff6ff;">
+              <div style="background:#eff6ff; border-radius:8px; padding:6px 8px;">
+                <i class="pi pi-id-card" style="color:#1e3a5f; font-size:14px;"></i>
+              </div>
+              <span style="font-weight:700; color:#1e3a5f; font-size:14px;">Coordonnées</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b; font-size:13px;">Téléphone</span>
+                <span style="font-weight:600; color:#1e293b; font-size:13px;">{{ partieSelectionnee.contact || '—' }}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b; font-size:13px;">Adresse</span>
+                <span style="font-weight:600; color:#1e293b; font-size:13px;">{{ partieSelectionnee.adresse || '—' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dossier associé -->
+        <div class="col-span-6">
+          <div style="background:white; border:1px solid #e2e8f0; border-radius:10px; padding:18px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px; padding-bottom:10px; border-bottom:2px solid #f0fdf4;">
+              <div style="background:#f0fdf4; border-radius:8px; padding:6px 8px;">
+                <i class="pi pi-folder" style="color:#16a34a; font-size:14px;"></i>
+              </div>
+              <span style="font-weight:700; color:#1e3a5f; font-size:14px;">Dossier associé</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b; font-size:13px;">Numéro</span>
+                <span style="font-weight:700; color:#4f46e5; font-size:13px;">{{ getDossierLabel(partieSelectionnee.id_dossier).split('—')[0] }}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b; font-size:13px;">Objet</span>
+                <span style="font-weight:600; color:#1e293b; font-size:13px;">{{ getDossierLabel(partieSelectionnee.id_dossier).split('—')[1] || '—' }}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b; font-size:13px;">Rôle</span>
+                <p-tag [value]="getRoleLabel(partieSelectionnee.role)" [severity]="getRoleSeverity(partieSelectionnee.role)"></p-tag>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="padding:16px 28px; background:white; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; gap:10px;">
+      <p-button label="Fermer" icon="pi pi-times" [outlined]="true" severity="secondary" (click)="detailsDialog = false" />
+      <p-button label="Exporter fiche" icon="pi pi-file-pdf" severity="danger" (click)="exportFichePartiePDF()" />
+      <p-button label="Modifier" icon="pi pi-pencil" severity="info" (click)="editFromDetails()" />
+    </div>
+
+  </div>
+</p-dialog>

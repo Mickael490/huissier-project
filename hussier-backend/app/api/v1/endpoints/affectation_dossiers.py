@@ -1,0 +1,92 @@
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from typing import List, Optional, Any
+from pydantic import BaseModel
+from app.api import deps
+from app.models.affectation_dossier import AffectationDossier
+
+router = APIRouter()
+
+class AffectationIn(BaseModel):
+    id_dossier: Optional[int] = None
+    id_acte: Optional[int] = None
+    id_utilisateur: Optional[int] = None
+    affecte_par: Optional[int] = None
+    agent_nom: Optional[str] = None
+    agent_role: Optional[str] = None
+    date_limite: Optional[str] = None
+    priorite: Optional[str] = "normale"
+    statut: Optional[str] = "en_cours"
+    instructions: Optional[str] = None
+    notes: Optional[str] = None
+
+@router.get("", response_model=List[dict])
+def get_affectations(db: Session = Depends(deps.get_db), skip: int = 0, limit: int = 100):
+    affectations = db.query(AffectationDossier).offset(skip).limit(limit).all()
+    return [
+        {
+            "id": a.id,
+            "id_dossier": a.id_dossier,
+            "id_acte": a.id_acte,
+            "id_utilisateur": a.id_utilisateur,
+            "affecte_par": a.affecte_par,
+            "agent_nom": a.agent_nom,
+            "agent_role": a.agent_role,
+            "date_affectation": str(a.date_affectation) if a.date_affectation else None,
+            "date_limite": str(a.date_limite) if a.date_limite else None,
+            "priorite": a.priorite,
+            "statut": a.statut,
+            "instructions": a.instructions,
+            "notes": a.notes,
+            "est_actif": a.est_actif,
+        }
+        for a in affectations
+    ]
+
+@router.post("", status_code=201)
+def create_affectation(affectation_in: AffectationIn, db: Session = Depends(deps.get_db)):
+    affectation = AffectationDossier(
+        id_dossier=affectation_in.id_dossier,
+        id_acte=affectation_in.id_acte,
+        id_utilisateur=affectation_in.id_utilisateur,
+        affecte_par=affectation_in.affecte_par or affectation_in.id_utilisateur,
+        agent_nom=affectation_in.agent_nom,
+        agent_role=affectation_in.agent_role,
+        date_limite=affectation_in.date_limite,
+        priorite=affectation_in.priorite or "normale",
+        statut=affectation_in.statut or "en_cours",
+        instructions=affectation_in.instructions,
+        notes=affectation_in.notes,
+        est_actif=True
+    )
+    db.add(affectation)
+    db.commit()
+    db.refresh(affectation)
+    return {"id": affectation.id, "message": "Affectation créée avec succès"}
+
+@router.put("/{affectation_id}", status_code=200)
+def update_affectation(affectation_id: int, affectation_in: AffectationIn, db: Session = Depends(deps.get_db)):
+    affectation = db.query(AffectationDossier).filter(AffectationDossier.id == affectation_id).first()
+    if not affectation:
+        raise HTTPException(status_code=404, detail="Affectation non trouvée")
+    for key, value in affectation_in.model_dump(exclude_none=True).items():
+        if hasattr(affectation, key):
+            setattr(affectation, key, value)
+    db.commit()
+    db.refresh(affectation)
+    return {"id": affectation.id, "message": "Affectation mise à jour"}
+
+@router.delete("/{affectation_id}", status_code=204)
+def delete_affectation(affectation_id: int, db: Session = Depends(deps.get_db)):
+    affectation = db.query(AffectationDossier).filter(
+        AffectationDossier.id == affectation_id
+    ).first()
+
+    if not affectation:
+        return None
+
+    db.delete(affectation)
+    db.commit()
+
+    return None
+

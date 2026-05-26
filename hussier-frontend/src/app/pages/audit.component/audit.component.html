@@ -1,0 +1,230 @@
+<p-toast></p-toast>
+
+<!-- TOOLBAR -->
+<div style="background:white; border-radius:12px; padding:16px 20px; margin-bottom:20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; justify-content:space-between; align-items:center;">
+  <div style="display:flex; align-items:center; gap:12px;">
+    <div style="background:linear-gradient(135deg, #1e3a5f, #2d6a9f); border-radius:10px; padding:10px 14px;">
+      <i class="pi pi-list" style="color:white; font-size:18px;"></i>
+    </div>
+    <div>
+      <div style="font-size:20px; font-weight:700; color:#1e3a5f;">Journal d'audit</div>
+      <div style="font-size:12px; color:#94a3b8;">Traçabilite de toutes les actions effectuees</div>
+    </div>
+  </div>
+  <div style="display:flex; gap:10px; align-items:center;">
+    <span style="position:relative;">
+      <i class="pi pi-search" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#94a3b8; z-index:1;"></i>
+      <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Rechercher..."
+        style="padding-left:36px; border-radius:8px; border:1px solid #e2e8f0; height:38px; width:220px;" />
+    </span>
+    <p-button label="Actualiser" icon="pi pi-refresh" severity="secondary" (click)="loadLogs()"></p-button>
+    <p-button label="Export PDF" icon="pi pi-file-pdf" severity="danger" (click)="exportListePDF()"></p-button>
+  </div>
+</div>
+
+<!-- STATS -->
+<div style="display:flex; gap:16px; margin-bottom:20px;">
+  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #4f46e5;">
+    <div style="background:#ede9fe; border-radius:10px; padding:10px 12px;">
+      <i class="pi pi-list" style="color:#4f46e5; font-size:18px;"></i>
+    </div>
+    <div>
+      <div style="font-size:22px; font-weight:700; color:#1e293b;">{{ totalLogs() }}</div>
+      <div style="font-size:12px; color:#94a3b8;">Total actions</div>
+    </div>
+  </div>
+  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #10b981;">
+    <div style="background:#d1fae5; border-radius:10px; padding:10px 12px;">
+      <i class="pi pi-plus-circle" style="color:#10b981; font-size:18px;"></i>
+    </div>
+    <div>
+      <div style="font-size:22px; font-weight:700; color:#1e293b;">{{ totalCreations() }}</div>
+      <div style="font-size:12px; color:#94a3b8;">Creations</div>
+    </div>
+  </div>
+  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #f97316;">
+    <div style="background:#fff7ed; border-radius:10px; padding:10px 12px;">
+      <i class="pi pi-pencil" style="color:#f97316; font-size:18px;"></i>
+    </div>
+    <div>
+      <div style="font-size:22px; font-weight:700; color:#1e293b;">{{ totalModifications() }}</div>
+      <div style="font-size:12px; color:#94a3b8;">Modifications</div>
+    </div>
+  </div>
+  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #ef4444;">
+    <div style="background:#fef2f2; border-radius:10px; padding:10px 12px;">
+      <i class="pi pi-trash" style="color:#ef4444; font-size:18px;"></i>
+    </div>
+    <div>
+      <div style="font-size:22px; font-weight:700; color:#1e293b;">{{ totalSuppressions() }}</div>
+      <div style="font-size:12px; color:#94a3b8;">Suppressions</div>
+    </div>
+  </div>
+</div>
+
+<!-- TABLE -->
+<div style="background:white; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,0.08); overflow:hidden;">
+  <p-table #dt [value]="logs()" dataKey="id" [paginator]="true" [rows]="15" [rowHover]="true"
+    [globalFilterFields]="['action', 'table_name', 'user_id']"
+    [sortField]="'created_at'" [sortOrder]="-1">
+    <ng-template #header>
+      <tr style="background:#f8fafc;">
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">ACTION</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">TABLE</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">ENREGISTREMENT</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">UTILISATEUR</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">DATE & HEURE</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">DETAILS</th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-log>
+      <tr style="border-bottom:1px solid #f1f5f9;">
+        <td style="padding:14px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div [style]="'width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:' + getActionColor(log.action) + '20'">
+              <i [class]="getActionIcon(log.action)" [style]="'font-size:14px; color:' + getActionColor(log.action)"></i>
+            </div>
+            <p-tag [value]="getActionLabel(log.action)" [severity]="getActionSeverity(log.action)"></p-tag>
+          </div>
+        </td>
+        <td style="padding:14px;">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <i class="pi pi-database" style="color:#94a3b8; font-size:12px;"></i>
+            <span style="font-weight:600; color:#1e293b; font-size:13px;">{{ log.entity_type || '—' }}</span>
+          </div>
+        </td>
+        <td style="padding:14px;">
+          <span style="background:#f1f5f9; padding:3px 8px; border-radius:6px; font-size:12px; font-weight:600; color:#475569;">
+            ID #{{ log.entity_id || '—' }}
+          </span>
+        </td>
+        <td style="padding:14px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div style="width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg, #1e3a5f, #2d6a9f); display:flex; align-items:center; justify-content:center; color:white; font-size:11px; font-weight:700;">
+              {{ (log.id_utilisateur || '?').toString().charAt(0) }}
+            </div>
+            <span style="font-size:13px; color:#475569;">User #{{ log.id_utilisateur || '—' }}</span>
+          </div>
+        </td>
+        <td style="padding:14px;">
+          <div style="font-weight:600; color:#1e293b; font-size:13px;">{{ log.date_action | date:'dd/MM/yyyy' }}</div>
+          <div style="font-size:12px; color:#94a3b8;">{{ log.date_action | date:'HH:mm:ss' }}</div>
+        </td>
+        <td style="padding:14px;">
+          <button type="button" pTooltip="Voir details" (click)="voirDetails(log)"
+            style="width:34px; height:34px; border-radius:50%; border:1.5px solid #2d6a9f; background:transparent; color:#2d6a9f; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+            <i class="pi pi-eye" style="font-size:13px;"></i>
+          </button>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #empty>
+      <tr>
+        <td colspan="6" style="text-align:center; padding:40px; color:#94a3b8;">
+          <i class="pi pi-list" style="font-size:36px; display:block; margin-bottom:8px;"></i>
+          Aucun log d'audit disponible
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- DIALOG DETAILS -->
+<p-dialog [(visible)]="detailsDialog" [modal]="true" [style]="{ width: '580px' }" [showHeader]="false">
+  <div *ngIf="logSelectionne" style="border-radius:12px; overflow:hidden; margin:-1.25rem;">
+
+    <!-- En-tete -->
+    <div [style]="'background:linear-gradient(135deg, ' + getActionColor(logSelectionne.action) + ', #1e3a5f); padding:24px 28px 20px;'">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div style="width:50px; height:50px; border-radius:12px; background:rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center;">
+            <i [class]="getActionIcon(logSelectionne.action)" style="font-size:22px; color:white;"></i>
+          </div>
+          <div>
+            <div style="color:rgba(255,255,255,0.7); font-size:11px; font-weight:600; letter-spacing:2px; text-transform:uppercase; margin-bottom:4px;">LOG D'AUDIT</div>
+            <div style="color:white; font-size:18px; font-weight:700;">{{ getActionLabel(logSelectionne.action) }}</div>
+            <div style="color:rgba(255,255,255,0.7); font-size:12px; margin-top:2px;">{{ logSelectionne.date_action | date:'dd/MM/yyyy HH:mm:ss' }}</div>
+          </div>
+        </div>
+        <button type="button" (click)="detailsDialog = false"
+          style="background:rgba(255,255,255,0.15); border:none; border-radius:6px; color:white; cursor:pointer; padding:5px 10px; font-size:12px;">
+          <i class="pi pi-times" style="margin-right:4px;"></i>Fermer
+        </button>
+      </div>
+    </div>
+
+    <!-- Corps -->
+    <div style="padding:24px 28px; background:#f8fafc;">
+      <div class="grid grid-cols-12 gap-4">
+        <div class="col-span-6">
+          <div style="background:white; border:1px solid #e2e8f0; border-radius:10px; padding:16px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid #eff6ff;">
+              <div style="background:#eff6ff; border-radius:8px; padding:5px 7px;">
+                <i class="pi pi-info-circle" style="color:#1e3a5f; font-size:13px;"></i>
+              </div>
+              <span style="font-weight:700; color:#1e3a5f; font-size:13px;">Informations</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px; font-size:13px;">
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b;">Table</span>
+                <span style="font-weight:600; color:#1e293b;">{{ logSelectionne.entity_type || '—' }}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b;">ID enregistrement</span>
+                <span style="font-weight:700; color:#4f46e5;">#{{ logSelectionne.entity_id || '—' }}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b;">Utilisateur</span>
+                <span style="font-weight:600; color:#1e293b;">User #{{ logSelectionne.id_utilisateur || '—' }}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b;">IP</span>
+                <span style="font-weight:600; color:#1e293b;">{{ logSelectionne.ip_address || '—' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-span-6">
+          <div style="background:white; border:1px solid #e2e8f0; border-radius:10px; padding:16px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid #f0fdf4;">
+              <div style="background:#f0fdf4; border-radius:8px; padding:5px 7px;">
+                <i class="pi pi-clock" style="color:#16a34a; font-size:13px;"></i>
+              </div>
+              <span style="font-weight:700; color:#1e3a5f; font-size:13px;">Horodatage</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px; font-size:13px;">
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b;">Date</span>
+                <span style="font-weight:600; color:#1e293b;">{{ logSelectionne.date_action | date:'dd/MM/yyyy' }}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b;">Heure</span>
+                <span style="font-weight:600; color:#4f46e5;">{{ logSelectionne.date_action | date:'HH:mm:ss' }}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b;">Action</span>
+                <p-tag [value]="getActionLabel(logSelectionne.action)" [severity]="getActionSeverity(logSelectionne.action)"></p-tag>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-span-12" *ngIf="logSelectionne.description">
+          <div style="background:white; border:1px solid #e2e8f0; border-radius:10px; padding:16px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+              <div style="background:#fff7ed; border-radius:8px; padding:5px 7px;">
+                <i class="pi pi-code" style="color:#f97316; font-size:13px;"></i>
+              </div>
+              <span style="font-weight:700; color:#1e3a5f; font-size:13px;">Details de l'action</span>
+            </div>
+            <pre style="font-size:11px; color:#475569; background:#f8fafc; border-radius:6px; padding:12px; margin:0; overflow-x:auto; white-space:pre-wrap;">{{ formatDetails(logSelectionne.description) }}</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="padding:14px 28px; background:white; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end;">
+      <p-button label="Fermer" icon="pi pi-times" [outlined]="true" severity="secondary" (click)="detailsDialog = false" />
+    </div>
+  </div>
+</p-dialog>

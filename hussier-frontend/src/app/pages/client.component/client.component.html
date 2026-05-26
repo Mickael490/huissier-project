@@ -1,0 +1,555 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<!-- TOOLBAR -->
+<div style="background: white; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; justify-content: space-between; align-items: center;">
+  <div style="display: flex; align-items: center; gap: 12px;">
+    <div style="background: linear-gradient(135deg, #1e3a5f, #2d6a9f); border-radius: 10px; padding: 10px 14px;">
+      <i class="pi pi-users" style="color: white; font-size: 18px;"></i>
+    </div>
+    <div>
+      <div style="font-size: 20px; font-weight: 700; color: #1e3a5f;">Gestion des clients</div>
+      <div style="font-size: 12px; color: #94a3b8;">Cabinet d'huissier de justice</div>
+    </div>
+  </div>
+  <div style="display: flex; gap: 10px; align-items: center;">
+    <span style="position: relative;">
+      <i class="pi pi-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; z-index: 1;"></i>
+      <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Rechercher un client..."
+        style="padding-left: 36px; border-radius: 8px; border: 1px solid #e2e8f0; height: 38px; width: 240px;" />
+    </span>
+    <p-button label="Nouveau client" icon="pi pi-plus" (click)="openNew()"
+      [ngStyle]="{'background': 'linear-gradient(135deg, #1e3a5f, #2d6a9f)'}"
+      styleClass="border-0"></p-button>
+    <p-button label="Export PDF" icon="pi pi-file-pdf" severity="danger" (click)="exportPDF()"></p-button>
+  </div>
+</div>
+
+<!-- TABLE -->
+<div style="background: white; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: hidden;">
+  <p-table
+    #dt
+    [value]="clients()"
+    dataKey="id"
+    [paginator]="true"
+    [rows]="10"
+    [rowsPerPageOptions]="[10,20,30]"
+    [rowHover]="true"
+    [globalFilterFields]="['nom','prenom','email','telephone','type_client','adresse']"
+    [tableStyle]="{ 'min-width': '75rem' }"
+  >
+    <ng-template #header>
+      <tr style="background: #f8fafc;">
+        <th style="min-width: 16rem; padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">CLIENT</th>
+        <th style="min-width: 10rem; padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">TYPE</th>
+        <th style="min-width: 12rem; padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">TÉLÉPHONE</th>
+        <th style="min-width: 16rem; padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">EMAIL</th>
+        <th style="min-width: 14rem; padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">ADRESSE</th>
+        <th style="width: 14rem; padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">ACTIONS</th>
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-client>
+      <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.2s;">
+
+        <td style="padding: 14px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div [style]="'width:40px; height:40px; border-radius:50%; background:' + getAvatarColor(client.type_client) + '; display:flex; align-items:center; justify-content:center; color:white; font-size:13px; font-weight:700; flex-shrink:0;'">
+              {{ getInitiales(client) }}
+            </div>
+            <div>
+              <div style="font-weight: 700; color: #1e293b; font-size: 14px;">{{ getNomAffiche(client) }}</div>
+              <div style="font-size: 12px; color: #94a3b8;" *ngIf="client.representant_legal">
+                <i class="pi pi-user" style="font-size: 10px; margin-right: 3px;"></i>{{ client.representant_legal }}
+              </div>
+              <div style="font-size: 12px; color: #94a3b8;" *ngIf="client.siret">
+                <i class="pi pi-hashtag" style="font-size: 10px; margin-right: 3px;"></i>{{ client.siret }}
+              </div>
+            </div>
+          </div>
+        </td>
+
+        <td style="padding: 14px;">
+          <p-tag [value]="getTypeLabel(client.type_client)" [severity]="getTypeSeverity(client.type_client)"></p-tag>
+        </td>
+
+        <td style="padding: 14px;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <i class="pi pi-phone" style="color: #94a3b8; font-size: 12px;"></i>
+            <span style="font-size: 13px; color: #475569;">{{ client.telephone || '—' }}</span>
+          </div>
+        </td>
+
+        <td style="padding: 14px;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <i class="pi pi-envelope" style="color: #94a3b8; font-size: 12px;"></i>
+            <span style="font-size: 13px; color: #475569;">{{ client.email || '—' }}</span>
+          </div>
+        </td>
+
+        <td style="padding: 14px;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <i class="pi pi-map-marker" style="color: #94a3b8; font-size: 12px;"></i>
+            <span style="font-size: 13px; color: #475569;">{{ client.adresse || '—' }}</span>
+          </div>
+        </td>
+
+        <td style="padding: 14px;">
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <button type="button" pTooltip="Voir fiche" tooltipPosition="top"
+              (click)="voirDetails(client)"
+              style="width:34px; height:34px; border-radius:50%; border:1.5px solid #2d6a9f; background:transparent; color:#2d6a9f; cursor:pointer; display:flex; align-items:center; justify-content:center;"
+              onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='transparent'">
+              <i class="pi pi-eye" style="font-size:13px;"></i>
+            </button>
+            <button type="button" pTooltip="Modifier" tooltipPosition="top"
+              (click)="editClient(client)"
+              style="width:34px; height:34px; border-radius:50%; border:1.5px solid #0ea5e9; background:transparent; color:#0ea5e9; cursor:pointer; display:flex; align-items:center; justify-content:center;"
+              onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background='transparent'">
+              <i class="pi pi-pencil" style="font-size:13px;"></i>
+            </button>
+            <button type="button" pTooltip="Supprimer" tooltipPosition="top"
+              (click)="deleteClient(client)"
+              style="width:34px; height:34px; border-radius:50%; border:1.5px solid #ef4444; background:transparent; color:#ef4444; cursor:pointer; display:flex; align-items:center; justify-content:center;"
+              onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='transparent'">
+              <i class="pi pi-trash" style="font-size:13px;"></i>
+            </button>
+          </div>
+        </td>
+
+      </tr>
+    </ng-template>
+
+    <ng-template #empty>
+      <tr>
+        <td colspan="6" style="text-align: center; padding: 60px 20px;">
+          <div style="color: #94a3b8;">
+            <i class="pi pi-users" style="font-size: 48px; display: block; margin-bottom: 12px;"></i>
+            <div style="font-size: 16px; font-weight: 600; margin-bottom: 4px;">Aucun client trouvé</div>
+            <div style="font-size: 13px;">Créez un nouveau client pour commencer</div>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- ===== DIALOG CRÉATION / MODIFICATION ===== -->
+<p-dialog
+  [(visible)]="clientDialog"
+  [header]="isEditMode ? 'Modifier le client' : 'Nouveau client'"
+  [modal]="true"
+  [style]="{ width: '700px' }"
+  [draggable]="false"
+>
+  <div style="padding: 8px 0;">
+
+    <!-- Sélection du type -->
+    <div style="margin-bottom: 20px;">
+      <label style="font-weight: 600; color: #1e3a5f; font-size: 13px; display: block; margin-bottom: 10px;">Type de client <span style="color: red;">*</span></label>
+      <div style="display: flex; gap: 10px;">
+
+        <div (click)="client.type_client = TypeClient.PARTICULIER"
+          [style]="'flex:1; padding:14px; border-radius:10px; cursor:pointer; border:2px solid ' + (client.type_client === TypeClient.PARTICULIER ? '#1e3a5f' : '#e2e8f0') + '; background:' + (client.type_client === TypeClient.PARTICULIER ? '#eff6ff' : 'white') + '; text-align:center; transition:all 0.2s;'">
+          <i class="pi pi-user" style="font-size: 20px; color: #1e3a5f; display: block; margin-bottom: 6px;"></i>
+          <div style="font-weight: 600; font-size: 13px; color: #1e3a5f;">Particulier</div>
+          <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">Personne physique</div>
+        </div>
+
+        <div (click)="client.type_client = TypeClient.ENTREPRISE"
+          [style]="'flex:1; padding:14px; border-radius:10px; cursor:pointer; border:2px solid ' + (client.type_client === TypeClient.ENTREPRISE ? '#065f46' : '#e2e8f0') + '; background:' + (client.type_client === TypeClient.ENTREPRISE ? '#f0fdf4' : 'white') + '; text-align:center; transition:all 0.2s;'">
+          <i class="pi pi-building" style="font-size: 20px; color: #059669; display: block; margin-bottom: 6px;"></i>
+          <div style="font-weight: 600; font-size: 13px; color: #065f46;">Entreprise</div>
+          <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">Personne morale</div>
+        </div>
+
+        <div (click)="client.type_client = TypeClient.AVOCAT"
+          [style]="'flex:1; padding:14px; border-radius:10px; cursor:pointer; border:2px solid ' + (client.type_client === TypeClient.AVOCAT ? '#92400e' : '#e2e8f0') + '; background:' + (client.type_client === TypeClient.AVOCAT ? '#fffbeb' : 'white') + '; text-align:center; transition:all 0.2s;'">
+          <i class="pi pi-briefcase" style="font-size: 20px; color: #d97706; display: block; margin-bottom: 6px;"></i>
+          <div style="font-weight: 600; font-size: 13px; color: #92400e;">Avocat</div>
+          <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">Auxiliaire de justice</div>
+        </div>
+
+        <div (click)="client.type_client = TypeClient.JURIDICTION"
+          [style]="'flex:1; padding:14px; border-radius:10px; cursor:pointer; border:2px solid ' + (client.type_client === TypeClient.JURIDICTION ? '#6b21a8' : '#e2e8f0') + '; background:' + (client.type_client === TypeClient.JURIDICTION ? '#fdf4ff' : 'white') + '; text-align:center; transition:all 0.2s;'">
+          <i class="pi pi-verified" style="font-size: 20px; color: #9333ea; display: block; margin-bottom: 6px;"></i>
+          <div style="font-weight: 600; font-size: 13px; color: #6b21a8;">Juridiction</div>
+          <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">Institution judiciaire</div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="grid grid-cols-12 gap-4">
+
+      <!-- PARTICULIER / AVOCAT -->
+      <ng-container *ngIf="!isPersonneMorale(client.type_client)">
+        <div class="col-span-6">
+          <label style="font-weight: 600; color: #1e3a5f; font-size: 13px; display: block; margin-bottom: 6px;">Nom <span style="color: red;">*</span></label>
+          <input pInputText [(ngModel)]="client.nom" class="w-full" placeholder="Nom de famille" style="border-radius: 8px;" />
+          <small class="p-error" *ngIf="submitted && !client.nom">Nom obligatoire</small>
+        </div>
+        <div class="col-span-6">
+          <label style="font-weight: 600; color: #1e3a5f; font-size: 13px; display: block; margin-bottom: 6px;">Prénom</label>
+          <input pInputText [(ngModel)]="client.prenom" class="w-full" placeholder="Prénom" style="border-radius: 8px;" />
+        </div>
+      </ng-container>
+
+      <!-- ENTREPRISE / JURIDICTION -->
+      <ng-container *ngIf="isPersonneMorale(client.type_client)">
+        <div class="col-span-12">
+          <label style="font-weight: 600; color: #1e3a5f; font-size: 13px; display: block; margin-bottom: 6px;">
+            {{ client.type_client === TypeClient.ENTREPRISE ? 'Raison sociale' : 'Dénomination' }} <span style="color: red;">*</span>
+          </label>
+          <input pInputText [(ngModel)]="client.nom" class="w-full"
+            [placeholder]="client.type_client === TypeClient.ENTREPRISE ? 'Nom de l\'entreprise' : 'Nom de la juridiction'"
+            style="border-radius: 8px;" />
+          <small class="p-error" *ngIf="submitted && !client.nom">Ce champ est obligatoire</small>
+        </div>
+        <div class="col-span-6">
+          <label style="font-weight: 600; color: #1e3a5f; font-size: 13px; display: block; margin-bottom: 6px;">Représentant légal</label>
+          <input pInputText [(ngModel)]="client.representant_legal" class="w-full" placeholder="Nom du représentant légal" style="border-radius: 8px;" />
+        </div>
+        <div class="col-span-6">
+          <label style="font-weight: 600; color: #1e3a5f; font-size: 13px; display: block; margin-bottom: 6px;">
+            {{ client.type_client === TypeClient.ENTREPRISE ? 'SIRET / NIF' : 'Numéro de juridiction' }}
+          </label>
+          <input pInputText [(ngModel)]="client.siret" class="w-full"
+            [placeholder]="client.type_client === TypeClient.ENTREPRISE ? 'SIRET ou NIF' : 'Référence'"
+            style="border-radius: 8px;" />
+        </div>
+      </ng-container>
+
+      <!-- Champs communs -->
+      <div class="col-span-6">
+        <label style="font-weight: 600; color: #1e3a5f; font-size: 13px; display: block; margin-bottom: 6px;">Téléphone</label>
+        <div style="position: relative;">
+          <i class="pi pi-phone" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 13px;"></i>
+          <input pInputText [(ngModel)]="client.telephone" class="w-full" placeholder="Ex: +226 70 00 00 00" style="border-radius: 8px; padding-left: 32px;" />
+        </div>
+      </div>
+
+      <div class="col-span-6">
+        <label style="font-weight: 600; color: #1e3a5f; font-size: 13px; display: block; margin-bottom: 6px;">Email</label>
+        <div style="position: relative;">
+          <i class="pi pi-envelope" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 13px;"></i>
+          <input pInputText [(ngModel)]="client.email" class="w-full" placeholder="adresse@email.com" style="border-radius: 8px; padding-left: 32px;" />
+        </div>
+      </div>
+
+      <div class="col-span-12">
+        <label style="font-weight: 600; color: #1e3a5f; font-size: 13px; display: block; margin-bottom: 6px;">Adresse</label>
+        <div style="position: relative;">
+          <i class="pi pi-map-marker" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 13px;"></i>
+          <input pInputText [(ngModel)]="client.adresse" class="w-full" placeholder="Adresse complète" style="border-radius: 8px; padding-left: 32px;" />
+        </div>
+      </div>
+
+      <!-- NIF pour particulier/avocat -->
+      <ng-container *ngIf="!isPersonneMorale(client.type_client)">
+        <div class="col-span-6">
+          <label style="font-weight: 600; color: #1e3a5f; font-size: 13px; display: block; margin-bottom: 6px;">NIF / Pièce d'identité</label>
+          <input pInputText [(ngModel)]="client.siret" class="w-full" placeholder="Numéro NIF ou CNI" style="border-radius: 8px;" />
+        </div>
+        <div class="col-span-6" *ngIf="client.type_client === TypeClient.AVOCAT">
+          <label style="font-weight: 600; color: #1e3a5f; font-size: 13px; display: block; margin-bottom: 6px;">Barreau / Cabinet</label>
+          <input pInputText [(ngModel)]="client.representant_legal" class="w-full" placeholder="Nom du barreau ou cabinet" style="border-radius: 8px;" />
+        </div>
+      </ng-container>
+
+    </div>
+  </div>
+
+
+    <!-- Securisation optionnelle -->
+    <div class="col-span-12">
+      <div style="background:#f8fafc; border-radius:10px; padding:14px 16px; border-left:4px solid #f97316; margin-top:8px;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+          <input type="checkbox" [(ngModel)]="protegerParMotDePasse" style="width:16px; height:16px; cursor:pointer;" />
+          <label style="font-weight:700; color:#1e3a5f; font-size:13px; cursor:pointer;">
+            <i class="pi pi-lock" style="color:#f97316; margin-right:4px;"></i>
+            Proteger cette fiche par mot de passe
+          </label>
+        </div>
+        <div *ngIf="protegerParMotDePasse" style="display:flex; gap:10px; align-items:center;">
+          <input pInputText type="password" [(ngModel)]="client.mot_de_passe"
+            placeholder="Entrez un mot de passe..."
+            style="flex:1; border-radius:8px; border:1.5px solid #f97316;" />
+          <i class="pi pi-shield" style="color:#f97316; font-size:18px;"></i>
+        </div>
+      </div>
+    </div>
+
+  <ng-template pTemplate="footer">
+    <div style="display: flex; justify-content: flex-end; gap: 10px; padding-top: 8px; border-top: 1px solid #e2e8f0;">
+      <p-button label="Annuler" icon="pi pi-times" [outlined]="true" severity="secondary" (click)="hideDialog()" />
+      <p-button [label]="isEditMode ? 'Mettre à jour' : 'Enregistrer'" icon="pi pi-check" (click)="saveClient()" />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- ===== DIALOG DÉTAILS CLIENT ===== -->
+<p-dialog
+  [(visible)]="detailsDialog"
+  [modal]="true"
+  [style]="{ width: '700px' }"
+  [draggable]="false"
+  [showHeader]="false"
+>
+  <div *ngIf="clientSelectionne" style="border-radius: 12px; overflow: hidden; margin: -1.25rem;">
+
+    <!-- EN-TÊTE -->
+    <div [style]="'background:' + getAvatarColor(clientSelectionne.type_client) + '; padding: 24px 28px 20px;'">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div style="width: 54px; height: 54px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; font-weight: 700;">
+            {{ getInitiales(clientSelectionne) }}
+          </div>
+          <div>
+            <div style="color: rgba(255,255,255,0.7); font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px;">FICHE CLIENT</div>
+            <div style="color: white; font-size: 20px; font-weight: 700; margin-bottom: 2px;">{{ getNomAffiche(clientSelectionne) }}</div>
+            <div style="color: rgba(255,255,255,0.75); font-size: 13px;">{{ getTypeLabel(clientSelectionne.type_client) }}</div>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+          <p-tag [value]="getTypeLabel(clientSelectionne.type_client)" [severity]="getTypeSeverity(clientSelectionne.type_client)"></p-tag>
+          <div style="color: rgba(255,255,255,0.6); font-size: 11px; margin-top: 4px;">
+            <i class="pi pi-calendar" style="margin-right: 4px;"></i>
+            Enregistré le {{ clientSelectionne.date_creation | date:'dd/MM/yyyy' }}
+          </div>
+          <button type="button" (click)="detailsDialog = false"
+            style="background: rgba(255,255,255,0.15); border: none; border-radius: 6px; color: white; cursor: pointer; padding: 5px 10px; font-size: 12px;">
+            <i class="pi pi-times" style="margin-right: 4px;"></i>Fermer
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CORPS -->
+    <div style="padding: 24px 28px; background: #f8fafc;">
+      <div class="grid grid-cols-12 gap-4">
+
+        <!-- Coordonnées -->
+        <div class="col-span-6">
+          <div style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; height: 100%;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid #eff6ff;">
+              <div style="background: #eff6ff; border-radius: 8px; padding: 6px 8px;">
+                <i class="pi pi-id-card" style="color: #1e3a5f; font-size: 14px;"></i>
+              </div>
+              <span style="font-weight: 700; color: #1e3a5f; font-size: 14px;">Coordonnées</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: #64748b; font-size: 13px;">Téléphone</span>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <i class="pi pi-phone" style="color: #2d6a9f; font-size: 12px;"></i>
+                  <span style="font-weight: 600; color: #1e293b; font-size: 13px;">{{ clientSelectionne.telephone || '—' }}</span>
+                </div>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: #64748b; font-size: 13px;">Email</span>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <i class="pi pi-envelope" style="color: #2d6a9f; font-size: 12px;"></i>
+                  <span style="font-weight: 600; color: #1e293b; font-size: 13px;">{{ clientSelectionne.email || '—' }}</span>
+                </div>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: #64748b; font-size: 13px;">Adresse</span>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <i class="pi pi-map-marker" style="color: #2d6a9f; font-size: 12px;"></i>
+                  <span style="font-weight: 600; color: #1e293b; font-size: 13px;">{{ clientSelectionne.adresse || '—' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Informations juridiques -->
+        <div class="col-span-6">
+          <div style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; height: 100%;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid #f0fdf4;">
+              <div style="background: #f0fdf4; border-radius: 8px; padding: 6px 8px;">
+                <i class="pi pi-briefcase" style="color: #16a34a; font-size: 14px;"></i>
+              </div>
+              <span style="font-weight: 700; color: #1e3a5f; font-size: 14px;">Informations juridiques</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: #64748b; font-size: 13px;">Type</span>
+                <p-tag [value]="getTypeLabel(clientSelectionne.type_client)" [severity]="getTypeSeverity(clientSelectionne.type_client)"></p-tag>
+              </div>
+
+              <ng-container *ngIf="isPersonneMorale(clientSelectionne.type_client)">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="color: #64748b; font-size: 13px;">Représentant légal</span>
+                  <span style="font-weight: 600; color: #1e293b; font-size: 13px;">{{ clientSelectionne.representant_legal || '—' }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="color: #64748b; font-size: 13px;">SIRET / NIF</span>
+                  <span style="font-weight: 600; color: #1e293b; font-size: 13px;">{{ clientSelectionne.siret || '—' }}</span>
+                </div>
+              </ng-container>
+
+              <ng-container *ngIf="!isPersonneMorale(clientSelectionne.type_client)">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="color: #64748b; font-size: 13px;">NIF / CNI</span>
+                  <span style="font-weight: 600; color: #1e293b; font-size: 13px;">{{ clientSelectionne.siret || '—' }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;" *ngIf="clientSelectionne.type_client === TypeClient.AVOCAT">
+                  <span style="color: #64748b; font-size: 13px;">Barreau / Cabinet</span>
+                  <span style="font-weight: 600; color: #1e293b; font-size: 13px;">{{ clientSelectionne.representant_legal || '—' }}</span>
+                </div>
+              </ng-container>
+
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: #64748b; font-size: 13px;">Date d'enregistrement</span>
+                <span style="font-weight: 600; color: #1e293b; font-size: 13px;">{{ clientSelectionne.date_creation | date:'dd/MM/yyyy' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+   <!-- DOSSIERS ET OBSERVATIONS -->
+<div style="padding: 0 28px 20px; background: #f8fafc;">
+  <div class="grid grid-cols-12 gap-4">
+
+    <!-- Statistiques rapides -->
+    <div class="col-span-12">
+      <div style="display: flex; gap: 12px;">
+        <div style="flex:1; background: white; border-radius: 10px; padding: 16px; text-align: center; border: 1px solid #e2e8f0;">
+          <div style="font-size: 24px; font-weight: 700; color: #1e3a5f;">{{ dossiersDuClient.length }}</div>
+          <div style="font-size: 12px; color: #94a3b8; margin-top: 2px;">Total dossiers</div>
+        </div>
+        <div style="flex:1; background: white; border-radius: 10px; padding: 16px; text-align: center; border: 1px solid #e2e8f0;">
+          <div style="font-size: 24px; font-weight: 700; color: #10b981;">{{ getDossiersActifs(clientSelectionne!.id) }}</div>
+          <div style="font-size: 12px; color: #94a3b8; margin-top: 2px;">En cours</div>
+        </div>
+        <div style="flex:1; background: white; border-radius: 10px; padding: 16px; text-align: center; border: 1px solid #e2e8f0;">
+          <div style="font-size: 24px; font-weight: 700; color: #f97316;">{{ getDossiersTermines(clientSelectionne!.id) }}</div>
+          <div style="font-size: 12px; color: #94a3b8; margin-top: 2px;">Terminés</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Liste des dossiers -->
+    <div class="col-span-12">
+      <div style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid #eff6ff;">
+          <div style="background: #eff6ff; border-radius: 8px; padding: 6px 8px;">
+            <i class="pi pi-folder" style="color: #1e3a5f; font-size: 14px;"></i>
+          </div>
+          <span style="font-weight: 700; color: #1e3a5f; font-size: 14px;">Dossiers du client</span>
+        </div>
+
+        <div *ngIf="dossiersDuClient.length === 0" style="text-align: center; padding: 20px; color: #94a3b8;">
+          <i class="pi pi-folder-open" style="font-size: 32px; display: block; margin-bottom: 8px;"></i>
+          Aucun dossier pour ce client
+        </div>
+
+        <div *ngFor="let dos of dossiersDuClient" 
+          style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="background: #eff6ff; border-radius: 8px; padding: 6px 10px;">
+              <i class="pi pi-folder" style="color: #4f46e5; font-size: 13px;"></i>
+            </div>
+            <div>
+              <div style="font-weight: 700; color: #1e3a5f; font-size: 13px;">{{ dos.numero_dossier }}</div>
+              <div style="font-size: 12px; color: #64748b;">{{ dos.objet }}</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <p-tag [value]="dos.statut" [severity]="getStatutSeverity(dos.statut)"></p-tag>
+            <div style="font-size: 11px; color: #94a3b8;">{{ dos.date_ouverture | date:'dd/MM/yyyy' }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statistiques financières -->
+<div class="col-span-12">
+  <div style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px;">
+    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid #dcfce7;">
+      <div style="background: #dcfce7; border-radius: 8px; padding: 6px 8px;">
+        <i class="pi pi-chart-bar" style="color: #16a34a; font-size: 14px;"></i>
+      </div>
+      <span style="font-weight: 700; color: #1e3a5f; font-size: 14px;">Statistiques financières</span>
+    </div>
+    <div style="display: flex; gap: 12px;">
+      <div style="flex:1; background: #f0fdf4; border-radius: 10px; padding: 16px; text-align: center; border: 1px solid #bbf7d0;">
+        <div style="font-size: 20px; font-weight: 700; color: #16a34a;">{{ getTotalPaiements() | number:'1.0-0' }}</div>
+        <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Total paiements (FCFA)</div>
+      </div>
+      <div style="flex:1; background: #eff6ff; border-radius: 10px; padding: 16px; text-align: center; border: 1px solid #bfdbfe;">
+        <div style="font-size: 20px; font-weight: 700; color: #1d4ed8;">{{ getNombrePaiements() }}</div>
+        <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Nombre de paiements</div>
+      </div>
+      <div style="flex:1; background: #fff7ed; border-radius: 10px; padding: 16px; text-align: center; border: 1px solid #fed7aa;">
+        <div style="font-size: 20px; font-weight: 700; color: #ea580c;">{{ getMontantMoyen() | number:'1.0-0' }}</div>
+        <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Montant moyen (FCFA)</div>
+      </div>
+    </div>
+
+    <!-- Liste des paiements -->
+    <div style="margin-top: 16px;">
+      <div *ngIf="paiementsDuClient.length === 0" style="text-align: center; padding: 16px; color: #94a3b8; font-size: 13px;">
+        <i class="pi pi-dollar" style="font-size: 24px; display: block; margin-bottom: 8px;"></i>
+        Aucun paiement enregistré
+      </div>
+      <div *ngFor="let p of paiementsDuClient" 
+        style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="background: #dcfce7; border-radius: 8px; padding: 6px 10px;">
+            <i class="pi pi-dollar" style="color: #16a34a; font-size: 13px;"></i>
+          </div>
+          <div>
+            <div style="font-weight: 600; color: #1e293b; font-size: 13px;">{{ p.type_paiement }}</div>
+            <div style="font-size: 11px; color: #94a3b8;">{{ p.mode_paiement }} · {{ p.date_paiement | date:'dd/MM/yyyy' }}</div>
+          </div>
+        </div>
+        <div style="font-weight: 700; color: #16a34a; font-size: 14px;">{{ p.montant | number:'1.0-0' }} FCFA</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  </div>
+</div>
+
+    <!-- FOOTER -->
+<div style="padding: 16px 28px; background: white; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px;">
+  <p-button label="Fermer" icon="pi pi-times" [outlined]="true" severity="secondary" (click)="detailsDialog = false" />
+  <p-button label="Exporter PDF" icon="pi pi-file-pdf" severity="danger" (click)="exportClientPDF()" />
+  <p-button label="Modifier" icon="pi pi-pencil" severity="info" (click)="editFromDetails()" />
+</div>
+
+  </div>
+</p-dialog>
+<!-- DIALOG MOT DE PASSE CLIENT -->
+
+<!-- DIALOG MOT DE PASSE CLIENT -->
+<p-dialog [(visible)]="motDePasseDialog" [modal]="true" [style]="{ width: '400px' }" [showHeader]="false">
+  <div style="border-radius:12px; overflow:hidden; margin:-1.25rem;">
+    <div style="background:linear-gradient(135deg, #1e3a5f, #2d6a9f); padding:28px; text-align:center;">
+      <div style="width:60px; height:60px; border-radius:50%; background:rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; margin:0 auto 14px;">
+        <i class="pi pi-lock" style="color:white; font-size:26px;"></i>
+      </div>
+      <div style="color:white; font-size:18px; font-weight:700; margin-bottom:6px;">Fiche securisee</div>
+      <div style="color:rgba(255,255,255,0.7); font-size:13px;">Cette fiche client est protegee par mot de passe</div>
+    </div>
+    <div style="padding:24px; background:#f8fafc;">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:8px;">Mot de passe *</label>
+      <input pInputText type="password" [(ngModel)]="motDePasseSaisi"
+        (keyup.enter)="verifierMotDePasse()"
+        placeholder="Entrez le mot de passe..."
+        class="w-full" style="border-radius:8px; border:2px solid #e2e8f0; margin-bottom:16px;" />
+      <p-button label="Confirmer" icon="pi pi-check" (click)="verifierMotDePasse()" styleClass="w-full" />
+      <div style="margin-top:10px;">
+        <p-button label="Annuler" icon="pi pi-times" [outlined]="true" severity="secondary"
+          (click)="motDePasseDialog = false; motDePasseSaisi = ''" styleClass="w-full" />
+      </div>
+    </div>
+  </div>
+</p-dialog>

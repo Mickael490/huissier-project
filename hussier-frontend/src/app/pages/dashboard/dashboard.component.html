@@ -1,0 +1,190 @@
+<div class="dashboard">
+
+  <!-- Header -->
+  <div class="dash-header">
+    <div class="dash-header-left">
+      <div class="dash-title-row">
+        <span class="dash-icon">⚖</span>
+        <div>
+          <h1 class="dash-title">Tableau de bord</h1>
+          <p class="dash-subtitle">{{ today | date:'EEEE d MMMM yyyy' : '' : 'fr' }} — Étude Hussier</p>
+        </div>
+      </div>
+    </div>
+    <div class="dash-header-right">
+      <div class="session-badge">
+        <span class="session-dot"></span>
+        Session active
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-icon--blue">
+        <i class="pi pi-folder-open"></i>
+      </div>
+      <div class="kpi-content">
+        <span class="kpi-label">Dossiers en cours</span>
+        <span class="kpi-value">142</span>
+        <span class="kpi-trend kpi-trend--up"><i class="pi pi-arrow-up"></i> +8 ce mois</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-icon--green">
+        <i class="pi pi-check-circle"></i>
+      </div>
+      <div class="kpi-content">
+        <span class="kpi-label">Dossiers clôturés</span>
+        <span class="kpi-value">37</span>
+        <span class="kpi-trend kpi-trend--neutral"><i class="pi pi-calendar"></i> Ce mois-ci</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-icon--amber">
+        <i class="pi pi-wallet"></i>
+      </div>
+      <div class="kpi-content">
+        <span class="kpi-label">Revenus du mois</span>
+        <span class="kpi-value">4 820 000 <small>FCFA</small></span>
+        <span class="kpi-trend kpi-trend--up"><i class="pi pi-arrow-up"></i> +12% vs mars</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-icon--purple">
+        <i class="pi pi-file-edit"></i>
+      </div>
+      <div class="kpi-content">
+        <span class="kpi-label">Actes rédigés</span>
+        <span class="kpi-value">89</span>
+        <span class="kpi-trend kpi-trend--neutral"><i class="pi pi-calendar"></i> Ce mois-ci</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-icon--teal">
+        <i class="pi pi-calendar"></i>
+      </div>
+      <div class="kpi-content">
+        <span class="kpi-label">Rendez-vous</span>
+        <span class="kpi-value">6</span>
+        <span class="kpi-trend kpi-trend--neutral"><i class="pi pi-clock"></i> Aujourd'hui</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-icon--red">
+        <i class="pi pi-exclamation-triangle"></i>
+      </div>
+      <div class="kpi-content">
+        <span class="kpi-label">Alertes actives</span>
+        <span class="kpi-value kpi-value--danger">4</span>
+        <span class="kpi-trend kpi-trend--down"><i class="pi pi-arrow-up"></i> 2 urgentes</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Grid -->
+  <div class="main-grid">
+
+    <!-- Dossiers récents -->
+    <div class="dash-card dash-card--wide">
+      <div class="card-header">
+        <span class="card-header-title"><i class="pi pi-folder"></i> Dossiers récents</span>
+        <a class="card-header-link" routerLink="/pages/dossiers">Voir tout <i class="pi pi-arrow-right"></i></a>
+      </div>
+      <table class="dash-table">
+        <thead>
+          <tr>
+            <th>Référence</th>
+            <th>Parties</th>
+            <th>Type</th>
+            <th>Statut</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let d of dossiers">
+            <td class="ref-cell">{{ d.ref }}</td>
+            <td class="name-cell">{{ d.parties }}</td>
+            <td class="type-cell">{{ d.type }}</td>
+            <td>
+              <span class="status-pill" [ngClass]="'status-pill--' + d.status">{{ d.statusLabel }}</span>
+            </td>
+            <td class="action-cell">
+              <button pButton icon="pi pi-eye" class="p-button-text p-button-sm p-button-secondary" pTooltip="Voir le dossier"></button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Alertes -->
+    <div class="dash-card">
+      <div class="card-header">
+        <span class="card-header-title"><i class="pi pi-bell"></i> Alertes & urgences</span>
+        <span class="alert-count">4</span>
+      </div>
+      <div class="alert-list">
+        <div class="alert-item" *ngFor="let a of alertes" [ngClass]="'alert-item--' + a.level">
+          <div class="alert-dot" [ngClass]="'alert-dot--' + a.level"></div>
+          <div class="alert-body">
+            <span class="alert-text">{{ a.message }}</span>
+            <span class="alert-time">{{ a.time }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rendez-vous -->
+    <div class="dash-card">
+      <div class="card-header">
+        <span class="card-header-title"><i class="pi pi-calendar-clock"></i> Agenda du jour</span>
+        <a class="card-header-link" routerLink="/pages/agenda">Agenda <i class="pi pi-arrow-right"></i></a>
+      </div>
+      <div class="rdv-list">
+        <div class="rdv-item" *ngFor="let r of rendezvous">
+          <div class="rdv-time">{{ r.heure }}</div>
+          <div class="rdv-bar" [ngClass]="'rdv-bar--' + r.priority"></div>
+          <div class="rdv-info">
+            <span class="rdv-name">{{ r.nom }}</span>
+            <span class="rdv-type">{{ r.type }}</span>
+          </div>
+          <span class="rdv-badge" [ngClass]="'rdv-badge--' + r.priority">{{ r.priority === 'urgent' ? 'Urgent' : '' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actes récents -->
+    <div class="dash-card">
+      <div class="card-header">
+        <span class="card-header-title"><i class="pi pi-file"></i> Actes récents</span>
+        <a class="card-header-link" routerLink="/pages/actes">Voir tout <i class="pi pi-arrow-right"></i></a>
+      </div>
+      <div class="acte-list">
+        <div class="acte-item" *ngFor="let a of actes">
+          <div class="acte-icon-wrap" [ngClass]="'acte-icon-wrap--' + a.color">
+            <i [class]="'pi ' + a.icon"></i>
+          </div>
+          <div class="acte-info">
+            <span class="acte-name">{{ a.titre }}</span>
+            <span class="acte-ref">{{ a.ref }} — {{ a.date }}</span>
+          </div>
+          <span class="acte-state" [ngClass]="'acte-state--' + a.state">{{ a.stateLabel }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Graphique -->
+    <div class="dash-card dash-card--chart">
+      <div class="card-header">
+        <span class="card-header-title"><i class="pi pi-chart-bar"></i> Évolution des dossiers — avril 2026</span>
+      </div>
+      <div class="chart-legend">
+        <span class="legend-item"><span class="legend-dot legend-dot--blue"></span>Nouveaux dossiers</span>
+        <span class="legend-item"><span class="legend-dot legend-dot--green legend-dot--dashed"></span>Clôturés</span>
+      </div>
+      <p-chart type="bar" [data]="chartData" [options]="chartOptions" height="220px"></p-chart>
+    </div>
+
+  </div>
+</div>

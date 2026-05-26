@@ -1,0 +1,63 @@
+<p-toast></p-toast>
+
+<div class="grid grid-cols-12 gap-8">
+  <!-- Carte profil -->
+  <div class="col-span-12 xl:col-span-4">
+    <div class="card text-center">
+      <div class="flex justify-center mb-4">
+        <div class="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center">
+          <i class="pi pi-user text-blue-500" style="font-size: 3rem"></i>
+        </div>
+      </div>
+      <h3 class="text-xl font-bold mb-1">{{ utilisateur.prenom }} {{ utilisateur.nom }}</h3>
+      <p class="text-muted-color mb-4">{{ utilisateur.email }}</p>
+      <p-tag [value]="utilisateur.role" [severity]="getRoleSeverity(utilisateur.role)"></p-tag>
+    </div>
+  </div>
+
+  <!-- Modifier le profil -->
+  <div class="col-span-12 xl:col-span-8">
+    <div class="card mb-6">
+      <h4 class="font-semibold text-xl mb-4">Informations personnelles</h4>
+      <div class="grid grid-cols-12 gap-4">
+        <div class="col-span-6">
+          <label class="font-bold block mb-2">Nom</label>
+          <input pInputText [(ngModel)]="utilisateur.nom" class="w-full" />
+        </div>
+        <div class="col-span-6">
+          <label class="font-bold block mb-2">Prénom</label>
+          <input pInputText [(ngModel)]="utilisateur.prenom" class="w-full" />
+        </div>
+        <div class="col-span-6">
+          <label class="font-bold block mb-2">Email</label>
+          <input pInputText [(ngModel)]="utilisateur.email" class="w-full" disabled />
+        </div>
+        <div class="col-span-6">
+          <label class="font-bold block mb-2">Téléphone</label>
+          <input pInputText [(ngModel)]="utilisateur.telephone" class="w-full" />
+        </div>
+      </div>
+      <div class="mt-4">
+        <p-button label="Mettre à jour" icon="pi pi-check" (click)="updateProfil()"></p-button>
+      </div>
+    </div>
+
+    <!-- Changer mot de passe -->
+    <div class="card">
+      <h4 class="font-semibold text-xl mb-4">Changer le mot de passe</h4>
+      <div class="grid grid-cols-12 gap-4">
+        <div class="col-span-12">
+          <label class="font-bold block mb-2">Nouveau mot de passe</label>
+          <input pInputText type="password" [(ngModel)]="nouveauMotDePasse" class="w-full" />
+        </div>
+        <div class="col-span-12">
+          <label class="font-bold block mb-2">Confirmer le mot de passe</label>
+          <input pInputText type="password" [(ngModel)]="confirmMotDePasse" class="w-full" />
+        </div>
+      </div>
+      <div class="mt-4">
+        <p-button label="Changer le mot de passe" icon="pi pi-lock" severity="secondary" (click)="updateMotDePasse()"></p-button>
+      </div>
+    </div>
+  </div>
+</div>

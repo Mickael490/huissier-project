@@ -1,0 +1,366 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<!-- TOOLBAR -->
+<div style="background:white; border-radius:12px; padding:16px 20px; margin-bottom:20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; justify-content:space-between; align-items:center;">
+  <div style="display:flex; align-items:center; gap:12px;">
+    <div style="background:linear-gradient(135deg, #1e3a5f, #2d6a9f); border-radius:10px; padding:10px 14px;">
+      <i class="pi pi-calendar" style="color:white; font-size:18px;"></i>
+    </div>
+    <div>
+      <div style="font-size:20px; font-weight:700; color:#1e3a5f;">Agenda du cabinet</div>
+      <div style="font-size:12px; color:#94a3b8;">Planification des rendez-vous et missions</div>
+    </div>
+  </div>
+  <div style="display:flex; gap:10px; align-items:center;">
+    <p-button label="Nouveau rendez-vous" icon="pi pi-plus" (click)="openNew()"
+      [ngStyle]="{'background': 'linear-gradient(135deg, #1e3a5f, #2d6a9f)'}"
+      styleClass="border-0"></p-button>
+    <p-button label="Export PDF" icon="pi pi-file-pdf" severity="danger" (click)="exportListePDF()"></p-button>
+  </div>
+</div>
+
+<!-- STATS -->
+<div style="display:flex; gap:16px; margin-bottom:20px;">
+  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #4f46e5;">
+    <div style="background:#ede9fe; border-radius:10px; padding:10px 12px;">
+      <i class="pi pi-calendar" style="color:#4f46e5; font-size:18px;"></i>
+    </div>
+    <div>
+      <div style="font-size:22px; font-weight:700; color:#1e293b;">{{ agendas().length }}</div>
+      <div style="font-size:12px; color:#94a3b8;">Total rendez-vous</div>
+    </div>
+  </div>
+  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #10b981;">
+    <div style="background:#d1fae5; border-radius:10px; padding:10px 12px;">
+      <i class="pi pi-sun" style="color:#10b981; font-size:18px;"></i>
+    </div>
+    <div>
+      <div style="font-size:22px; font-weight:700; color:#1e293b;">{{ rdvAujourdhui() }}</div>
+      <div style="font-size:12px; color:#94a3b8;">Aujourd'hui</div>
+    </div>
+  </div>
+  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #3b82f6;">
+    <div style="background:#dbeafe; border-radius:10px; padding:10px 12px;">
+      <i class="pi pi-clock" style="color:#3b82f6; font-size:18px;"></i>
+    </div>
+    <div>
+      <div style="font-size:22px; font-weight:700; color:#1e293b;">{{ rdvPlanifies() }}</div>
+      <div style="font-size:12px; color:#94a3b8;">Planifiés / Confirmés</div>
+    </div>
+  </div>
+  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #ef4444;">
+    <div style="background:#fef2f2; border-radius:10px; padding:10px 12px;">
+      <i class="pi pi-exclamation-triangle" style="color:#ef4444; font-size:18px;"></i>
+    </div>
+    <div>
+      <div style="font-size:22px; font-weight:700; color:#1e293b;">{{ rdvUrgents() }}</div>
+      <div style="font-size:12px; color:#94a3b8;">Urgents</div>
+    </div>
+  </div>
+</div>
+
+<!-- TABLE -->
+<div style="background:white; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,0.08); overflow:hidden;">
+  <p-table [value]="agendas()" dataKey="id" [paginator]="true" [rows]="10" [rowHover]="true"
+    [sortField]="'date_debut'" [sortOrder]="1">
+    <ng-template #header>
+      <tr style="background:#f8fafc;">
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">RENDEZ-VOUS</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">TYPE</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">DATE & HEURE</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">LIEU</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">STATUT</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">PRIORITÉ</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">ACTIONS</th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-agenda>
+      <tr style="border-bottom:1px solid #f1f5f9;">
+        <td style="padding:14px;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div [style]="'width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:' + (getTypeInfo(agenda.type_rdv)?.color + '20')">
+              <i [class]="getTypeInfo(agenda.type_rdv)?.icon" [style]="'font-size:16px; color:' + getTypeInfo(agenda.type_rdv)?.color"></i>
+            </div>
+            <div>
+              <div style="font-weight:700; color:#1e293b; font-size:14px;">{{ agenda.titre }}</div>
+              <div style="font-size:12px; color:#94a3b8;">{{ agenda.reference }}</div>
+            </div>
+          </div>
+        </td>
+        <td style="padding:14px;">
+          <span style="font-size:13px; color:#475569;">{{ getTypeLabel(agenda.type_rdv) }}</span>
+        </td>
+        <td style="padding:14px;">
+          <div style="font-weight:600; color:#1e293b; font-size:13px;">{{ agenda.date_debut | date:'dd/MM/yyyy' }}</div>
+          <div style="font-size:12px; color:#94a3b8;">{{ agenda.date_debut | date:'HH:mm' }} → {{ agenda.date_fin | date:'HH:mm' }} ({{ getDuree(agenda) }})</div>
+        </td>
+        <td style="padding:14px;">
+          <div style="display:flex; align-items:center; gap:6px;" *ngIf="agenda.lieu">
+            <i class="pi pi-map-marker" style="color:#94a3b8; font-size:12px;"></i>
+            <span style="font-size:13px; color:#475569;">{{ agenda.lieu }}</span>
+          </div>
+          <span *ngIf="!agenda.lieu" style="color:#cbd5e1;">—</span>
+        </td>
+        <td style="padding:14px;">
+          <p-tag [value]="getStatutLabel(agenda.statut)" [severity]="getStatutSeverity(agenda.statut)"></p-tag>
+        </td>
+        <td style="padding:14px;">
+          <div style="display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:12px; font-size:11px; font-weight:700;"
+            [style.background]="getPrioriteInfo(agenda.priorite)?.color + '20'"
+            [style.color]="getPrioriteInfo(agenda.priorite)?.color">
+            {{ agenda.priorite?.toUpperCase() }}
+          </div>
+        </td>
+        <td style="padding:14px;">
+          <div style="display:flex; gap:6px;">
+            <button type="button" pTooltip="Voir détails" (click)="voirDetails(agenda)"
+              style="width:34px; height:34px; border-radius:50%; border:1.5px solid #2d6a9f; background:transparent; color:#2d6a9f; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+              <i class="pi pi-eye" style="font-size:13px;"></i>
+            </button>
+            <button type="button" pTooltip="Modifier" (click)="editAgenda(agenda)"
+              style="width:34px; height:34px; border-radius:50%; border:1.5px solid #0ea5e9; background:transparent; color:#0ea5e9; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+              <i class="pi pi-pencil" style="font-size:13px;"></i>
+            </button>
+            <button type="button" pTooltip="Supprimer" (click)="deleteAgenda(agenda)"
+              style="width:34px; height:34px; border-radius:50%; border:1.5px solid #ef4444; background:transparent; color:#ef4444; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+              <i class="pi pi-trash" style="font-size:13px;"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #empty>
+      <tr>
+        <td colspan="7" style="text-align:center; padding:40px; color:#94a3b8;">
+          <i class="pi pi-calendar" style="font-size:36px; display:block; margin-bottom:8px;"></i>
+          Aucun rendez-vous planifié
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- DIALOG CREATION/MODIFICATION -->
+<p-dialog [(visible)]="agendaDialog" [header]="isEditMode ? 'Modifier le rendez-vous' : 'Nouveau rendez-vous'" [modal]="true" [style]="{ width: '750px' }">
+  <div class="grid grid-cols-12 gap-4">
+
+    <!-- Type RDV -->
+    <div class="col-span-12">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:8px;">Type de rendez-vous *</label>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <div *ngFor="let t of typeOptions" (click)="agenda.type_rdv = t.value"
+          [style]="'flex:1; min-width:80px; padding:10px 8px; border-radius:10px; cursor:pointer; text-align:center; border:2px solid ' + (agenda.type_rdv === t.value ? t.color : '#e2e8f0') + '; background:' + (agenda.type_rdv === t.value ? '#f8faff' : 'white')">
+          <i [class]="t.icon" [style]="'font-size:16px; display:block; margin-bottom:4px; color:' + t.color"></i>
+          <div style="font-size:10px; font-weight:600; color:#1e3a5f;">{{ t.label }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-span-12">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Titre *</label>
+      <input pInputText [(ngModel)]="agenda.titre" class="w-full" style="border-radius:8px;" placeholder="Titre du rendez-vous" />
+      <small class="p-error" *ngIf="submitted && !agenda.titre">Obligatoire</small>
+    </div>
+
+    <div class="col-span-4">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Statut</label>
+      <select [(ngModel)]="agenda.statut" class="w-full p-inputtext" style="border-radius:8px;">
+        <option *ngFor="let s of statutOptions" [value]="s.value">{{ s.label }}</option>
+      </select>
+    </div>
+
+    <div class="col-span-4">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Priorité</label>
+      <select [(ngModel)]="agenda.priorite" class="w-full p-inputtext" style="border-radius:8px;">
+        <option *ngFor="let p of prioriteOptions" [value]="p.value">{{ p.label }}</option>
+      </select>
+    </div>
+
+    <div class="col-span-4">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Lieu</label>
+      <input pInputText [(ngModel)]="agenda.lieu" class="w-full" style="border-radius:8px;" placeholder="Adresse ou salle" />
+    </div>
+
+    <div class="col-span-6">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Date début *</label>
+      <input pInputText type="datetime-local" [(ngModel)]="agenda.date_debut" class="w-full" style="border-radius:8px;" />
+      <small class="p-error" *ngIf="submitted && !agenda.date_debut">Obligatoire</small>
+    </div>
+
+    <div class="col-span-6">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Date fin *</label>
+      <input pInputText type="datetime-local" [(ngModel)]="agenda.date_fin" class="w-full" style="border-radius:8px;" />
+      <small class="p-error" *ngIf="submitted && !agenda.date_fin">Obligatoire</small>
+    </div>
+
+    <div class="col-span-6">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Agent responsable *</label>
+      <select [(ngModel)]="agenda.id_utilisateur" class="w-full p-inputtext" style="border-radius:8px;">
+        <option [ngValue]="undefined">-- Sélectionner --</option>
+        <option *ngFor="let u of utilisateurs" [ngValue]="u.id">{{ u.prenom }} {{ u.nom }}</option>
+      </select>
+      <small class="p-error" *ngIf="submitted && !agenda.id_utilisateur">Obligatoire</small>
+    </div>
+
+    <div class="col-span-6">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Dossier lié</label>
+      <select [(ngModel)]="agenda.id_dossier" class="w-full p-inputtext" style="border-radius:8px;">
+        <option [ngValue]="undefined">-- Sélectionner --</option>
+        <option *ngFor="let d of dossiers" [ngValue]="d.id">{{ d.numero_dossier }} — {{ d.objet }}</option>
+      </select>
+    </div>
+
+    <div class="col-span-6">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Client concerné</label>
+      <select [(ngModel)]="agenda.id_client" class="w-full p-inputtext" style="border-radius:8px;">
+        <option [ngValue]="undefined">-- Sélectionner --</option>
+        <option *ngFor="let c of clients" [ngValue]="c.id">{{ c.nom }}</option>
+      </select>
+    </div>
+
+    <div class="col-span-6">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Rappel (minutes avant)</label>
+      <input pInputText type="number" [(ngModel)]="agenda.rappel_minutes_avant" class="w-full" style="border-radius:8px;" />
+    </div>
+
+    <div class="col-span-12">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Description</label>
+      <textarea pInputTextarea [(ngModel)]="agenda.description" rows="2" class="w-full" style="border-radius:8px;" placeholder="Détails du rendez-vous..."></textarea>
+    </div>
+
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Annuler" icon="pi pi-times" text (click)="hideDialog()" />
+    <p-button [label]="isEditMode ? 'Mettre à jour' : 'Planifier'" icon="pi pi-calendar-plus" (click)="saveAgenda()" />
+  </ng-template>
+</p-dialog>
+
+<!-- DIALOG DETAILS -->
+<p-dialog [(visible)]="detailsDialog" [modal]="true" [style]="{ width: '650px' }" [showHeader]="false">
+  <div *ngIf="agendaSelectionne" style="border-radius:12px; overflow:hidden; margin:-1.25rem;">
+
+    <!-- En-tête coloré -->
+    <div [style]="'padding:24px 28px 20px; background:linear-gradient(135deg,' + (getTypeInfo(agendaSelectionne.type_rdv)?.color || '#1e3a5f') + ', #1e3a5f)'">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div style="width:52px; height:52px; border-radius:12px; background:rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center;">
+            <i [class]="getTypeInfo(agendaSelectionne.type_rdv)?.icon" style="font-size:22px; color:white;"></i>
+          </div>
+          <div>
+            <div style="color:rgba(255,255,255,0.7); font-size:11px; font-weight:600; letter-spacing:2px; text-transform:uppercase; margin-bottom:4px;">RENDEZ-VOUS</div>
+            <div style="color:white; font-size:18px; font-weight:700;">{{ agendaSelectionne.titre }}</div>
+            <div style="color:rgba(255,255,255,0.7); font-size:12px; margin-top:2px;">{{ agendaSelectionne.reference }}</div>
+          </div>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+          <p-tag [value]="getStatutLabel(agendaSelectionne.statut)" [severity]="getStatutSeverity(agendaSelectionne.statut)"></p-tag>
+          <button type="button" (click)="detailsDialog = false"
+            style="background:rgba(255,255,255,0.15); border:none; border-radius:6px; color:white; cursor:pointer; padding:5px 10px; font-size:12px;">
+            <i class="pi pi-times" style="margin-right:4px;"></i>Fermer
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Corps -->
+    <div style="padding:20px 28px; background:#f8fafc;">
+      <div class="grid grid-cols-12 gap-4">
+
+        <!-- Date & heure -->
+        <div class="col-span-6">
+          <div style="background:white; border:1px solid #e2e8f0; border-radius:10px; padding:16px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid #eff6ff;">
+              <div style="background:#eff6ff; border-radius:8px; padding:5px 7px;">
+                <i class="pi pi-clock" style="color:#1e3a5f; font-size:13px;"></i>
+              </div>
+              <span style="font-weight:700; color:#1e3a5f; font-size:13px;">Date & Heure</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px; font-size:13px;">
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b;">Début</span>
+                <span style="font-weight:600; color:#1e293b;">{{ agendaSelectionne.date_debut | date:'dd/MM/yyyy HH:mm' }}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b;">Fin</span>
+                <span style="font-weight:600; color:#1e293b;">{{ agendaSelectionne.date_fin | date:'dd/MM/yyyy HH:mm' }}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b;">Durée</span>
+                <span style="font-weight:700; color:#4f46e5;">{{ getDuree(agendaSelectionne) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Infos -->
+        <div class="col-span-6">
+          <div style="background:white; border:1px solid #e2e8f0; border-radius:10px; padding:16px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid #f0fdf4;">
+              <div style="background:#f0fdf4; border-radius:8px; padding:5px 7px;">
+                <i class="pi pi-info-circle" style="color:#16a34a; font-size:13px;"></i>
+              </div>
+              <span style="font-weight:700; color:#1e3a5f; font-size:13px;">Informations</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px; font-size:13px;">
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b;">Type</span>
+                <span style="font-weight:600; color:#1e293b;">{{ getTypeLabel(agendaSelectionne.type_rdv) }}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b;">Priorité</span>
+                <span style="font-weight:700;" [style.color]="getPrioriteInfo(agendaSelectionne.priorite)?.color">{{ agendaSelectionne.priorite?.toUpperCase() }}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;" *ngIf="agendaSelectionne.lieu">
+                <span style="color:#64748b;">Lieu</span>
+                <span style="font-weight:600; color:#1e293b;">{{ agendaSelectionne.lieu }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Agent & Dossier -->
+        <div class="col-span-12">
+          <div style="background:white; border:1px solid #e2e8f0; border-radius:10px; padding:16px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid #fff7ed;">
+              <div style="background:#fff7ed; border-radius:8px; padding:5px 7px;">
+                <i class="pi pi-users" style="color:#f97316; font-size:13px;"></i>
+              </div>
+              <span style="font-weight:700; color:#1e3a5f; font-size:13px;">Participants & Dossier</span>
+            </div>
+            <div style="display:flex; gap:20px; font-size:13px;">
+              <div style="flex:1;">
+                <div style="color:#64748b; margin-bottom:2px;">Agent responsable</div>
+                <div style="font-weight:700; color:#1e293b;">{{ getUtilisateurLabel(agendaSelectionne.id_utilisateur) }}</div>
+              </div>
+              <div style="flex:1;" *ngIf="agendaSelectionne.id_dossier">
+                <div style="color:#64748b; margin-bottom:2px;">Dossier</div>
+                <div style="font-weight:700; color:#4f46e5;">{{ getDossierLabel(agendaSelectionne.id_dossier) }}</div>
+              </div>
+              <div style="flex:1;" *ngIf="agendaSelectionne.id_client">
+                <div style="color:#64748b; margin-bottom:2px;">Client</div>
+                <div style="font-weight:600; color:#1e293b;">{{ getClientLabel(agendaSelectionne.id_client) }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="col-span-12" *ngIf="agendaSelectionne.description">
+          <div style="background:white; border:1px solid #e2e8f0; border-radius:10px; padding:16px;">
+            <div style="font-weight:700; color:#1e3a5f; font-size:13px; margin-bottom:8px;">Description</div>
+            <p style="font-size:13px; color:#475569; margin:0;">{{ agendaSelectionne.description }}</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="padding:14px 28px; background:white; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; gap:10px;">
+      <p-button label="Fermer" icon="pi pi-times" [outlined]="true" severity="secondary" (click)="detailsDialog = false" />
+      <p-button label="Modifier" icon="pi pi-pencil" severity="info" (click)="editFromDetails()" />
+    </div>
+
+  </div>
+</p-dialog>

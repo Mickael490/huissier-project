@@ -1,0 +1,442 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<!-- TOOLBAR -->
+<div style="background: white; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; justify-content: space-between; align-items: center;">
+  <div style="display: flex; align-items: center; gap: 12px;">
+    <div style="background: linear-gradient(135deg, #1e3a5f, #2d6a9f); border-radius: 10px; padding: 10px 14px;">
+      <i class="pi pi-folder-open" style="color: white; font-size: 18px;"></i>
+    </div>
+    <div>
+      <div style="font-size: 20px; font-weight: 700; color: #1e3a5f;">Gestion des dossiers</div>
+      <div style="font-size: 12px; color: #94a3b8;">Cabinet d'huissier de justice</div>
+    </div>
+  </div>
+  <div style="display: flex; gap: 10px; align-items: center;">
+    <span class="p-input-icon-left" style="position: relative;">
+      <i class="pi pi-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; z-index: 1;"></i>
+      <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Rechercher un dossier..." style="padding-left: 36px; border-radius: 8px; border: 1px solid #e2e8f0; height: 38px; width: 220px;" />
+    </span>
+    <p-button label="Nouveau dossier" icon="pi pi-plus" (click)="openNew()"
+      [ngStyle]="{'background': 'linear-gradient(135deg, #1e3a5f, #2d6a9f)'}"
+      styleClass="border-0"></p-button>
+    <p-button label="Supprimer" icon="pi pi-trash" severity="danger" [outlined]="true"
+      (click)="deleteSelectedDossiers()"
+      [disabled]="!selectedDossiers || !selectedDossiers.length"></p-button>
+    <p-button label="Export PDF" icon="pi pi-file-pdf" severity="danger" (click)="exportPDF()"></p-button>
+  </div>
+</div>
+
+<!-- TABLE -->
+<div style="background: white; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: hidden;">
+  <p-table
+    #dt
+    [value]="dossiers()"
+    dataKey="id"
+    [paginator]="true"
+    [rows]="10"
+    [rowsPerPageOptions]="[10,20,30]"
+    [rowHover]="true"
+    [(selection)]="selectedDossiers"
+    [globalFilterFields]="['numero_dossier','objet','type_dossier','statut']"
+    [tableStyle]="{ 'min-width': '75rem' }"
+  >
+    <ng-template #header>
+      <tr style="background: #f8fafc;">
+        <th style="width: 3rem; padding: 14px;"><p-tableHeaderCheckbox /></th>
+        <th style="min-width: 12rem; padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">NUMÉRO</th>
+        <th style="min-width: 16rem; padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">OBJET</th>
+        <th style="min-width: 12rem; padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">CLIENT</th>
+        <th style="min-width: 10rem; padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">TYPE</th>
+        <th style="min-width: 10rem; padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">STATUT</th>
+        <th style="min-width: 12rem; padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">DATE OUVERTURE</th>
+        <th style="width: 14rem; padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">ACTIONS</th>
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-dossier>
+      <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.2s;">
+        <td style="padding: 14px;"><p-tableCheckbox [value]="dossier" /></td>
+        <td style="padding: 14px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="background: #eff6ff; border-radius: 6px; padding: 4px 10px;">
+              <span style="font-weight: 700; color: #1e3a5f; font-size: 13px;">{{ dossier.numero_dossier }}</span>
+            </div>
+            <span *ngIf="dossier.mot_de_passe" title="Dossier verrouillé">🔒</span>
+          </div>
+        </td>
+        <td style="padding: 14px;">
+          <span style="color: #334155; font-size: 14px;">{{ dossier.objet }}</span>
+        </td>
+        <td style="padding: 14px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #1e3a5f, #2d6a9f); display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 700;">
+              {{ getClientNomComplet(dossier.client_id).charAt(0) }}
+            </div>
+            <span style="font-size: 14px; color: #334155;">{{ getClientNomComplet(dossier.client_id) }}</span>
+          </div>
+        </td>
+        <td style="padding: 14px;">
+          <span style="background: #f1f5f9; color: #475569; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: capitalize;">
+            {{ dossier.type_dossier }}
+          </span>
+        </td>
+        <td style="padding: 14px;">
+          <p-tag [value]="dossier.statut" [severity]="getStatutSeverity(dossier.statut)"></p-tag>
+        </td>
+        <td style="padding: 14px;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <i class="pi pi-calendar" style="color: #94a3b8; font-size: 12px;"></i>
+            <span style="font-size: 13px; color: #475569;">{{ dossier.date_ouverture | date:'dd/MM/yyyy' }}</span>
+          </div>
+        </td>
+        <td style="padding: 14px;">
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <button type="button" pTooltip="Voir détails" tooltipPosition="top"
+              (click)="voirDetails(dossier)"
+              style="width:34px; height:34px; border-radius:50%; border:1.5px solid #2d6a9f; background:transparent; color:#2d6a9f; cursor:pointer; display:flex; align-items:center; justify-content:center;"
+              onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='transparent'">
+              <i class="pi pi-eye" style="font-size:13px;"></i>
+            </button>
+            <button type="button" pTooltip="Modifier" tooltipPosition="top"
+              (click)="editDossier(dossier)"
+              style="width:34px; height:34px; border-radius:50%; border:1.5px solid #0ea5e9; background:transparent; color:#0ea5e9; cursor:pointer; display:flex; align-items:center; justify-content:center;"
+              onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background='transparent'">
+              <i class="pi pi-pencil" style="font-size:13px;"></i>
+            </button>
+            <button type="button" pTooltip="Supprimer" tooltipPosition="top"
+              (click)="deleteDossier(dossier)"
+              style="width:34px; height:34px; border-radius:50%; border:1.5px solid #ef4444; background:transparent; color:#ef4444; cursor:pointer; display:flex; align-items:center; justify-content:center;"
+              onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='transparent'">
+              <i class="pi pi-trash" style="font-size:13px;"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template #empty>
+      <tr>
+        <td colspan="8" style="text-align: center; padding: 60px 20px;">
+          <div style="color: #94a3b8;">
+            <i class="pi pi-folder-open" style="font-size: 48px; display: block; margin-bottom: 12px;"></i>
+            <div style="font-size: 16px; font-weight: 600; margin-bottom: 4px;">Aucun dossier trouvé</div>
+            <div style="font-size: 13px;">Créez un nouveau dossier pour commencer</div>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- DIALOG CREATION/MODIFICATION -->
+<p-dialog
+  [(visible)]="dossierDialog"
+  [header]="isEditMode ? 'Modifier le dossier' : 'Nouveau dossier'"
+  [modal]="true"
+  [style]="{ width: '720px' }"
+  [draggable]="false"
+>
+  <div style="padding: 8px 0;">
+    <div class="grid grid-cols-12 gap-4">
+
+      <div class="col-span-12" *ngIf="isEditMode">
+        <label style="font-weight: 600; color: #1e3a5f; font-size: 13px; display: block; margin-bottom: 6px;">Numéro de dossier</label>
+        <input pInputText [(ngModel)]="dossier.numero_dossier" disabled class="w-full" style="background: #f8fafc; border-radius: 8px;" />
+      </div>
+
+      <div class="col-span-12">
+        <label style="font-weight: 600; color: #1e3a5f; font-size: 13px; display: block; margin-bottom: 6px;">Objet <span style="color: red;">*</span></label>
+        <input pInputText [(ngModel)]="dossier.objet" class="w-full" placeholder="Objet du dossier" style="border-radius: 8px;" />
+        <small class="p-error" *ngIf="submitted && !dossier.objet">L'objet est obligatoire</small>
+      </div>
+
+      <div class="col-span-6">
+        <label style="font-weight: 600; color: #1e3a5f; font-size: 13px; display: block; margin-bottom: 6px;">Type <span style="color: red;">*</span></label>
+        <select [(ngModel)]="dossier.type_dossier" class="w-full p-inputtext" style="border-radius: 8px; height: 42px;">
+          <option value="">-- Sélectionner --</option>
+          <option value="contentieux">Contentieux</option>
+          <option value="recouvrement">Recouvrement</option>
+          <option value="constat">Constat</option>
+          <option value="signification">Signification</option>
+          <option value="saisie">Saisie</option>
+          <option value="expulsion">Expulsion</option>
+          <option value="autre">Autre</option>
+        </select>
+      </div>
+
+      <div class="col-span-6">
+        <label style="font-weight: 600; color: #1e3a5f; font-size: 13px; display: block; margin-bottom: 6px;">Statut</label>
+        <select [(ngModel)]="dossier.statut" class="w-full p-inputtext" style="border-radius: 8px; height: 42px;">
+          <option value="nouveau">Nouveau</option>
+          <option value="en_cours">En cours</option>
+          <option value="en_attente">En attente</option>
+          <option value="termine">Terminé</option>
+          <option value="archive">Archivé</option>
+          <option value="annule">Annulé</option>
+        </select>
+      </div>
+
+      <div class="col-span-12">
+        <label style="font-weight: 600; color: #1e3a5f; font-size: 13px; display: block; margin-bottom: 6px;">Description</label>
+        <textarea pInputTextarea [(ngModel)]="dossier.description" rows="3" class="w-full" placeholder="Description du dossier..." style="border-radius: 8px;"></textarea>
+      </div>
+
+      <!-- ✅ Montant principal -->
+      <div class="col-span-4">
+        <label style="font-weight: 600; color: #1e3a5f; font-size: 13px; display: block; margin-bottom: 6px;">Montant principal</label>
+        <input pInputText type="number" [(ngModel)]="dossier.montant_principal"
+          (ngModelChange)="calculerMontantTotal()"
+          class="w-full" style="border-radius: 8px;" />
+      </div>
+
+      <!-- ✅ Montant frais -->
+      <div class="col-span-4">
+        <label style="font-weight: 600; color: #1e3a5f; font-size: 13px; display: block; margin-bottom: 6px;">Montant frais</label>
+        <input pInputText type="number" [(ngModel)]="dossier.montant_frais"
+          (ngModelChange)="calculerMontantTotal()"
+          class="w-full" style="border-radius: 8px;" />
+      </div>
+
+      <!-- ✅ Montant total calculé automatiquement -->
+      <div class="col-span-4">
+        <label style="font-weight: 600; color: #1e3a5f; font-size: 13px; display: block; margin-bottom: 6px;">Montant total</label>
+        <input pInputText type="number" [ngModel]="dossier.montant_total" readonly
+          class="w-full" style="background: #f0fdf4; border-radius: 8px; color: #16a34a; font-weight: 700; border: 1.5px solid #bbf7d0;" />
+      </div>
+
+      <div class="col-span-4">
+        <label style="font-weight: 600; color: #1e3a5f; font-size: 13px; display: block; margin-bottom: 6px;">Cabinet <span style="color: red;">*</span></label>
+        <select [(ngModel)]="dossier.cabinet_id" class="w-full p-inputtext" style="border-radius: 8px; height: 42px;">
+          <option [ngValue]="undefined">-- Sélectionner --</option>
+          <option *ngFor="let c of cabinets" [ngValue]="c.id">{{ c.nom }}</option>
+        </select>
+      </div>
+
+      <!-- ✅ Client nom + prénom -->
+      <div class="col-span-4">
+        <label style="font-weight: 600; color: #1e3a5f; font-size: 13px; display: block; margin-bottom: 6px;">Client</label>
+        <select [(ngModel)]="dossier.client_id" class="w-full p-inputtext" style="border-radius: 8px; height: 42px;">
+          <option [ngValue]="undefined">-- Sélectionner --</option>
+          <option *ngFor="let cl of clients" [ngValue]="cl.id">
+            {{ cl.prenom ? cl.nom + ' ' + cl.prenom : cl.nom }}
+          </option>
+        </select>
+      </div>
+
+      <!-- ✅ Responsable nom + prénom -->
+      <div class="col-span-4">
+        <label style="font-weight: 600; color: #1e3a5f; font-size: 13px; display: block; margin-bottom: 6px;">Responsable</label>
+        <select [(ngModel)]="dossier.utilisateur_responsable_id" class="w-full p-inputtext" style="border-radius: 8px; height: 42px;">
+          <option [ngValue]="undefined">-- Sélectionner --</option>
+          <option *ngFor="let u of utilisateurs" [ngValue]="u.id">
+            {{ u.prenom ? u.nom + ' ' + u.prenom : u.nom }}
+          </option>
+        </select>
+      </div>
+
+      <div class="col-span-6">
+        <label style="font-weight: 600; color: #1e3a5f; font-size: 13px; display: block; margin-bottom: 6px;">Date d'ouverture</label>
+        <input pInputText type="date" [(ngModel)]="dossier.date_ouverture" class="w-full" style="border-radius: 8px;" />
+      </div>
+      <div class="col-span-6">
+        <label style="font-weight: 600; color: #1e3a5f; font-size: 13px; display: block; margin-bottom: 6px;">Date de clôture</label>
+        <input pInputText type="date" [(ngModel)]="dossier.date_cloture" class="w-full" style="border-radius: 8px;" />
+      </div>
+
+    </div>
+  </div>
+
+    <!-- Securisation optionnelle -->
+    <div class="col-span-12">
+      <div style="background:#f8fafc; border-radius:10px; padding:14px 16px; border-left:4px solid #f97316; margin-top:8px;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+          <input type="checkbox" [(ngModel)]="protegerParMotDePasse" style="width:16px; height:16px; cursor:pointer;" />
+          <label style="font-weight:700; color:#1e3a5f; font-size:13px; cursor:pointer;">
+            <i class="pi pi-lock" style="color:#f97316; margin-right:4px;"></i>
+            Proteger ce dossier par mot de passe
+          </label>
+        </div>
+        <div *ngIf="protegerParMotDePasse" style="display:flex; gap:10px; align-items:center;">
+          <input pInputText type="password" [(ngModel)]="dossier.mot_de_passe"
+            placeholder="Entrez un mot de passe..."
+            style="flex:1; border-radius:8px; border:1.5px solid #f97316;" />
+          <i class="pi pi-shield" style="color:#f97316; font-size:18px;"></i>
+        </div>
+      </div>
+    </div>
+
+  <ng-template pTemplate="footer">
+    <div style="display: flex; justify-content: flex-end; gap: 10px; padding-top: 8px; border-top: 1px solid #e2e8f0;">
+      <p-button label="Annuler" icon="pi pi-times" [outlined]="true" severity="secondary" (click)="hideDialog()" />
+      <p-button [label]="isEditMode ? 'Mettre à jour' : 'Enregistrer'" icon="pi pi-check" (click)="saveDossier()" />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- DIALOG DETAILS -->
+<p-dialog
+  [(visible)]="detailsDialog"
+  header="Dossier juridique"
+  [modal]="true"
+  [style]="{ width: '850px' }"
+  [draggable]="false"
+>
+<div *ngIf="dossierSelectionne">
+
+    <!-- EN-TÊTE -->
+    <div style="background: linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 100%); border-radius: 12px; padding: 24px; margin-bottom: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+          <div style="color: #a8d4f5; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px;">RÉFÉRENCE DOSSIER</div>
+          <div style="color: white; font-size: 26px; font-weight: 700; margin-bottom: 4px;">
+            {{ dossierSelectionne.numero_dossier }}
+            <span *ngIf="dossierSelectionne.mot_de_passe" style="font-size: 16px; margin-left: 8px;">🔒</span>
+          </div>
+          <div style="color: #cbd5e1; font-size: 15px;">{{ dossierSelectionne.objet }}</div>
+        </div>
+        <div style="text-align: right;">
+          <p-tag [value]="dossierSelectionne.statut" [severity]="getStatutSeverity(dossierSelectionne.statut)"></p-tag>
+          <div style="color: #94a3b8; font-size: 12px; margin-top: 8px;">
+            Ouvert le {{ dossierSelectionne.date_ouverture | date:'dd/MM/yyyy' }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-12 gap-4">
+
+      <!-- Infos générales -->
+      <div class="col-span-6">
+        <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; height: 100%;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0;">
+            <span style="background: #eff6ff; padding: 6px; border-radius: 8px;">📋</span>
+            <span style="font-weight: 700; color: #1e3a5f; font-size: 14px;">Informations générales</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: #64748b; font-size: 13px;">Type</span>
+              <span style="font-weight: 600; color: #1e293b; font-size: 13px; background: #f1f5f9; padding: 3px 10px; border-radius: 20px; text-transform: capitalize;">{{ dossierSelectionne.type_dossier }}</span>
+            </div>
+
+            <!-- ✅ Client nom + prénom + avatar -->
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: #64748b; font-size: 13px;">Client</span>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <div style="width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, #1e3a5f, #2d6a9f); display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: 700;">
+                  {{ getClientNomComplet(dossierSelectionne.client_id).charAt(0) }}
+                </div>
+                <span style="font-weight: 600; color: #1e293b; font-size: 13px;">{{ getClientNomComplet(dossierSelectionne.client_id) }}</span>
+              </div>
+            </div>
+
+            <!-- ✅ Responsable nom + prénom -->
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: #64748b; font-size: 13px;">Responsable</span>
+              <span style="font-weight: 600; color: #1e293b; font-size: 13px;">{{ getResponsableNomComplet(dossierSelectionne.utilisateur_responsable_id) }}</span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: #64748b; font-size: 13px;">Date d'ouverture</span>
+              <span style="font-weight: 600; color: #1e293b; font-size: 13px;">{{ dossierSelectionne.date_ouverture | date:'dd/MM/yyyy' }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: #64748b; font-size: 13px;">Date de clôture</span>
+              <span style="font-weight: 600; color: #1e293b; font-size: 13px;">
+                {{ dossierSelectionne.date_cloture ? (dossierSelectionne.date_cloture | date:'dd/MM/yyyy') : '—' }}
+              </span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: #64748b; font-size: 13px;">Protection</span>
+              <span style="font-size: 13px; font-weight: 600;" [style.color]="dossierSelectionne.mot_de_passe ? '#f59e0b' : '#22c55e'">
+                {{ dossierSelectionne.mot_de_passe ? '🔒 Verrouillé' : '🔓 Libre' }}
+              </span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+     <!-- Infos financières -->
+<!-- Infos financières -->
+<div class="col-span-6">
+  <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; height: 100%;">
+    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0;">
+      <span style="background: #f0fdf4; padding: 6px; border-radius: 8px;">💰</span>
+      <span style="font-weight: 700; color: #1e3a5f; font-size: 14px;">Informations financières</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #f8fafc; border-radius: 8px; border-left: 3px solid #16a34a;">
+        <span style="color: #64748b; font-size: 13px;">Montant principal</span>
+        <span style="font-weight: 700; color: #16a34a; font-size: 14px;">
+          {{ dossierSelectionne.montant_principal ? (dossierSelectionne.montant_principal | number:'1.0-0') : '0' }} FCFA
+        </span>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #f8fafc; border-radius: 8px; border-left: 3px solid #ea580c;">
+        <span style="color: #64748b; font-size: 13px;">Montant frais</span>
+        <span style="font-weight: 700; color: #ea580c; font-size: 14px;">
+          {{ dossierSelectionne.montant_frais ? (dossierSelectionne.montant_frais | number:'1.0-0') : '0' }} FCFA
+        </span>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px; background: linear-gradient(135deg, #1e3a5f, #2d6a9f); border-radius: 8px;">
+        <span style="color: #a8d4f5; font-size: 13px; font-weight: 600;">
+          <i class="pi pi-calculator" style="margin-right: 6px;"></i>Montant total
+        </span>
+        <span style="font-weight: 700; color: white; font-size: 16px;">
+          {{ dossierSelectionne.montant_total ? (dossierSelectionne.montant_total | number:'1.0-0') : '0' }} FCFA
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+      <!-- Description -->
+     <div class="col-span-12">
+        <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0;">
+            <span style="background: #fdf4ff; padding: 6px; border-radius: 8px;">📝</span>
+            <span style="font-weight: 700; color: #1e3a5f; font-size: 14px;">Description</span>
+          </div>
+         <p style="color: #475569; font-size: 14px; line-height: 1.6; margin: 0;">
+  {{ dossierSelectionne.description || '—' }}
+         </p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div style="display: flex; justify-content: flex-end; gap: 10px; padding-top: 8px; border-top: 1px solid #e2e8f0;">
+      <p-button label="Fermer" icon="pi pi-times" [outlined]="true" severity="secondary" (click)="detailsDialog = false" />
+      <p-button label="Modifier" icon="pi pi-pencil" severity="info" (click)="editFromDetails()" />
+      <p-button label="Exporter PDF" icon="pi pi-file-pdf" severity="danger" (click)="exportDossierPDF()" />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- DIALOG MOT DE PASSE DOSSIER -->
+<p-dialog [(visible)]="motDePasseDialog" [modal]="true" [style]="{ width: '400px' }" [showHeader]="false">
+  <div style="border-radius:12px; overflow:hidden; margin:-1.25rem;">
+    <div style="background:linear-gradient(135deg, #1e3a5f, #2d6a9f); padding:28px; text-align:center;">
+      <div style="width:60px; height:60px; border-radius:50%; background:rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; margin:0 auto 14px;">
+        <i class="pi pi-lock" style="color:white; font-size:26px;"></i>
+      </div>
+      <div style="color:white; font-size:18px; font-weight:700; margin-bottom:6px;">Dossier securise</div>
+      <div style="color:rgba(255,255,255,0.7); font-size:13px;">Ce dossier est protege par mot de passe</div>
+    </div>
+    <div style="padding:24px; background:#f8fafc;">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:8px;">Mot de passe *</label>
+      <input pInputText type="password" [(ngModel)]="motDePasseSaisi"
+        (keyup.enter)="verifierMotDePasse()"
+        placeholder="Entrez le mot de passe..."
+        class="w-full" style="border-radius:8px; border:2px solid #e2e8f0; margin-bottom:16px;" />
+      <p-button label="Confirmer" icon="pi pi-check" (click)="verifierMotDePasse()" styleClass="w-full" />
+      <div style="margin-top:10px;">
+        <p-button label="Annuler" icon="pi pi-times" [outlined]="true" severity="secondary"
+          (click)="motDePasseDialog = false; motDePasseSaisi = ''" styleClass="w-full" />
+      </div>
+    </div>
+  </div>
+</p-dialog>

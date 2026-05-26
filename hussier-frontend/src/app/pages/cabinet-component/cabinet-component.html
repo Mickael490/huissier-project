@@ -1,0 +1,287 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<!-- TOOLBAR -->
+<div style="background:white; border-radius:12px; padding:16px 20px; margin-bottom:20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; justify-content:space-between; align-items:center;">
+  <div style="display:flex; align-items:center; gap:12px;">
+    <div style="background:linear-gradient(135deg, #1e3a5f, #2d6a9f); border-radius:10px; padding:10px 14px;">
+      <i class="pi pi-building" style="color:white; font-size:18px;"></i>
+    </div>
+    <div>
+      <div style="font-size:20px; font-weight:700; color:#1e3a5f;">Gestion du cabinet</div>
+      <div style="font-size:12px; color:#94a3b8;">Informations et parametres du cabinet d'huissier</div>
+    </div>
+  </div>
+  <div style="display:flex; gap:10px; align-items:center;">
+    <span style="position:relative;">
+      <i class="pi pi-search" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#94a3b8; z-index:1;"></i>
+      <input pInputText type="text" #searchInput (input)="onGlobalFilter(dt, $event)" placeholder="Rechercher..."
+        style="padding-left:36px; border-radius:8px; border:1px solid #e2e8f0; height:38px; width:220px;" />
+    </span>
+    <p-button label="Nouveau cabinet" icon="pi pi-plus" (click)="openNew()"
+      [ngStyle]="{'background': 'linear-gradient(135deg, #1e3a5f, #2d6a9f)'}"
+      styleClass="border-0"></p-button>
+    <p-button label="Export PDF" icon="pi pi-file-pdf" severity="danger" (click)="exportListePDF()"></p-button>
+  </div>
+</div>
+
+<!-- TABLE -->
+<div style="background:white; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,0.08); overflow:hidden;">
+  <p-table #dt [value]="cabinets()" dataKey="id" [paginator]="true" [rows]="10"
+    [rowHover]="true" [(selection)]="selectedCabinets"
+    [globalFilterFields]="['nom','ville','telephone','email','numero_agrement']">
+    <ng-template #header>
+      <tr style="background:#f8fafc;">
+        <th style="width:3rem; padding:14px;"><p-tableHeaderCheckbox /></th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">CABINET</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">COORDONNEES</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">AGREMENT</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">STATUT</th>
+        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">ACTIONS</th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-cabinet>
+      <tr style="border-bottom:1px solid #f1f5f9;">
+        <td style="width:3rem; padding:14px;"><p-tableCheckbox [value]="cabinet" /></td>
+        <td style="padding:14px;">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="width:44px; height:44px; border-radius:10px; background:linear-gradient(135deg, #1e3a5f, #2d6a9f); display:flex; align-items:center; justify-content:center; color:white; font-size:18px; font-weight:700; flex-shrink:0;">
+              {{ cabinet.nom?.charAt(0)?.toUpperCase() }}
+            </div>
+            <div>
+              <div style="font-weight:700; color:#1e293b; font-size:14px;">{{ cabinet.nom }}</div>
+              <div style="font-size:12px; color:#94a3b8;">{{ cabinet.raison_sociale || cabinet.ville }}</div>
+            </div>
+          </div>
+        </td>
+        <td style="padding:14px;">
+          <div style="display:flex; flex-direction:column; gap:4px;">
+            <div style="display:flex; align-items:center; gap:6px;" *ngIf="cabinet.telephone">
+              <i class="pi pi-phone" style="color:#94a3b8; font-size:12px;"></i>
+              <span style="font-size:13px; color:#475569;">{{ cabinet.telephone }}</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;" *ngIf="cabinet.email">
+              <i class="pi pi-envelope" style="color:#94a3b8; font-size:12px;"></i>
+              <span style="font-size:13px; color:#475569;">{{ cabinet.email }}</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;" *ngIf="cabinet.adresse">
+              <i class="pi pi-map-marker" style="color:#94a3b8; font-size:12px;"></i>
+              <span style="font-size:12px; color:#94a3b8;">{{ cabinet.adresse }}</span>
+            </div>
+          </div>
+        </td>
+        <td style="padding:14px;">
+          <div style="font-size:13px; color:#1e293b; font-weight:600;">{{ cabinet.numero_agrement || '—' }}</div>
+          <div style="font-size:12px; color:#94a3b8;">{{ cabinet.juridiction_rattachement || '' }}</div>
+        </td>
+        <td style="padding:14px;">
+          <p-tag [value]="cabinet.actif ? 'Actif' : 'Inactif'" [severity]="cabinet.actif ? 'success' : 'danger'"></p-tag>
+        </td>
+        <td style="padding:14px;">
+          <div style="display:flex; gap:6px;">
+            <button type="button" pTooltip="Voir fiche" (click)="voirDetails(cabinet)"
+              style="width:34px; height:34px; border-radius:50%; border:1.5px solid #2d6a9f; background:transparent; color:#2d6a9f; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+              <i class="pi pi-eye" style="font-size:13px;"></i>
+            </button>
+            <button type="button" pTooltip="Modifier" (click)="editCabinet(cabinet)"
+              style="width:34px; height:34px; border-radius:50%; border:1.5px solid #0ea5e9; background:transparent; color:#0ea5e9; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+              <i class="pi pi-pencil" style="font-size:13px;"></i>
+            </button>
+            <button type="button" pTooltip="Supprimer" (click)="deleteCabinet(cabinet)"
+              style="width:34px; height:34px; border-radius:50%; border:1.5px solid #ef4444; background:transparent; color:#ef4444; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+              <i class="pi pi-trash" style="font-size:13px;"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #empty>
+      <tr>
+        <td colspan="6" style="text-align:center; padding:40px; color:#94a3b8;">
+          <i class="pi pi-building" style="font-size:36px; display:block; margin-bottom:8px;"></i>
+          Aucun cabinet enregistre
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- DIALOG CREATION/MODIFICATION -->
+<p-dialog [(visible)]="cabinetDialog" header="Informations du cabinet" [modal]="true" [style]="{ width: '750px' }">
+  <div class="grid grid-cols-12 gap-4">
+    <div class="col-span-12">
+      <div style="background:#f8fafc; border-radius:10px; padding:12px 16px; border-left:4px solid #4f46e5; margin-bottom:4px;">
+        <div style="font-size:13px; font-weight:600; color:#1e3a5f;">Informations generales</div>
+      </div>
+    </div>
+    <div class="col-span-6">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Nom du cabinet *</label>
+      <input pInputText [(ngModel)]="cabinet.nom" class="w-full" style="border-radius:8px;" placeholder="Me SAWADOGO..." />
+      <small class="p-error" *ngIf="submitted && !cabinet.nom">Obligatoire</small>
+    </div>
+    <div class="col-span-6">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Raison sociale</label>
+      <input pInputText [(ngModel)]="cabinet.raison_sociale" class="w-full" style="border-radius:8px;" />
+    </div>
+    <div class="col-span-4">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Ville</label>
+      <input pInputText [(ngModel)]="cabinet.ville" class="w-full" style="border-radius:8px;" placeholder="Ouagadougou" />
+    </div>
+    <div class="col-span-4">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Code postal</label>
+      <input pInputText [(ngModel)]="cabinet.code_postal" class="w-full" style="border-radius:8px;" />
+    </div>
+    <div class="col-span-4">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Telephone</label>
+      <input pInputText [(ngModel)]="cabinet.telephone" class="w-full" style="border-radius:8px;" placeholder="+226 70 00 00 00" />
+    </div>
+    <div class="col-span-12">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Adresse *</label>
+      <input pInputText [(ngModel)]="cabinet.adresse" class="w-full" style="border-radius:8px;" placeholder="Adresse complete..." />
+      <small class="p-error" *ngIf="submitted && !cabinet.adresse">Obligatoire</small>
+    </div>
+    <div class="col-span-6">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Email</label>
+      <input pInputText [(ngModel)]="cabinet.email" class="w-full" style="border-radius:8px;" placeholder="cabinet@exemple.com" />
+    </div>
+    <div class="col-span-6">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Site web</label>
+      <input pInputText [(ngModel)]="cabinet.site_web" class="w-full" style="border-radius:8px;" placeholder="https://..." />
+    </div>
+    <div class="col-span-12">
+      <div style="background:#f8fafc; border-radius:10px; padding:12px 16px; border-left:4px solid #10b981; margin-bottom:4px;">
+        <div style="font-size:13px; font-weight:600; color:#065f46;">Informations juridiques</div>
+      </div>
+    </div>
+    <div class="col-span-4">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Numero agrement</label>
+      <input pInputText [(ngModel)]="cabinet.numero_agrement" class="w-full" style="border-radius:8px;" />
+    </div>
+    <div class="col-span-4">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Juridiction</label>
+      <input pInputText [(ngModel)]="cabinet.juridiction_rattachement" class="w-full" style="border-radius:8px;" />
+    </div>
+    <div class="col-span-4">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Chambre departementale</label>
+      <input pInputText [(ngModel)]="cabinet.chambre_departementale" class="w-full" style="border-radius:8px;" />
+    </div>
+    <div class="col-span-12">
+      <div style="display:flex; align-items:center; gap:10px; padding:12px; background:#f8fafc; border-radius:8px;">
+        <p-checkbox [(ngModel)]="cabinet.actif" binary="true"></p-checkbox>
+        <label style="font-weight:600; color:#1e3a5f; cursor:pointer;">Cabinet actif</label>
+      </div>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Annuler" icon="pi pi-times" text (click)="hideDialog()" />
+    <p-button label="Enregistrer" icon="pi pi-check" (click)="saveCabinet()" />
+  </ng-template>
+</p-dialog>
+
+<!-- DIALOG DETAILS -->
+<p-dialog [(visible)]="detailsDialog" [modal]="true" [style]="{ width: '680px' }" [showHeader]="false">
+  <div *ngIf="cabinetSelectionne" style="border-radius:12px; overflow:hidden; margin:-1.25rem;">
+
+    <!-- En-tete -->
+    <div style="background:linear-gradient(135deg, #1e3a5f, #2d6a9f); padding:28px 28px 24px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div style="display:flex; align-items:center; gap:16px;">
+          <div style="width:60px; height:60px; border-radius:14px; background:rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; color:white; font-size:24px; font-weight:700;">
+            {{ cabinetSelectionne.nom?.charAt(0)?.toUpperCase() }}
+          </div>
+          <div>
+            <div style="color:rgba(255,255,255,0.7); font-size:11px; font-weight:600; letter-spacing:2px; text-transform:uppercase; margin-bottom:4px;">FICHE CABINET</div>
+            <div style="color:white; font-size:22px; font-weight:700;">{{ cabinetSelectionne.nom }}</div>
+            <div style="color:rgba(255,255,255,0.7); font-size:13px; margin-top:2px;">{{ cabinetSelectionne.raison_sociale || 'Huissier de Justice' }}</div>
+          </div>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+          <p-tag [value]="cabinetSelectionne.actif ? 'Actif' : 'Inactif'" [severity]="cabinetSelectionne.actif ? 'success' : 'danger'"></p-tag>
+          <button type="button" (click)="detailsDialog = false"
+            style="background:rgba(255,255,255,0.15); border:none; border-radius:6px; color:white; cursor:pointer; padding:5px 10px; font-size:12px;">
+            <i class="pi pi-times" style="margin-right:4px;"></i>Fermer
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Corps -->
+    <div style="padding:24px 28px; background:#f8fafc;">
+      <div class="grid grid-cols-12 gap-4">
+
+        <!-- Coordonnees -->
+        <div class="col-span-6">
+          <div style="background:white; border:1px solid #e2e8f0; border-radius:10px; padding:18px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px; padding-bottom:10px; border-bottom:2px solid #eff6ff;">
+              <div style="background:#eff6ff; border-radius:8px; padding:6px 8px;">
+                <i class="pi pi-phone" style="color:#1e3a5f; font-size:14px;"></i>
+              </div>
+              <span style="font-weight:700; color:#1e3a5f; font-size:14px;">Coordonnees</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px; font-size:13px;">
+              <div style="display:flex; justify-content:space-between;" *ngIf="cabinetSelectionne.telephone">
+                <span style="color:#64748b;">Telephone</span>
+                <span style="font-weight:600; color:#1e293b;">{{ cabinetSelectionne.telephone }}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;" *ngIf="cabinetSelectionne.email">
+                <span style="color:#64748b;">Email</span>
+                <span style="font-weight:600; color:#4f46e5; font-size:12px;">{{ cabinetSelectionne.email }}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;" *ngIf="cabinetSelectionne.site_web">
+                <span style="color:#64748b;">Site web</span>
+                <span style="font-weight:600; color:#0ea5e9; font-size:12px;">{{ cabinetSelectionne.site_web }}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;" *ngIf="cabinetSelectionne.adresse">
+                <span style="color:#64748b;">Adresse</span>
+                <span style="font-weight:600; color:#1e293b; font-size:12px;">{{ cabinetSelectionne.adresse }}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;" *ngIf="cabinetSelectionne.ville">
+                <span style="color:#64748b;">Ville</span>
+                <span style="font-weight:600; color:#1e293b;">{{ cabinetSelectionne.ville }} {{ cabinetSelectionne.code_postal }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Infos juridiques -->
+        <div class="col-span-6">
+          <div style="background:white; border:1px solid #e2e8f0; border-radius:10px; padding:18px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px; padding-bottom:10px; border-bottom:2px solid #f0fdf4;">
+              <div style="background:#f0fdf4; border-radius:8px; padding:6px 8px;">
+                <i class="pi pi-verified" style="color:#16a34a; font-size:14px;"></i>
+              </div>
+              <span style="font-weight:700; color:#1e3a5f; font-size:14px;">Informations juridiques</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px; font-size:13px;">
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b;">N Agrement</span>
+                <span style="font-weight:700; color:#4f46e5;">{{ cabinetSelectionne.numero_agrement || '—' }}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b;">Juridiction</span>
+                <span style="font-weight:600; color:#1e293b;">{{ cabinetSelectionne.juridiction_rattachement || '—' }}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b;">Chambre dep.</span>
+                <span style="font-weight:600; color:#1e293b; font-size:12px;">{{ cabinetSelectionne.chambre_departementale || '—' }}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b;">Creation</span>
+                <span style="font-weight:600; color:#1e293b;">{{ cabinetSelectionne.date_creation | date:'dd/MM/yyyy' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="padding:16px 28px; background:white; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; gap:10px;">
+      <p-button label="Fermer" icon="pi pi-times" [outlined]="true" severity="secondary" (click)="detailsDialog = false" />
+      <p-button label="Exporter fiche" icon="pi pi-file-pdf" severity="danger" (click)="exportFicheCabinetPDF()" />
+      <p-button label="Modifier" icon="pi pi-pencil" severity="info" (click)="editFromDetails()" />
+    </div>
+
+  </div>
+</p-dialog>
