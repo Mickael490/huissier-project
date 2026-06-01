@@ -25,11 +25,11 @@ export class AppMenu implements OnInit {
     }
 
     isAdmin(): boolean {
-        return this.role === 'admin';
+        return this.role?.toUpperCase() === 'ADMIN';
     }
 
     isHuissierOrAdmin(): boolean {
-        return ['admin', 'huissier'].includes(this.role);
+        return ['ADMIN', 'HUISSIER'].includes(this.role?.toUpperCase() || '');
     }
 
     buildMenu() {

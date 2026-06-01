@@ -118,6 +118,7 @@ export class PartieComponent implements OnInit {
       this.http.post(this.apiUrl, this.partie, { headers: this.getHeaders() }).subscribe({
         next: () => {
           this.loadParties();
+          this.loadDossiers();
           this.messageService.add({ severity: 'success', summary: 'Succès', detail: 'Partie créée' });
           this.hideDialog();
         },

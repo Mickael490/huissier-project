@@ -1,9 +1,9 @@
 export enum RoleEnum {
-  ADMIN = 'admin',
-  HUISSIER = 'huissier',
-  CLERC = 'clerc',
-  ASSISTANT = 'assistant',
-  SECRETAIRE = 'secretaire',
+  ADMIN = 'ADMIN',
+  HUISSIER = 'HUISSIER',
+  CLERC = 'CLERC',
+  ASSISTANT = 'ASSISTANT',
+  SECRETAIRE = 'SECRETAIRE',
 }
 
 export interface Utilisateur {

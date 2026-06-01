@@ -156,6 +156,17 @@ export class ArchiveComponent implements OnInit {
       this.messageService.add({ severity: 'warn', summary: 'Attention', detail: 'Veuillez remplir les champs obligatoires' });
       return;
     }
+    if (this.archive.id) {
+      this.http.put(`${this.apiUrl}/${this.archive.id}`, this.archive, { headers: this.getHeaders() }).subscribe({
+        next: () => {
+          this.loadArchives();
+          this.messageService.add({ severity: 'success', summary: 'Succes', detail: 'Archive mise a jour' });
+          this.hideDialog();
+        },
+        error: (err) => this.messageService.add({ severity: 'error', summary: 'Erreur', detail: JSON.stringify(err.error) })
+      });
+      return;
+    }
     const payload = {
       dossier_id: this.archive.dossier_id,
       type_archive: this.archive.type_archive,

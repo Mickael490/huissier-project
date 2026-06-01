@@ -35,7 +35,7 @@ import { PdfService } from 'src/services/pdf.service';
 export class AffectationComponent implements OnInit {
   
   affectations = signal<any[]>([]);
-  actes = signal<any[]>([]); // Passage en signal pour une meilleure réactivité
+  actes = signal<any[]>([]);
   dossiers: { id: number; numero: string; objet: string }[] = [];
   utilisateurs: { id: number; nom: string; role: string }[] = [];
   
@@ -55,13 +55,10 @@ export class AffectationComponent implements OnInit {
 
   @ViewChild('dt') dt!: Table;
 
-  // Compteurs réactifs pour le template
   readonly nbEnCours = computed(() => this.affectations().filter(a => a.statut === 'en_cours').length);
   readonly nbTerminees = computed(() => this.affectations().filter(a => a.statut === 'termine').length);
   readonly nbUrgentes = computed(() => this.affectations().filter(a => a.priorite === 'haute' && a.statut === 'en_cours').length);
 
-  // CORRECTION : Déclaration de la propriété attendue par le formulaire HTML
-  // Retourne les actes non encore affectés, ou inclut l'acte en cours de modification
   get actesDisponibles(): any[] {
     const listAffectations = this.affectations();
     return this.actes().filter(acte => {
@@ -104,11 +101,13 @@ export class AffectationComponent implements OnInit {
   loadActes(): void {
     this.http.get<any[]>(this.acteUrl, { headers: this.getHeaders() }).subscribe({
       next: (data) => {
-        this.actes.set(data.map((a: any) => ({
+        console.log("DEBUG: Actes chargés =", data);
+        this.actes.set((data || []).map((a: any) => ({
           id: a.id, type_acte: a.type_acte, id_dossier: a.id_dossier
         })));
+        console.log("DEBUG: actes.signal =", this.actes());
       },
-      error: () => {}
+      error: (err) => console.error('Erreur actes:', err)
     });
   }
 
@@ -243,9 +242,15 @@ export class AffectationComponent implements OnInit {
     const a = this.actes().find(x => x.id === id);
     if (!a) return `Acte #${id}`;
     switch (a.type_acte) {
-      case 'signification': return 'Signification';
-      case 'constat': return 'Constat';
-      case 'saisie': return 'Saisie';
+      case 'SIGNIFICATION': return 'Signification';
+      case 'CONSTAT': return 'Constat';
+      case 'SAISIE': return 'Saisie';
+      case 'RECOUVREMENT': return 'Recouvrement';
+      case 'EXPULSION': return 'Expulsion';
+      case 'COMMANDEMENT': return 'Commandement';
+      case 'PROCES_VERBAL': return 'Procès Verbal';
+      case 'INVENTAIRE': return 'Inventaire';
+      case 'AUTRE': return 'Autre';
       default: return a.type_acte;
     }
   }

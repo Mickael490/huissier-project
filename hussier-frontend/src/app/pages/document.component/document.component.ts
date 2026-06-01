@@ -100,6 +100,15 @@ export class DocumentComponent implements OnInit {
     this.detailsDialog = true;
   }
 
+  editDocument(document: any): void {
+    this.typeDocument = document.type_document;
+    this.dossierId = document.id_dossier;
+    this.description = document.description || '';
+    this.selectedFile = null;
+    this.documentDialog = true;
+    this.submitted = false;
+  }
+
   hideDialog(): void {
     this.documentDialog = false;
     this.submitted = false;

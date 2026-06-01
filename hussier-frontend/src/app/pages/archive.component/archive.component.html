@@ -170,7 +170,7 @@
 
 <ng-template pTemplate="footer">
     <p-button label="Annuler" icon="pi pi-times" text (click)="hideDialog()" />
-    <p-button label="Archiver" icon="pi pi-inbox" (click)="saveArchive()" />
+    <p-button [label]="archive.id ? 'Mettre a jour' : 'Archiver'" icon="pi pi-check" (click)="saveArchive()" />
   </ng-template>
 </p-dialog>
 

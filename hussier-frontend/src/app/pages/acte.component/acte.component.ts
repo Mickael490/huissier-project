@@ -43,15 +43,15 @@ export class ActeComponent implements OnInit {
   private dossierUrl = `${environment.apiUrl}/dossiers`;
 
   typeOptions = [
-    { label: 'Signification', value: 'signification', icon: 'pi pi-send', color: '#2d6a9f' },
-    { label: 'Constat', value: 'constat', icon: 'pi pi-eye', color: '#d97706' },
+    { label: 'Signification', value: 'signification', icon: 'pi pi-send', color: '#4f46e5' },
+    { label: 'Constat', value: 'constat', icon: 'pi pi-eye', color: '#0ea5e9' },
     { label: 'Saisie', value: 'saisie', icon: 'pi pi-lock', color: '#ef4444' },
-    { label: 'Recouvrement', value: 'recouvrement', icon: 'pi pi-dollar', color: '#059669' },
-    { label: 'Expulsion', value: 'expulsion', icon: 'pi pi-sign-out', color: '#7c3aed' },
-    { label: 'Commandement', value: 'commandement', icon: 'pi pi-megaphone', color: '#dc2626' },
-    { label: 'Procès-verbal', value: 'proces_verbal', icon: 'pi pi-file', color: '#0891b2' },
-    { label: 'Inventaire', value: 'inventaire', icon: 'pi pi-list', color: '#65a30d' },
-    { label: 'Autre', value: 'autre', icon: 'pi pi-ellipsis-h', color: '#64748b' },
+    { label: 'Recouvrement', value: 'recouvrement', icon: 'pi pi-dollar', color: '#10b981' },
+    { label: 'Expulsion', value: 'expulsion', icon: 'pi pi-home', color: '#f97316' },
+    { label: 'Commandement', value: 'commandement', icon: 'pi pi-megaphone', color: '#8b5cf6' },
+    { label: 'Proces verbal', value: 'proces_verbal', icon: 'pi pi-file-edit', color: '#06b6d4' },
+    { label: 'Inventaire', value: 'inventaire', icon: 'pi pi-list', color: '#64748b' },
+    { label: 'Autre', value: 'autre', icon: 'pi pi-file', color: '#94a3b8' }
   ];
 
   constructor(
@@ -126,6 +126,10 @@ export class ActeComponent implements OnInit {
   }
 
   saveActe(): void {
+    // Convertir type_acte en minuscule
+    this.acte.type_acte = this.acte.type_acte.toLowerCase();
+    // Convertir type_acte en minuscule
+    this.acte.type_acte = this.acte.type_acte.toLowerCase();
     this.submitted = true;
     if (!this.acte.id_dossier || !this.acte.type_acte || !this.acte.date_acte) {
       this.messageService.add({
