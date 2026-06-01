@@ -8,11 +8,11 @@ from app.db.session import Base
 
 class RoleEnum(str, enum.Enum):
     """Rôles disponibles dans le système"""
-    ADMIN = "admin"
-    HUISSIER = "huissier"
-    CLERC = "clerc"
-    ASSISTANT = "assistant"
-    SECRETAIRE = "secretaire"
+    ADMIN = "ADMIN"
+    HUISSIER = "HUISSIER"
+    CLERC = "CLERC"
+    ASSISTANT = "ASSISTANT"
+    SECRETAIRE = "SECRETAIRE"
 
 
 class Utilisateur(Base):

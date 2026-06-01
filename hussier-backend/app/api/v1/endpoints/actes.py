@@ -16,7 +16,16 @@ def create_acte(*, db: Session = Depends(deps.get_db), acte_in: ActeCreate):
     dossier = crud_dossier.get(db, id=acte_in.id_dossier)
     if not dossier:
         raise HTTPException(status_code=404, detail="Dossier non trouvé")
-    return crud_acte.create(db, obj_in=acte_in)
+    # Créer dict avec type_acte en minuscule
+    acte_data = acte_in.dict(exclude={'type_acte'})
+    acte_data['type_acte'] = str(acte_in.type_acte).lower()
+    # Créer objet Acte directement (sans schéma)
+    from app.models.acte import Acte
+    acte_obj = Acte(**acte_data)
+    db.add(acte_obj)
+    db.commit()
+    db.refresh(acte_obj)
+    return acte_obj
 
 @router.get("", response_model=List[ActeResponse])
 def read_actes(

@@ -13,7 +13,10 @@ def get_paiements(db: Session = Depends(deps.get_db), skip: int = 0, limit: int 
 
 @router.post("", response_model=PaiementResponse, status_code=201)
 def create_paiement(*, db: Session = Depends(deps.get_db), paiement_in: PaiementCreate):
-    paiement = Paiement(**paiement_in.model_dump())
+    data = paiement_in.model_dump()
+    data['type_paiement'] = data['type_paiement'].upper()
+    data['mode_paiement'] = data['mode_paiement'].lower()
+    paiement = Paiement(**data)
     db.add(paiement)
     db.commit()
     db.refresh(paiement)
@@ -31,7 +34,13 @@ def update_paiement(*, db: Session = Depends(deps.get_db), paiement_id: int, pai
     paiement = db.query(Paiement).filter(Paiement.id == paiement_id).first()
     if not paiement:
         raise HTTPException(status_code=404, detail="Paiement non trouvé")
-    for field, value in paiement_in.model_dump(exclude_unset=True).items():
+    data = paiement_in.model_dump(exclude_unset=True)
+    if 'type_paiement' in data and data['type_paiement']:
+        data['type_paiement'] = data['type_paiement'].upper()
+        pass
+    if 'mode_paiement' in data and data['mode_paiement']:
+        data['mode_paiement'] = data['mode_paiement'].lower()
+    for field, value in data.items():
         setattr(paiement, field, value)
     db.commit()
     db.refresh(paiement)
