@@ -14,6 +14,7 @@ import { ClientService } from 'src/services/clients/ClientService';
 import { Client, ClientCreate, ClientUpdate, TypeClient } from 'src/types/client';
 import { PdfService } from 'src/services/pdf.service';
 import { environment } from 'src/environments/environment';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-client',
@@ -29,6 +30,7 @@ import { environment } from 'src/environments/environment';
 export class ClientComponent implements OnInit {
 
   clients = signal<Client[]>([]);
+  selectedClients: Client[] = [];
   client: Partial<Client> = {};
   clientDialog = false;
   detailsDialog = false;
@@ -256,6 +258,36 @@ getDossiersTermines(clientId: number): number {
   
   exportPDF(): void {
     this.pdfService.exportClients(this.clients());
+  }
+
+  exportSelectionPDF(): void {
+    if (!this.selectedClients.length) return;
+    this.pdfService.exportClients(this.selectedClients);
+  }
+
+  deleteSelectedClients(): void {
+    if (!this.selectedClients.length) return;
+    this.confirmationService.confirm({
+      message: `Supprimer les ${this.selectedClients.length} client(s) sélectionné(s) ?`,
+      header: 'Confirmation de suppression',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        const calls = this.selectedClients.filter(c => c.id != null).map(c => this.clientService.deleteClient(c.id));
+        if (!calls.length) return;
+        forkJoin(calls).subscribe({
+          next: () => {
+            const n = calls.length;
+            this.selectedClients = [];
+            this.loadClients();
+            this.messageService.add({ severity: 'success', summary: 'Supprimé', detail: `${n} client(s) supprimé(s)` });
+          },
+          error: () => {
+            this.messageService.add({ severity: 'error', summary: 'Erreur', detail: 'Suppression partielle impossible' });
+            this.loadClients();
+          }
+        });
+      }
+    });
   }
 getStatutSeverity(statut: string): string {
     switch (statut) {
