@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 from app.api import deps
@@ -22,3 +22,12 @@ def get_audit_log(log_id: int, db: Session = Depends(deps.get_db)):
     if not log:
         raise HTTPException(status_code=404, detail="Log non trouvé")
     return log
+
+@router.delete("/{log_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_audit_log(log_id: int, db: Session = Depends(deps.get_db)):
+    # Réservé ADMIN (routeur restreint dans app/api/v1/api.py).
+    log = crud_audit_log.get(db, id=log_id)
+    if not log:
+        raise HTTPException(status_code=404, detail="Log non trouvé")
+    crud_audit_log.delete(db, id=log_id)
+    return None

@@ -181,5 +181,13 @@ class CRUDAuditLog:
         db.commit()
         return count
 
+    def delete(self, db: Session, id: int) -> Optional[AuditLog]:
+        """Supprimer un log par ID"""
+        obj = db.query(AuditLog).filter(AuditLog.id == id).first()
+        if obj:
+            db.delete(obj)
+            db.commit()
+        return obj
+
 
 crud_audit_log = CRUDAuditLog()
