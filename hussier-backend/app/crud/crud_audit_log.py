@@ -66,11 +66,11 @@ class CRUDAuditLog:
         limit: int = 100
     ) -> List[AuditLog]:
         """Récupérer les logs par type d'action"""
-        query = db.query(AuditLog).filter(AuditLog.type_action == action_type)
-        
+        query = db.query(AuditLog).filter(AuditLog.action == action_type)
+
         if cabinet_id:
             query = query.filter(AuditLog.id_cabinet == cabinet_id)
-        
+
         return (
             query.order_by(AuditLog.date_action.desc())
             .offset(skip)
@@ -78,20 +78,20 @@ class CRUDAuditLog:
             .all()
         )
 
-    def get_by_table(
+    def get_by_entity(
         self,
         db: Session,
-        table_name: str,
-        id_enregistrement: Optional[int] = None,
+        entity_type: str,
+        entity_id: Optional[int] = None,
         skip: int = 0,
         limit: int = 100
     ) -> List[AuditLog]:
-        """Récupérer les logs d'une table spécifique"""
-        query = db.query(AuditLog).filter(AuditLog.table_name == table_name)
-        
-        if id_enregistrement:
-            query = query.filter(AuditLog.id_enregistrement == id_enregistrement)
-        
+        """Récupérer les logs d'un type d'entité (et éventuellement d'un enregistrement)"""
+        query = db.query(AuditLog).filter(AuditLog.entity_type == entity_type)
+
+        if entity_id:
+            query = query.filter(AuditLog.entity_id == entity_id)
+
         return (
             query.order_by(AuditLog.date_action.desc())
             .offset(skip)
@@ -147,14 +147,15 @@ class CRUDAuditLog:
     def create(self, db: Session, obj_in: AuditLogCreate) -> AuditLog:
         """Créer un nouveau log d'audit"""
         db_obj = AuditLog(
-            type_action=obj_in.type_action,
-            table_name=obj_in.table_name,
-            id_enregistrement=obj_in.id_enregistrement,
+            action=obj_in.action,
+            entity_type=obj_in.entity_type,
+            entity_id=obj_in.entity_id,
             id_cabinet=obj_in.id_cabinet,
             id_utilisateur=obj_in.id_utilisateur,
-            anciennes_valeurs=obj_in.anciennes_valeurs,
-            nouvelles_valeurs=obj_in.nouvelles_valeurs,
-            adresse_ip=obj_in.adresse_ip,
+            description=obj_in.description,
+            donnees_avant=obj_in.donnees_avant,
+            donnees_apres=obj_in.donnees_apres,
+            ip_address=obj_in.ip_address,
             user_agent=obj_in.user_agent
         )
         db.add(db_obj)

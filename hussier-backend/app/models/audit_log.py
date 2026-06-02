@@ -28,6 +28,8 @@ class EntityType(str, enum.Enum):
     PAIEMENT = "PAIEMENT"
     UTILISATEUR = "UTILISATEUR"
     ARCHIVE = "ARCHIVE"
+    AGENDA = "AGENDA"
+    AFFECTATION = "AFFECTATION"
 
 
 class AuditLog(Base):

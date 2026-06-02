@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
 from app.core.security import SECRET_KEY, ALGORITHM
 from app.crud import crud_utilisateur
+from app.models.utilisateur import RoleEnum
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
@@ -41,3 +42,24 @@ def get_current_active_user(current_user=Depends(get_current_user)):
     if not current_user.actif:
         raise HTTPException(status_code=400, detail="Compte désactivé")
     return current_user
+
+
+def require_roles(*allowed: RoleEnum):
+    """Génère une dépendance qui n'autorise que les rôles passés en argument.
+
+    À utiliser au niveau d'un routeur (dependencies=[...]) ou d'une route.
+    Renvoie l'utilisateur courant pour qu'il puisse aussi être injecté.
+    """
+    allowed_values = {r.value if isinstance(r, RoleEnum) else str(r) for r in allowed}
+
+    def checker(current_user=Depends(get_current_active_user)):
+        role = current_user.role
+        role_value = role.value if isinstance(role, RoleEnum) else str(role)
+        if role_value not in allowed_values:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Accès refusé : votre rôle ne vous permet pas cette action",
+            )
+        return current_user
+
+    return checker

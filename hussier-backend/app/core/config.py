@@ -1,6 +1,9 @@
 # app/core/config.py
+import os
+import secrets
 from pydantic_settings import BaseSettings
-from typing import List, Optional
+from pydantic import field_validator
+from typing import List, Optional, Union
 
 class Settings(BaseSettings):
     # API
@@ -20,7 +23,9 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/dossier_db"
     
     # Security
-    SECRET_KEY: str = "votre-cle-secrete-super-longue-et-aleatoire-changez-moi"
+    # En production, definir SECRET_KEY dans .env. Sinon une cle aleatoire est
+    # generee au demarrage (les sessions ne survivent pas a un redemarrage).
+    SECRET_KEY: str = secrets.token_urlsafe(64)
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
@@ -39,6 +44,15 @@ class Settings(BaseSettings):
     # Redis (optionnel)
     REDIS_URL: str = "redis://localhost:6379/0"
     
+    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
+        # Permet de definir BACKEND_CORS_ORIGINS dans .env en liste separee par virgules
+        # ex: BACKEND_CORS_ORIGINS=https://app.mondomaine.com,https://www.mondomaine.com
+        if isinstance(v, str) and not v.startswith("["):
+            return [o.strip() for o in v.split(",") if o.strip()]
+        return v
+
     class Config:
         case_sensitive = True
         env_file = ".env"

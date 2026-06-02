@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from typing import List, Optional, Any
 from pydantic import BaseModel
 from app.api import deps
 from app.models.affectation_dossier import AffectationDossier
+from app.services import audit
+from app.models.audit_log import ActionType, EntityType
 
 router = APIRouter()
 
@@ -44,7 +46,9 @@ def get_affectations(db: Session = Depends(deps.get_db), skip: int = 0, limit: i
     ]
 
 @router.post("", status_code=201)
-def create_affectation(affectation_in: AffectationIn, db: Session = Depends(deps.get_db)):
+def create_affectation(affectation_in: AffectationIn, request: Request,
+                       db: Session = Depends(deps.get_db),
+                       current_user=Depends(deps.get_current_active_user)):
     affectation = AffectationDossier(
         id_dossier=affectation_in.id_dossier,
         id_acte=affectation_in.id_acte,
@@ -62,10 +66,15 @@ def create_affectation(affectation_in: AffectationIn, db: Session = Depends(deps
     db.add(affectation)
     db.commit()
     db.refresh(affectation)
+    audit.record(db, current_user, request, action=ActionType.CREATE,
+                 entity_type=EntityType.AFFECTATION, entity_id=affectation.id,
+                 description=f"Création de l'affectation #{affectation.id}")
     return {"id": affectation.id, "message": "Affectation créée avec succès"}
 
 @router.put("/{affectation_id}", status_code=200)
-def update_affectation(affectation_id: int, affectation_in: AffectationIn, db: Session = Depends(deps.get_db)):
+def update_affectation(affectation_id: int, affectation_in: AffectationIn, request: Request,
+                       db: Session = Depends(deps.get_db),
+                       current_user=Depends(deps.get_current_active_user)):
     affectation = db.query(AffectationDossier).filter(AffectationDossier.id == affectation_id).first()
     if not affectation:
         raise HTTPException(status_code=404, detail="Affectation non trouvée")
@@ -74,10 +83,15 @@ def update_affectation(affectation_id: int, affectation_in: AffectationIn, db: S
             setattr(affectation, key, value)
     db.commit()
     db.refresh(affectation)
+    audit.record(db, current_user, request, action=ActionType.UPDATE,
+                 entity_type=EntityType.AFFECTATION, entity_id=affectation_id,
+                 description=f"Modification de l'affectation #{affectation_id}")
     return {"id": affectation.id, "message": "Affectation mise à jour"}
 
 @router.delete("/{affectation_id}", status_code=204)
-def delete_affectation(affectation_id: int, db: Session = Depends(deps.get_db)):
+def delete_affectation(affectation_id: int, request: Request,
+                       db: Session = Depends(deps.get_db),
+                       current_user=Depends(deps.get_current_active_user)):
     affectation = db.query(AffectationDossier).filter(
         AffectationDossier.id == affectation_id
     ).first()
@@ -88,5 +102,8 @@ def delete_affectation(affectation_id: int, db: Session = Depends(deps.get_db)):
     db.delete(affectation)
     db.commit()
 
+    audit.record(db, current_user, request, action=ActionType.DELETE,
+                 entity_type=EntityType.AFFECTATION, entity_id=affectation_id,
+                 description=f"Suppression de l'affectation #{affectation_id}")
     return None
 

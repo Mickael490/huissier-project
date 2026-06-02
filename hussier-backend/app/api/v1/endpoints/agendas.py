@@ -1,5 +1,5 @@
 # app/api/endpoints/agendas.py
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
@@ -9,6 +9,8 @@ from app.crud.crud_agenda import crud_agenda
 from app.crud.crud_utilisateur import crud_utilisateur
 from app.crud.crud_dossier import crud_dossier
 from app.crud.crud_client import crud_client
+from app.services import audit
+from app.models.audit_log import ActionType, EntityType
 from app.schemas.agenda import (
     AgendaCreate,
     AgendaUpdate,
@@ -24,6 +26,8 @@ router = APIRouter()
 def create_agenda(
     *,
     db: Session = Depends(deps.get_db),
+    request: Request,
+    current_user=Depends(deps.get_current_active_user),
     agenda_in: AgendaCreate
 ):
     """Créer un nouveau rendez-vous"""
@@ -55,6 +59,9 @@ def create_agenda(
 
     # Créer l'agenda
     agenda = crud_agenda.create(db, obj_in=agenda_in)
+    audit.record(db, current_user, request, action=ActionType.CREATE,
+                 entity_type=EntityType.AGENDA, entity_id=agenda.id,
+                 description=f"Création du rendez-vous #{agenda.id}")
     return agenda
 
 
@@ -121,6 +128,8 @@ def read_agenda(
 def update_agenda(
     *,
     db: Session = Depends(deps.get_db),
+    request: Request,
+    current_user=Depends(deps.get_current_active_user),
     agenda_id: int,
     agenda_in: AgendaUpdate
 ):
@@ -131,8 +140,11 @@ def update_agenda(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Rendez-vous non trouvé"
         )
-    
+
     agenda = crud_agenda.update(db, db_obj=db_agenda, obj_in=agenda_in)
+    audit.record(db, current_user, request, action=ActionType.UPDATE,
+                 entity_type=EntityType.AGENDA, entity_id=agenda_id,
+                 description=f"Modification du rendez-vous #{agenda_id}")
     return agenda
 
 
@@ -140,6 +152,8 @@ def update_agenda(
 def delete_agenda(
     *,
     db: Session = Depends(deps.get_db),
+    request: Request,
+    current_user=Depends(deps.get_current_active_user),
     agenda_id: int
 ):
     """Supprimer un rendez-vous"""
@@ -149,8 +163,11 @@ def delete_agenda(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Rendez-vous non trouvé"
         )
-    
+
     crud_agenda.remove(db, id=agenda_id)
+    audit.record(db, current_user, request, action=ActionType.DELETE,
+                 entity_type=EntityType.AGENDA, entity_id=agenda_id,
+                 description=f"Suppression du rendez-vous #{agenda_id}")
     return None
 
 

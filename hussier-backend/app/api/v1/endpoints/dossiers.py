@@ -2,10 +2,13 @@ from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from datetime import datetime
+from fastapi import Request
 from app.api import deps
 from app.crud import crud_dossier
 from app.schemas.dossier import DossierCreate, DossierUpdate, DossierResponse, DossierListResponse
 from app.models.dossier import StatutDossier, TypeDossier
+from app.services import audit
+from app.models.audit_log import ActionType, EntityType
 
 router = APIRouter()  # ✅ défini en premier
 
@@ -49,17 +52,23 @@ def lister_dossiers(
     return {"total": len(dossiers), "skip": skip, "limit": limit, "dossiers": dossiers}
 
 @router.post("", response_model=DossierResponse, status_code=201)
-def creer_dossier(*, db: Session = Depends(deps.get_db), dossier_in: DossierCreate):
+def creer_dossier(*, db: Session = Depends(deps.get_db), dossier_in: DossierCreate,
+                  request: Request, current_user=Depends(deps.get_current_active_user)):
     if not dossier_in.numero_dossier:
         dossier_in.numero_dossier = generer_numero_dossier(db)
     # ✅ Calcul automatique du montant total
     principal = dossier_in.montant_principal or 0
     frais = dossier_in.montant_frais or 0
     dossier_in.montant_total = principal + frais
-    return crud_dossier.create(db=db, obj_in=dossier_in)
+    dossier = crud_dossier.create(db=db, obj_in=dossier_in)
+    audit.record(db, current_user, request, action=ActionType.CREATE,
+                 entity_type=EntityType.DOSSIER, entity_id=dossier.id,
+                 description=f"Création du dossier {dossier.numero_dossier}")
+    return dossier
 
 @router.put("/{dossier_id}", response_model=DossierResponse)
-def modifier_dossier(*, db: Session = Depends(deps.get_db), dossier_id: int, dossier_in: DossierUpdate):
+def modifier_dossier(*, db: Session = Depends(deps.get_db), dossier_id: int, dossier_in: DossierUpdate,
+                     request: Request, current_user=Depends(deps.get_current_active_user)):
     db_obj = crud_dossier.get(db=db, id=dossier_id)
     if not db_obj:
         raise HTTPException(status_code=404, detail="Dossier non trouvé")
@@ -67,20 +76,21 @@ def modifier_dossier(*, db: Session = Depends(deps.get_db), dossier_id: int, dos
     principal = dossier_in.montant_principal if dossier_in.montant_principal is not None else (db_obj.montant_principal or 0)
     frais = dossier_in.montant_frais if dossier_in.montant_frais is not None else (db_obj.montant_frais or 0)
     dossier_in.montant_total = principal + frais
-    return crud_dossier.update(db=db, db_obj=db_obj, obj_in=dossier_in)
-
-@router.put("/{dossier_id}", response_model=DossierResponse)
-def modifier_dossier(*, db: Session = Depends(deps.get_db), dossier_id: int, dossier_in: DossierUpdate):
-    db_obj = crud_dossier.get(db=db, id=dossier_id)
-    if not db_obj:
-        raise HTTPException(status_code=404, detail="Dossier non trouvé")
-    return crud_dossier.update(db=db, db_obj=db_obj, obj_in=dossier_in)
+    dossier = crud_dossier.update(db=db, db_obj=db_obj, obj_in=dossier_in)
+    audit.record(db, current_user, request, action=ActionType.UPDATE,
+                 entity_type=EntityType.DOSSIER, entity_id=dossier_id,
+                 description=f"Modification du dossier {dossier.numero_dossier}")
+    return dossier
 
 @router.delete("/{dossier_id}", status_code=204)
-def supprimer_dossier(*, db: Session = Depends(deps.get_db), dossier_id: int):
+def supprimer_dossier(*, db: Session = Depends(deps.get_db), dossier_id: int,
+                      request: Request, current_user=Depends(deps.get_current_active_user)):
     dossier = crud_dossier.remove(db=db, id=dossier_id)
     if not dossier:
         raise HTTPException(status_code=404, detail="Dossier non trouvé")
+    audit.record(db, current_user, request, action=ActionType.DELETE,
+                 entity_type=EntityType.DOSSIER, entity_id=dossier_id,
+                 description=f"Suppression du dossier #{dossier_id}")
     return None
 
 @router.post("/{dossier_id}/cloturer", response_model=DossierResponse)

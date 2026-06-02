@@ -4,14 +4,18 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import date
 
+from fastapi import Request
 from app.api import deps
 from app.crud import crud_acte, crud_dossier
 from app.schemas.acte import ActeCreate, ActeUpdate, ActeResponse
+from app.services import audit
+from app.models.audit_log import ActionType, EntityType
 
 router = APIRouter()
 
 @router.post("", response_model=ActeResponse, status_code=status.HTTP_201_CREATED)
-def create_acte(*, db: Session = Depends(deps.get_db), acte_in: ActeCreate):
+def create_acte(*, db: Session = Depends(deps.get_db), acte_in: ActeCreate,
+                request: Request, current_user=Depends(deps.get_current_active_user)):
     """Créer un nouvel acte"""
     dossier = crud_dossier.get(db, id=acte_in.id_dossier)
     if not dossier:
@@ -25,6 +29,9 @@ def create_acte(*, db: Session = Depends(deps.get_db), acte_in: ActeCreate):
     db.add(acte_obj)
     db.commit()
     db.refresh(acte_obj)
+    audit.record(db, current_user, request, action=ActionType.CREATE,
+                 entity_type=EntityType.ACTE, entity_id=acte_obj.id,
+                 description=f"Création de l'acte #{acte_obj.id}")
     return acte_obj
 
 @router.get("", response_model=List[ActeResponse])
@@ -56,15 +63,24 @@ def read_acte(*, db: Session = Depends(deps.get_db), acte_id: int):
     return acte
 
 @router.put("/{acte_id}", response_model=ActeResponse)
-def update_acte(*, db: Session = Depends(deps.get_db), acte_id: int, acte_in: ActeUpdate):
+def update_acte(*, db: Session = Depends(deps.get_db), acte_id: int, acte_in: ActeUpdate,
+                request: Request, current_user=Depends(deps.get_current_active_user)):
     acte = crud_acte.get(db, id=acte_id)
     if not acte:
         raise HTTPException(status_code=404, detail="Acte non trouvé")
-    return crud_acte.update(db, db_obj=acte, obj_in=acte_in)
+    acte = crud_acte.update(db, db_obj=acte, obj_in=acte_in)
+    audit.record(db, current_user, request, action=ActionType.UPDATE,
+                 entity_type=EntityType.ACTE, entity_id=acte_id,
+                 description=f"Modification de l'acte #{acte_id}")
+    return acte
 
 @router.delete("/{acte_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_acte(*, db: Session = Depends(deps.get_db), acte_id: int):
+def delete_acte(*, db: Session = Depends(deps.get_db), acte_id: int,
+                request: Request, current_user=Depends(deps.get_current_active_user)):
     acte = crud_acte.get(db, id=acte_id)
     if not acte:
         raise HTTPException(status_code=404, detail="Acte non trouvé")
     crud_acte.remove(db, id=acte_id)
+    audit.record(db, current_user, request, action=ActionType.DELETE,
+                 entity_type=EntityType.ACTE, entity_id=acte_id,
+                 description=f"Suppression de l'acte #{acte_id}")

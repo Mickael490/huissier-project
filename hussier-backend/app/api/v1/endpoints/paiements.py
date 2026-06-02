@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from typing import List
 from app.api import deps
 from app.models.paiement import Paiement
 from app.schemas.paiement import PaiementCreate, PaiementUpdate, PaiementResponse
+from app.services import audit
+from app.models.audit_log import ActionType, EntityType
 
 router = APIRouter()
 
@@ -12,14 +14,20 @@ def get_paiements(db: Session = Depends(deps.get_db), skip: int = 0, limit: int 
     return db.query(Paiement).offset(skip).limit(limit).all()
 
 @router.post("", response_model=PaiementResponse, status_code=201)
-def create_paiement(*, db: Session = Depends(deps.get_db), paiement_in: PaiementCreate):
+def create_paiement(*, db: Session = Depends(deps.get_db), paiement_in: PaiementCreate,
+                    request: Request, current_user=Depends(deps.get_current_active_user)):
     data = paiement_in.model_dump()
-    data['type_paiement'] = data['type_paiement'].upper()
-    data['mode_paiement'] = data['mode_paiement'].lower()
+    if data.get('type_paiement'):
+        data['type_paiement'] = data['type_paiement'].lower()
+    if data.get('mode_paiement'):
+        data['mode_paiement'] = data['mode_paiement'].lower()
     paiement = Paiement(**data)
     db.add(paiement)
     db.commit()
     db.refresh(paiement)
+    audit.record(db, current_user, request, action=ActionType.CREATE,
+                 entity_type=EntityType.PAIEMENT, entity_id=paiement.id,
+                 description=f"Enregistrement du paiement #{paiement.id}")
     return paiement
 
 @router.get("/{paiement_id}", response_model=PaiementResponse)
@@ -30,27 +38,34 @@ def get_paiement(*, db: Session = Depends(deps.get_db), paiement_id: int):
     return paiement
 
 @router.put("/{paiement_id}", response_model=PaiementResponse)
-def update_paiement(*, db: Session = Depends(deps.get_db), paiement_id: int, paiement_in: PaiementUpdate):
+def update_paiement(*, db: Session = Depends(deps.get_db), paiement_id: int, paiement_in: PaiementUpdate,
+                    request: Request, current_user=Depends(deps.get_current_active_user)):
     paiement = db.query(Paiement).filter(Paiement.id == paiement_id).first()
     if not paiement:
         raise HTTPException(status_code=404, detail="Paiement non trouvé")
     data = paiement_in.model_dump(exclude_unset=True)
-    if 'type_paiement' in data and data['type_paiement']:
-        data['type_paiement'] = data['type_paiement'].upper()
-        pass
-    if 'mode_paiement' in data and data['mode_paiement']:
+    if data.get('type_paiement'):
+        data['type_paiement'] = data['type_paiement'].lower()
+    if data.get('mode_paiement'):
         data['mode_paiement'] = data['mode_paiement'].lower()
     for field, value in data.items():
         setattr(paiement, field, value)
     db.commit()
     db.refresh(paiement)
+    audit.record(db, current_user, request, action=ActionType.UPDATE,
+                 entity_type=EntityType.PAIEMENT, entity_id=paiement_id,
+                 description=f"Modification du paiement #{paiement_id}")
     return paiement
 
 @router.delete("/{paiement_id}", status_code=204)
-def delete_paiement(*, db: Session = Depends(deps.get_db), paiement_id: int):
+def delete_paiement(*, db: Session = Depends(deps.get_db), paiement_id: int,
+                    request: Request, current_user=Depends(deps.get_current_active_user)):
     paiement = db.query(Paiement).filter(Paiement.id == paiement_id).first()
     if not paiement:
         raise HTTPException(status_code=404, detail="Paiement non trouvé")
     db.delete(paiement)
     db.commit()
+    audit.record(db, current_user, request, action=ActionType.DELETE,
+                 entity_type=EntityType.PAIEMENT, entity_id=paiement_id,
+                 description=f"Suppression du paiement #{paiement_id}")
     return None

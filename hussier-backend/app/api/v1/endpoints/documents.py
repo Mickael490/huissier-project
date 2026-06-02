@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Request
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from typing import Optional
@@ -8,6 +8,8 @@ from app.api import deps
 from app.crud.crud_document import crud_document
 from app.crud.crud_dossier import crud_dossier
 from app.schemas.document import DocumentResponse, DocumentList, DocumentUpdate, TypeDocumentEnum, DocumentCreate
+from app.services import audit
+from app.models.audit_log import ActionType, EntityType
 
 router = APIRouter()
 
@@ -35,6 +37,8 @@ def get_all_documents(
 async def upload_document(
     *,
     db: Session = Depends(deps.get_db),
+    request: Request,
+    current_user=Depends(deps.get_current_active_user),
     file: UploadFile = File(...),
     id_dossier: int = Form(...),
     type_document: TypeDocumentEnum = Form(...),
@@ -80,6 +84,9 @@ async def upload_document(
         taille_octets=file_size
     )
 
+    audit.record(db, current_user, request, action=ActionType.CREATE,
+                 entity_type=EntityType.DOCUMENT, entity_id=document.id,
+                 description=f"Ajout du document {file.filename}")
     return document
 
 @router.get("/dossier/{dossier_id}", response_model=DocumentList)
@@ -108,15 +115,23 @@ def download_document(*, db: Session = Depends(deps.get_db), document_id: int):
     return FileResponse(path=document.chemin_fichier, filename=document.nom_original, media_type=document.mime_type)
 
 @router.patch("/{document_id}", response_model=DocumentResponse)
-def update_document(*, db: Session = Depends(deps.get_db), document_id: int, document_in: DocumentUpdate):
+def update_document(*, db: Session = Depends(deps.get_db), document_id: int, document_in: DocumentUpdate,
+                    request: Request, current_user=Depends(deps.get_current_active_user)):
     document = crud_document.update_document(db, document_id=document_id, document_update=document_in)
     if not document:
         raise HTTPException(status_code=404, detail="Document non trouvé")
+    audit.record(db, current_user, request, action=ActionType.UPDATE,
+                 entity_type=EntityType.DOCUMENT, entity_id=document_id,
+                 description=f"Modification du document #{document_id}")
     return document
 
 @router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_document(*, db: Session = Depends(deps.get_db), document_id: int):
+def delete_document(*, db: Session = Depends(deps.get_db), document_id: int,
+                    request: Request, current_user=Depends(deps.get_current_active_user)):
     success = crud_document.delete_document(db, document_id=document_id)
     if not success:
         raise HTTPException(status_code=404, detail="Document non trouvé")
+    audit.record(db, current_user, request, action=ActionType.DELETE,
+                 entity_type=EntityType.DOCUMENT, entity_id=document_id,
+                 description=f"Suppression du document #{document_id}")
     return None

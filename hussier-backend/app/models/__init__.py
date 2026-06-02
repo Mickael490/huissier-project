@@ -8,7 +8,7 @@ from app.models.affectation_dossier import AffectationDossier
 from app.models.partie import Partie, RolePartie
 from app.models.agenda import Agenda, TypeRendezVous, StatutRendezVous, PrioriteRendezVous
 from app.models.acte import Acte, TypeActe
-from app.models.paiement import Paiement, TypePaiement, ModePaiement
+from app.models.paiement import Paiement
 from app.models.archive import Archive, TypeArchive
 from app.models.audit_log import AuditLog
 from app.models.document import Document
@@ -33,8 +33,6 @@ __all__ = [
     "Acte",
     "TypeActe",
     "Paiement",
-    "TypePaiement",
-    "ModePaiement",
     "Archive",
     "TypeArchive",
     "AuditLog",   
