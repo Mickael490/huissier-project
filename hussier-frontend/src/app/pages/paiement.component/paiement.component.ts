@@ -71,6 +71,14 @@ export class PaiementComponent implements OnInit {
     { label: 'Autre', value: 'autre', icon: 'pi pi-wallet' }
   ];
 
+  reseauxMobile = [
+    { label: 'Orange Money', value: 'orange', icon: 'pi pi-circle-fill', color: '#ff7900' },
+    { label: 'MTN Mobile Money', value: 'mtn', icon: 'pi pi-circle-fill', color: '#ffcc00' },
+    { label: 'Moov Money', value: 'moov', icon: 'pi pi-circle-fill', color: '#0066b3' },
+    { label: 'Wave', value: 'wave', icon: 'pi pi-circle-fill', color: '#1dc8f5' },
+    { label: 'Coris Money', value: 'coris', icon: 'pi pi-circle-fill', color: '#e30613' }
+  ];
+
   typeOptions = [
     { label: 'Acompte', value: 'acompte' },
     { label: 'Provision', value: 'provision' },
@@ -114,7 +122,13 @@ export class PaiementComponent implements OnInit {
   }
 
   openNew(): void {
-    this.paiement = { mode_paiement: 'especes', reverse_au_client: false };
+    const today = new Date().toISOString().substring(0, 10);
+    this.paiement = {
+      mode_paiement: 'especes',
+      type_paiement: '',
+      date_paiement: today,
+      reverse_au_client: false
+    };
     this.protegerParMotDePasse = false;
     this.isEditMode = false;
     this.paiementDialog = true;
@@ -167,10 +181,17 @@ export class PaiementComponent implements OnInit {
     if (!this.protegerParMotDePasse) {
       this.paiement.mot_de_passe = null;
     }
-    if (!this.paiement.id_dossier || !this.paiement.montant) {
+    if (
+      !this.paiement.id_dossier ||
+      !this.paiement.montant ||
+      !this.paiement.type_paiement ||
+      !this.paiement.date_paiement ||
+      !this.paiement.mode_paiement
+    ) {
       this.messageService.add({ severity: 'warn', summary: 'Attention', detail: 'Veuillez remplir les champs obligatoires' });
       return;
     }
+    this.paiement.montant = Number(this.paiement.montant);
     if (this.isEditMode && this.paiement.id) {
       this.http.put(`${this.apiUrl}/${this.paiement.id}`, this.paiement, { headers: this.getHeaders() }).subscribe({
         next: () => {

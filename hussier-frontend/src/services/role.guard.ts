@@ -1,34 +1,32 @@
 import { inject } from '@angular/core';
 import { Router, CanActivateFn } from '@angular/router';
 
-export const adminGuard: CanActivateFn = () => {
+export type AppRole = 'ADMIN' | 'HUISSIER' | 'CLERC' | 'ASSISTANT' | 'SECRETAIRE';
+
+const currentRole = (): string => (localStorage.getItem('role') || '').toUpperCase();
+
+export const rolesGuard = (allowed: AppRole[]): CanActivateFn => () => {
   const router = inject(Router);
-  const role = (localStorage.getItem('role') || '').toUpperCase();
-  if (role === 'ADMIN') return true;
+  if (allowed.includes(currentRole() as AppRole)) return true;
   router.navigate(['/pages/dashboard']);
   return false;
 };
 
-export const huissierGuard: CanActivateFn = () => {
-  const router = inject(Router);
-  const role = (localStorage.getItem('role') || '').toUpperCase();
-  if (['ADMIN', 'HUISSIER'].includes(role)) return true;
-  router.navigate(['/pages/dashboard']);
-  return false;
-};
+export const hasRole = (allowed: AppRole[]): boolean =>
+  allowed.includes(currentRole() as AppRole);
 
-export const clercGuard: CanActivateFn = () => {
-  const router = inject(Router);
-  const role = (localStorage.getItem('role') || '').toUpperCase();
-  if (['ADMIN', 'HUISSIER', 'CLERC'].includes(role)) return true;
-  router.navigate(['/pages/dashboard']);
-  return false;
-};
+export const adminGuard: CanActivateFn = rolesGuard(['ADMIN']);
+export const huissierGuard: CanActivateFn = rolesGuard(['ADMIN', 'HUISSIER']);
+export const clercGuard: CanActivateFn = rolesGuard(['ADMIN', 'HUISSIER', 'CLERC']);
+export const assistantGuard: CanActivateFn = rolesGuard(['ADMIN', 'HUISSIER', 'CLERC', 'ASSISTANT']);
+export const secretaireGuard: CanActivateFn = rolesGuard(['ADMIN', 'HUISSIER', 'CLERC', 'ASSISTANT', 'SECRETAIRE']);
 
-export const secretaireGuard: CanActivateFn = () => {
-  const router = inject(Router);
-  const role = (localStorage.getItem('role') || '').toUpperCase();
-  if (['ADMIN', 'HUISSIER', 'CLERC', 'ASSISTANT', 'SECRETAIRE'].includes(role)) return true;
-  router.navigate(['/pages/dashboard']);
-  return false;
-};
+export const dossierGuard: CanActivateFn = rolesGuard(['ADMIN', 'HUISSIER', 'CLERC', 'ASSISTANT']);
+export const clientGuard: CanActivateFn = rolesGuard(['ADMIN', 'HUISSIER', 'CLERC', 'SECRETAIRE']);
+export const partieGuard: CanActivateFn = rolesGuard(['ADMIN', 'HUISSIER', 'CLERC']);
+export const acteGuard: CanActivateFn = rolesGuard(['ADMIN', 'HUISSIER', 'CLERC']);
+export const paiementGuard: CanActivateFn = rolesGuard(['ADMIN', 'HUISSIER']);
+export const affectationGuard: CanActivateFn = rolesGuard(['ADMIN', 'HUISSIER']);
+export const documentGuard: CanActivateFn = rolesGuard(['ADMIN', 'HUISSIER', 'CLERC', 'ASSISTANT']);
+export const archiveGuard: CanActivateFn = rolesGuard(['ADMIN', 'HUISSIER']);
+export const agendaGuard: CanActivateFn = rolesGuard(['ADMIN', 'HUISSIER', 'CLERC', 'ASSISTANT', 'SECRETAIRE']);

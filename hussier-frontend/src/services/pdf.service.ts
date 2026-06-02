@@ -195,63 +195,134 @@ export class PdfService {
   }
 
   imprimerRecuPaiement(paiement: any, dossierLabel: string) {
-    const doc = new jsPDF({ format: 'a5' });
-    const w = 148;
-    doc.setFillColor(30, 58, 95);
-    doc.rect(0, 0, w, 30, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('RECU DE PAIEMENT', w / 2, 13, { align: 'center' });
-    doc.setFontSize(9);
-    doc.text('Cabinet Me SAWADOGO - Huissier de Justice', w / 2, 21, { align: 'center' });
-    doc.setFontSize(8);
-    doc.text('Ouagadougou, Burkina Faso', w / 2, 27, { align: 'center' });
-    doc.setTextColor(0, 0, 0);
-    const numRecu = 'N' + String(paiement.id).padStart(6, '0');
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text(numRecu, w - 14, 38, { align: 'right' });
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.text('Date : ' + (paiement.date_paiement ? new Date(paiement.date_paiement).toLocaleDateString('fr-FR') : new Date().toLocaleDateString('fr-FR')), 14, 38);
-    doc.setDrawColor(200, 200, 200);
-    doc.line(14, 42, w - 14, 42);
-    autoTable(doc, {
-      startY: 46,
-      body: [
-        ['Dossier', dossierLabel],
-        ['Type', paiement.type_paiement || ''],
-        ['Mode', paiement.mode_paiement || ''],
-        ['Libelle', paiement.note_caisse || ''],
-        ['Reference', paiement.reference || ''],
-      ],
-      styles: { fontSize: 8 },
-      columnStyles: { 0: { fontStyle: 'bold', cellWidth: 50, fillColor: [240, 244, 255] }, 1: { cellWidth: 80 } },
-      theme: 'grid'
+    const numRecu = 'N' + String(paiement.id || '').padStart(6, '0');
+    const dateStr = paiement.date_paiement
+      ? new Date(paiement.date_paiement).toLocaleDateString('fr-FR')
+      : new Date().toLocaleDateString('fr-FR');
+    const montant = Number(paiement.montant || 0).toLocaleString('fr-FR') + ' FCFA';
+
+    const esc = (v: any) => String(v ?? '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+
+    let modeDetails = '';
+    const mode = (paiement.mode_paiement || '').toLowerCase();
+    if (mode === 'cheque' && paiement.numero_cheque) {
+      modeDetails = `<tr><th>N° chèque</th><td>${esc(paiement.numero_cheque)}</td></tr>`;
+    } else if (mode === 'virement' && paiement.reference_virement) {
+      modeDetails = `<tr><th>Réf. virement</th><td>${esc(paiement.reference_virement)}</td></tr>`;
+    } else if (mode === 'mobile') {
+      const reseau = paiement.reseau_mobile ? String(paiement.reseau_mobile).toUpperCase() : '';
+      const num = paiement.numero_mobile || '';
+      if (reseau || num) {
+        modeDetails = `<tr><th>Mobile Money</th><td>${esc(reseau)}${reseau && num ? ' — ' : ''}${esc(num)}</td></tr>`;
+      }
+    } else if (mode === 'autre' && paiement.autre_mode) {
+      modeDetails = `<tr><th>Mode (autre)</th><td>${esc(paiement.autre_mode)}</td></tr>`;
+    }
+
+    const html = `<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>Reçu ${esc(numRecu)}</title>
+<style>
+  @page { size: A5; margin: 10mm; }
+  * { box-sizing: border-box; }
+  body { font-family: Helvetica, Arial, sans-serif; color: #1e293b; margin: 0; padding: 0; }
+  .recu { width: 100%; max-width: 130mm; margin: 0 auto; }
+  .head { background: #1e3a5f; color: #fff; padding: 14px 16px; text-align: center; border-radius: 6px 6px 0 0; }
+  .head .title { font-size: 16px; font-weight: 700; letter-spacing: 2px; }
+  .head .sub { font-size: 11px; opacity: .9; margin-top: 4px; }
+  .meta { display: flex; justify-content: space-between; font-size: 11px; padding: 10px 16px 0; }
+  .meta .num { font-weight: 700; color: #1e3a5f; }
+  table { width: calc(100% - 32px); margin: 8px 16px; border-collapse: collapse; font-size: 11px; }
+  th, td { border: 1px solid #e2e8f0; padding: 6px 10px; text-align: left; }
+  th { background: #f0f4ff; width: 38%; color: #1e3a5f; }
+  .montant { margin: 10px 16px; padding: 14px; background: #f0fdf4; border: 1.5px solid #22c55e; border-radius: 6px; text-align: center; color: #166534; }
+  .montant .lbl { font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+  .montant .val { font-size: 20px; font-weight: 700; margin-top: 4px; }
+  .sig { margin: 18px 16px 8px; font-size: 11px; }
+  .sig .box { margin-top: 6px; width: 60mm; height: 22mm; border: 1px dashed #94a3b8; }
+  .foot { margin: 16px; text-align: center; font-size: 9px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 8px; }
+  @media print { .no-print { display: none; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+</style>
+</head>
+<body>
+  <div class="recu">
+    <div class="head">
+      <div class="title">REÇU DE PAIEMENT</div>
+      <div class="sub">Cabinet Me SAWADOGO — Huissier de Justice</div>
+      <div class="sub">Ouagadougou, Burkina Faso</div>
+    </div>
+    <div class="meta">
+      <span>Date : <strong>${esc(dateStr)}</strong></span>
+      <span class="num">${esc(numRecu)}</span>
+    </div>
+    <table>
+      <tr><th>Dossier</th><td>${esc(dossierLabel)}</td></tr>
+      <tr><th>Type</th><td>${esc(paiement.type_paiement || '')}</td></tr>
+      <tr><th>Mode</th><td>${esc(paiement.mode_paiement || '')}</td></tr>
+      ${modeDetails}
+      <tr><th>Libellé</th><td>${esc(paiement.note_caisse || '')}</td></tr>
+    </table>
+    <div class="montant">
+      <div class="lbl">MONTANT ENCAISSÉ</div>
+      <div class="val">${esc(montant)}</div>
+    </div>
+    <div class="sig">
+      Signature et cachet :
+      <div class="box"></div>
+    </div>
+    <div class="foot">Ce reçu est un document officiel du Cabinet Me SAWADOGO</div>
+  </div>
+  <script>
+    window.addEventListener('load', function () {
+      setTimeout(function () {
+        window.focus();
+        window.print();
+      }, 150);
+      window.addEventListener('afterprint', function () { window.close(); });
     });
-    const my = (doc as any).lastAutoTable.finalY + 8;
-    doc.setFillColor(240, 253, 244);
-    doc.setDrawColor(34, 197, 94);
-    doc.roundedRect(14, my, w - 28, 20, 3, 3, 'FD');
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(22, 101, 52);
-    doc.text('MONTANT ENCAISSE', w / 2, my + 8, { align: 'center' });
-    doc.setFontSize(16);
-    doc.text(Number(paiement.montant || 0).toLocaleString('fr-FR') + ' FCFA', w / 2, my + 16, { align: 'center' });
-    const sy = my + 30;
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Signature et cachet :', 14, sy);
-    doc.setDrawColor(200, 200, 200);
-    doc.rect(14, sy + 3, 50, 20);
-    const ph = doc.internal.pageSize.height;
-    doc.setFontSize(7);
-    doc.setTextColor(150, 150, 150);
-    doc.text('Ce recu est un document officiel du Cabinet Me SAWADOGO', w / 2, ph - 8, { align: 'center' });
-    doc.save('recu-paiement-' + numRecu + '.pdf');
+  <\/script>
+</body>
+</html>`;
+
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    iframe.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(iframe);
+
+    const cleanup = () => {
+      setTimeout(() => {
+        if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+      }, 500);
+    };
+
+    const htmlNoScript = html.replace(/<script[\s\S]*?<\/script>/g, '');
+
+    iframe.onload = () => {
+      const win = iframe.contentWindow;
+      if (!win) { cleanup(); return; }
+      try {
+        win.focus();
+        win.onafterprint = cleanup;
+        win.print();
+      } catch (e) {
+        cleanup();
+      }
+    };
+
+    const doc = iframe.contentWindow?.document;
+    if (!doc) { cleanup(); return; }
+    doc.open();
+    doc.write(htmlNoScript);
+    doc.close();
   }
 
   exportActes(actes: any[]) {

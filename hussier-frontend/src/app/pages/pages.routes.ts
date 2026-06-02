@@ -14,22 +14,33 @@ import { UtilisateurComponent } from './utilisateur.component/utilisateur.compon
 import { DossierComponent } from './dossier.component/dossier.component';
 import { AffectationComponent } from './affectation.component/affectation.component';
 import { PaiementComponent } from './paiement.component/paiement.component';
-import { adminGuard, huissierGuard, clercGuard } from 'src/services/role.guard';
+import {
+    adminGuard,
+    dossierGuard,
+    clientGuard,
+    partieGuard,
+    acteGuard,
+    paiementGuard,
+    affectationGuard,
+    documentGuard,
+    archiveGuard,
+    agendaGuard
+} from 'src/services/role.guard';
 import { ProfilComponent } from './profil/profil.component';
 import { RolesComponent } from './roles/roles.component';
 
 export default [
     { path: 'profil', component: ProfilComponent },
-    { path: 'roles', component: RolesComponent },
-    { path: 'dossier', component: DossierComponent, canActivate: [clercGuard] },
-    { path: 'client', component: ClientComponent, canActivate: [clercGuard] },
-    { path: 'partie', component: PartieComponent, canActivate: [clercGuard] },
-    { path: 'paiement', component: PaiementComponent, canActivate: [huissierGuard] },
-    { path: 'acte', component: ActeComponent, canActivate: [clercGuard] },
-    { path: 'affectation', component: AffectationComponent, canActivate: [huissierGuard] },
-    { path: 'document', component: DocumentComponent, canActivate: [clercGuard] },
-    { path: 'archive', component: ArchiveComponent, canActivate: [huissierGuard] },
-    { path: 'agenda', component: AgendaComponent, canActivate: [clercGuard] },
+    { path: 'roles', component: RolesComponent, canActivate: [adminGuard] },
+    { path: 'dossier', component: DossierComponent, canActivate: [dossierGuard] },
+    { path: 'client', component: ClientComponent, canActivate: [clientGuard] },
+    { path: 'partie', component: PartieComponent, canActivate: [partieGuard] },
+    { path: 'paiement', component: PaiementComponent, canActivate: [paiementGuard] },
+    { path: 'acte', component: ActeComponent, canActivate: [acteGuard] },
+    { path: 'affectation', component: AffectationComponent, canActivate: [affectationGuard] },
+    { path: 'document', component: DocumentComponent, canActivate: [documentGuard] },
+    { path: 'archive', component: ArchiveComponent, canActivate: [archiveGuard] },
+    { path: 'agenda', component: AgendaComponent, canActivate: [agendaGuard] },
     { path: 'cabinet', component: CabinetComponent, canActivate: [adminGuard] },
     { path: 'utilisateur', component: UtilisateurComponent, canActivate: [adminGuard] },
     { path: 'audit', component: AuditComponent, canActivate: [adminGuard] },

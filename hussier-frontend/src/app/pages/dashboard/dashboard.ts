@@ -9,6 +9,7 @@ import { BadgeModule } from 'primeng/badge';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 import { RouterModule } from '@angular/router';
+import { hasRole, AppRole } from 'src/services/role.guard';
 
 @Component({
     selector: 'app-dashboard',
@@ -54,7 +55,7 @@ import { RouterModule } from '@angular/router';
         </div>
 
         <!-- Barre progression objectif mensuel -->
-        <div style="margin-top:20px; background:rgba(255,255,255,0.1); border-radius:10px; padding:14px 20px;">
+        <div *ngIf="canFinance" style="margin-top:20px; background:rgba(255,255,255,0.1); border-radius:10px; padding:14px 20px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
             <span style="font-size:12px; color:rgba(255,255,255,0.8); font-weight:600;">Objectif mensuel — {{ (stats?.kpis?.paiements_mois || 0) | number:'1.0-0' }} FCFA encaisses</span>
             <span style="font-size:12px; color:rgba(255,255,255,0.8);">{{ progressionMois }}%</span>
@@ -62,6 +63,23 @@ import { RouterModule } from '@angular/router';
           <div style="background:rgba(255,255,255,0.2); border-radius:6px; height:8px; overflow:hidden;">
             <div [style]="'height:100%; border-radius:6px; background:linear-gradient(90deg, #10b981, #4ade80); width:' + progressionMois + '%; transition:width 1s ease;'"></div>
           </div>
+        </div>
+      </div>
+
+      <!-- ACTIONS RAPIDES (adaptees au role) -->
+      <div style="background:white; border-radius:14px; padding:18px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+        <div style="font-size:13px; font-weight:700; color:#1e3a5f; margin-bottom:14px; display:flex; align-items:center; gap:8px;">
+          <i class="pi pi-bolt" style="color:#f59e0b;"></i> Actions rapides
+        </div>
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+          <a *ngFor="let qa of quickActions" [routerLink]="qa.link"
+            style="display:flex; align-items:center; gap:10px; padding:10px 16px; border-radius:10px; text-decoration:none; background:#f8fafc; border:1px solid #f1f5f9; transition:all .15s;"
+            onmouseover="this.style.background='#eef2ff'" onmouseout="this.style.background='#f8fafc'">
+            <div [style]="'width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:' + qa.color + '1a;'">
+              <i [class]="qa.icon" [style]="'color:' + qa.color + '; font-size:14px;'"></i>
+            </div>
+            <span style="font-size:13px; font-weight:600; color:#334155;">{{ qa.label }}</span>
+          </a>
         </div>
       </div>
 
@@ -111,7 +129,7 @@ import { RouterModule } from '@angular/router';
           </div>
         </div>
 
-        <div style="background:white; border-radius:14px; padding:20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); border-left:4px solid #10b981;">
+        <div *ngIf="canFinance" style="background:white; border-radius:14px; padding:20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); border-left:4px solid #10b981;">
           <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
             <div>
               <div style="font-size:12px; color:#94a3b8; margin-bottom:4px; text-transform:uppercase; letter-spacing:1px;">Encaissements</div>
@@ -128,7 +146,7 @@ import { RouterModule } from '@angular/router';
           </div>
         </div>
 
-        <div style="background:white; border-radius:14px; padding:20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); border-left:4px solid #f97316;">
+        <div *ngIf="canClients" style="background:white; border-radius:14px; padding:20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); border-left:4px solid #f97316;">
           <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
             <div>
               <div style="font-size:12px; color:#94a3b8; margin-bottom:4px; text-transform:uppercase; letter-spacing:1px;">Clients</div>
@@ -160,7 +178,7 @@ import { RouterModule } from '@angular/router';
 
       <!-- KPIs SECONDAIRES -->
       <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px;">
-        <div style="background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px;">
+        <div *ngIf="canActes" style="background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px;">
           <div style="width:40px; height:40px; border-radius:10px; background:#ede9fe; display:flex; align-items:center; justify-content:center;">
             <i class="pi pi-file-edit" style="color:#8b5cf6; font-size:16px;"></i>
           </div>
@@ -169,7 +187,7 @@ import { RouterModule } from '@angular/router';
             <div style="font-size:12px; color:#94a3b8;">Actes</div>
           </div>
         </div>
-        <div style="background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px;">
+        <div *ngIf="canActes" style="background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px;">
           <div style="width:40px; height:40px; border-radius:10px; background:#fef2f2; display:flex; align-items:center; justify-content:center;">
             <i class="pi pi-sitemap" style="color:#ef4444; font-size:16px;"></i>
           </div>
@@ -178,7 +196,7 @@ import { RouterModule } from '@angular/router';
             <div style="font-size:12px; color:#94a3b8;">Parties</div>
           </div>
         </div>
-        <div style="background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px;">
+        <div *ngIf="canDossiers" style="background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px;">
           <div style="width:40px; height:40px; border-radius:10px; background:#f0fdf4; display:flex; align-items:center; justify-content:center;">
             <i class="pi pi-file" style="color:#10b981; font-size:16px;"></i>
           </div>
@@ -187,7 +205,7 @@ import { RouterModule } from '@angular/router';
             <div style="font-size:12px; color:#94a3b8;">Documents</div>
           </div>
         </div>
-        <div style="background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px;">
+        <div *ngIf="canFinance" style="background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px;">
           <div style="width:40px; height:40px; border-radius:10px; background:#fff7ed; display:flex; align-items:center; justify-content:center;">
             <i class="pi pi-inbox" style="color:#f97316; font-size:16px;"></i>
           </div>
@@ -358,7 +376,7 @@ import { RouterModule } from '@angular/router';
       </div>
 
       <!-- DERNIERS PAIEMENTS -->
-      <div style="background:white; border-radius:14px; padding:24px; box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+      <div *ngIf="canFinance" style="background:white; border-radius:14px; padding:24px; box-shadow:0 1px 4px rgba(0,0,0,0.08);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
           <div>
             <div style="font-size:15px; font-weight:700; color:#1e3a5f;">Derniers paiements</div>
@@ -451,7 +469,29 @@ export class Dashboard implements OnInit, OnDestroy {
       { type: 'LOGIN', texte: 'Connexion depuis Ouagadougou', temps: 'Il y a 4h' },
     ];
 
+    // --- Visibilite par role (aligne sur role.guard.ts) ---
+    get isAdmin(): boolean { return hasRole(['ADMIN']); }
+    get canFinance(): boolean { return hasRole(['ADMIN', 'HUISSIER']); }          // Paiements, Affectations, Archives
+    get canActes(): boolean { return hasRole(['ADMIN', 'HUISSIER', 'CLERC']); }     // Parties, Actes
+    get canClients(): boolean { return hasRole(['ADMIN', 'HUISSIER', 'CLERC', 'SECRETAIRE']); }
+    get canDossiers(): boolean { return hasRole(['ADMIN', 'HUISSIER', 'CLERC', 'ASSISTANT']); }
+
+    // Actions rapides specifiques au profil connecte
+    quickActions: { label: string; icon: string; color: string; link: string }[] = [];
+
     constructor(private http: HttpClient) {}
+
+    private buildQuickActions() {
+        const a: any[] = [];
+        if (this.canDossiers) a.push({ label: 'Nouveau dossier', icon: 'pi pi-folder-plus', color: '#4f46e5', link: '/pages/dossier' });
+        if (this.canActes) a.push({ label: 'Rediger un acte', icon: 'pi pi-file-edit', color: '#8b5cf6', link: '/pages/acte' });
+        if (this.canClients) a.push({ label: 'Ajouter un client', icon: 'pi pi-user-plus', color: '#f97316', link: '/pages/client' });
+        if (this.canFinance) a.push({ label: 'Enregistrer un paiement', icon: 'pi pi-dollar', color: '#10b981', link: '/pages/paiement' });
+        a.push({ label: 'Planifier un RDV', icon: 'pi pi-calendar-plus', color: '#06b6d4', link: '/pages/agenda' });
+        if (this.canDossiers) a.push({ label: 'Importer un document', icon: 'pi pi-file', color: '#0ea5e9', link: '/pages/document' });
+        if (this.isAdmin) a.push({ label: 'Gerer les utilisateurs', icon: 'pi pi-users', color: '#64748b', link: '/pages/utilisateur' });
+        this.quickActions = a;
+    }
 
     ngOnInit() {
         this.nomUtilisateur = (localStorage.getItem('prenom') || '' + ' ' + (localStorage.getItem('nom') || '')).trim() || 'Utilisateur';
@@ -460,6 +500,7 @@ export class Dashboard implements OnInit, OnDestroy {
         this.updateHeure();
         this.timer = setInterval(() => this.updateHeure(), 1000);
         this.generateHeatmap();
+        this.buildQuickActions();
         this.loadStats();
     }
 
@@ -519,12 +560,13 @@ export class Dashboard implements OnInit, OnDestroy {
     }
 
     buildComparatif(data: any) {
-        this.comparatif = [
+        const items: any[] = [
             { label: 'Dossiers', actuel: data?.kpis?.total_dossiers || 0, precedent: Math.max(0, (data?.kpis?.total_dossiers || 0) - 2), hausse: true, pct: 75 },
-            { label: 'Clients', actuel: data?.kpis?.total_clients || 0, precedent: Math.max(0, (data?.kpis?.total_clients || 0) - 1), hausse: true, pct: 80 },
-            { label: 'Paiements (FCFA)', actuel: data?.kpis?.paiements_mois || 0, precedent: Math.max(0, (data?.kpis?.paiements_mois || 0) * 0.88), hausse: true, pct: 88 },
-            { label: 'RDV semaine', actuel: data?.kpis?.rdv_semaine || 0, precedent: Math.max(0, (data?.kpis?.rdv_semaine || 0) - 1), hausse: false, pct: 60 },
         ];
+        if (this.canClients) items.push({ label: 'Clients', actuel: data?.kpis?.total_clients || 0, precedent: Math.max(0, (data?.kpis?.total_clients || 0) - 1), hausse: true, pct: 80 });
+        if (this.canFinance) items.push({ label: 'Paiements (FCFA)', actuel: data?.kpis?.paiements_mois || 0, precedent: Math.max(0, (data?.kpis?.paiements_mois || 0) * 0.88), hausse: true, pct: 88 });
+        items.push({ label: 'RDV semaine', actuel: data?.kpis?.rdv_semaine || 0, precedent: Math.max(0, (data?.kpis?.rdv_semaine || 0) - 1), hausse: false, pct: 60 });
+        this.comparatif = items;
     }
 
     buildCharts(data: any) {

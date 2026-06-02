@@ -175,15 +175,59 @@
       <input pInputText type="date" [(ngModel)]="paiement.date_paiement" class="w-full" style="border-radius:8px;" />
     </div>
     <div class="col-span-6">
-      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Référence (chèque/virement)</label>
-      <input pInputText [(ngModel)]="paiement.reference" class="w-full" style="border-radius:8px;" placeholder="N° chèque ou virement" />
-    </div>
-    <div class="col-span-6">
       <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Reversé au client</label>
       <select [(ngModel)]="paiement.reverse_au_client" class="w-full p-inputtext" style="border-radius:8px;">
         <option [ngValue]="false">Non</option>
         <option [ngValue]="true">Oui</option>
       </select>
+    </div>
+
+    <!-- Champ conditionnel : Chèque -->
+    <div class="col-span-12" *ngIf="paiement.mode_paiement === 'cheque'">
+      <div style="background:#eff6ff; border-radius:10px; padding:14px 16px; border-left:4px solid #1d4ed8;">
+        <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">
+          <i class="pi pi-file" style="color:#1d4ed8; margin-right:4px;"></i>N° du chèque *
+        </label>
+        <input pInputText [(ngModel)]="paiement.numero_cheque" class="w-full" style="border-radius:8px;" placeholder="Ex. 1234567" />
+      </div>
+    </div>
+
+    <!-- Champ conditionnel : Virement -->
+    <div class="col-span-12" *ngIf="paiement.mode_paiement === 'virement'">
+      <div style="background:#ede9fe; border-radius:10px; padding:14px 16px; border-left:4px solid #7c3aed;">
+        <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">
+          <i class="pi pi-arrow-right-arrow-left" style="color:#7c3aed; margin-right:4px;"></i>Référence du virement *
+        </label>
+        <input pInputText [(ngModel)]="paiement.reference_virement" class="w-full" style="border-radius:8px;" placeholder="Réf. bancaire" />
+      </div>
+    </div>
+
+    <!-- Champs conditionnels : Mobile Money (réseau + numéro) -->
+    <div class="col-span-12" *ngIf="paiement.mode_paiement === 'mobile'">
+      <div style="background:#fef3c7; border-radius:10px; padding:14px 16px; border-left:4px solid #d97706;">
+        <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:10px;">
+          <i class="pi pi-mobile" style="color:#d97706; margin-right:4px;"></i>Réseau Mobile Money *
+        </label>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+          <div *ngFor="let r of reseauxMobile" (click)="paiement.reseau_mobile = r.value"
+            [style]="'flex:1; min-width:110px; padding:10px; border-radius:10px; cursor:pointer; text-align:center; background:white; border:2px solid ' + (paiement.reseau_mobile === r.value ? r.color : '#e2e8f0')">
+            <i [class]="r.icon" [style.color]="r.color" style="font-size:18px; display:block; margin-bottom:4px;"></i>
+            <div style="font-size:11px; font-weight:600; color:#1e3a5f;">{{ r.label }}</div>
+          </div>
+        </div>
+        <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Numéro de téléphone *</label>
+        <input pInputText [(ngModel)]="paiement.numero_mobile" class="w-full" style="border-radius:8px;" placeholder="Ex. 70 12 34 56" />
+      </div>
+    </div>
+
+    <!-- Champ conditionnel : Autre -->
+    <div class="col-span-12" *ngIf="paiement.mode_paiement === 'autre'">
+      <div style="background:#f1f5f9; border-radius:10px; padding:14px 16px; border-left:4px solid #64748b;">
+        <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">
+          <i class="pi pi-wallet" style="color:#64748b; margin-right:4px;"></i>Préciser le mode *
+        </label>
+        <input pInputText [(ngModel)]="paiement.autre_mode" class="w-full" style="border-radius:8px;" placeholder="Description du mode de paiement" />
+      </div>
     </div>
     <div class="col-span-12">
       <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Note de caisse / Libellé</label>
@@ -258,9 +302,21 @@
                   {{ getModeLabel(paiementSelectionne.mode_paiement) }}
                 </div>
               </div>
-              <div style="display:flex; justify-content:space-between;">
-                <span style="color:#64748b; font-size:13px;">Référence</span>
-                <span style="font-weight:600; color:#1e293b; font-size:13px;">{{ paiementSelectionne.reference || '—' }}</span>
+              <div style="display:flex; justify-content:space-between;" *ngIf="paiementSelectionne.mode_paiement === 'cheque'">
+                <span style="color:#64748b; font-size:13px;">N° Chèque</span>
+                <span style="font-weight:600; color:#1e293b; font-size:13px;">{{ paiementSelectionne.numero_cheque || '—' }}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;" *ngIf="paiementSelectionne.mode_paiement === 'virement'">
+                <span style="color:#64748b; font-size:13px;">Réf. virement</span>
+                <span style="font-weight:600; color:#1e293b; font-size:13px;">{{ paiementSelectionne.reference_virement || '—' }}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;" *ngIf="paiementSelectionne.mode_paiement === 'mobile'">
+                <span style="color:#64748b; font-size:13px;">Réseau / N°</span>
+                <span style="font-weight:600; color:#1e293b; font-size:13px;">{{ (paiementSelectionne.reseau_mobile | uppercase) || '—' }} {{ paiementSelectionne.numero_mobile ? '— ' + paiementSelectionne.numero_mobile : '' }}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;" *ngIf="paiementSelectionne.mode_paiement === 'autre'">
+                <span style="color:#64748b; font-size:13px;">Mode</span>
+                <span style="font-weight:600; color:#1e293b; font-size:13px;">{{ paiementSelectionne.autre_mode || '—' }}</span>
               </div>
               <div style="display:flex; justify-content:space-between;">
                 <span style="color:#64748b; font-size:13px;">Reversé client</span>
