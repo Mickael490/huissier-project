@@ -15,7 +15,8 @@ def get_dashboard_stats(db: Session = Depends(deps.get_db)):
     from app.models.paiement import Paiement
     from app.models.agenda import Agenda
 
-    maintenant = datetime.now()
+    from datetime import datetime, timezone
+    maintenant = datetime.now(timezone.utc).replace(tzinfo=None)
     debut_mois = maintenant.replace(day=1, hour=0, minute=0, second=0)
     fin_semaine = maintenant + timedelta(days=7)
 
