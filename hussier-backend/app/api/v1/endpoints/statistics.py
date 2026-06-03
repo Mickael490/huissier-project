@@ -67,7 +67,7 @@ def get_dashboard_stats(db: Session = Depends(deps.get_db)):
                 "id": r.id,
                 "titre": r.titre,
                 "type": str(r.type_rdv),
-                "date_debut": str(r.date_debut),
+                "date_debut": r.date_debut.isoformat() if r.date_debut else None,
                 "lieu": r.lieu
             } for r in prochains_rdv
         ],
