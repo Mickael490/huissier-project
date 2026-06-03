@@ -109,7 +109,7 @@ import { hasRole, AppRole } from 'src/services/role.guard';
       <!-- KPIs PRINCIPAUX -->
       <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px;">
 
-        <div style="background:white; border-radius:14px; padding:20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); border-left:4px solid #4f46e5;">
+        <div style="background:linear-gradient(135deg, #f0f4ff 0%, #f5f3ff 100%); border-radius:14px; padding:20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); border-left:4px solid #4f46e5;">
           <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
             <div>
               <div style="font-size:12px; color:#94a3b8; margin-bottom:4px; text-transform:uppercase; letter-spacing:1px;">Dossiers</div>
