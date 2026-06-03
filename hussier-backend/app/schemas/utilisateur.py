@@ -35,7 +35,7 @@ class UtilisateurInDB(UtilisateurBase):
     """Schéma pour un utilisateur en base de données (réponse API)"""
     id: int
     date_creation: datetime
-    date_modification: datetime
+    date_modification: Optional[datetime] = None
     derniere_connexion: Optional[datetime] = None
 
     class Config:
