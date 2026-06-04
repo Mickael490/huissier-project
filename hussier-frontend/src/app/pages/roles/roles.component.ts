@@ -25,7 +25,7 @@ export class RolesComponent implements OnInit {
 
   roles = [
     {
-      value: 'admin',
+      value: 'ADMIN',
       label: 'Administrateur',
       icon: '👑',
       severity: 'danger',
@@ -38,7 +38,7 @@ export class RolesComponent implements OnInit {
       ]
     },
     {
-      value: 'huissier',
+      value: 'HUISSIER',
       label: 'Huissier',
       icon: '⚖️',
       severity: 'warning',
@@ -50,7 +50,7 @@ export class RolesComponent implements OnInit {
       ]
     },
     {
-      value: 'clerc',
+      value: 'CLERC',
       label: 'Clerc',
       icon: '📋',
       severity: 'info',
@@ -61,7 +61,7 @@ export class RolesComponent implements OnInit {
       ]
     },
     {
-      value: 'assistant',
+      value: 'ASSISTANT',
       label: 'Assistant',
       icon: '🔧',
       severity: 'success',
@@ -72,7 +72,7 @@ export class RolesComponent implements OnInit {
       ]
     },
     {
-      value: 'secretaire',
+      value: 'SECRETAIRE',
       label: 'Secrétaire',
       icon: '📝',
       severity: 'secondary',

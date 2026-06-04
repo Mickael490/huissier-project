@@ -116,9 +116,12 @@ export class CabinetComponent implements OnInit {
       header: 'Confirmation',
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
-        this.cabinetService.deleteCabinet(cabinet.id).subscribe(() => {
-          this.loadCabinets();
-          this.messageService.add({ severity: 'success', summary: 'Supprime', detail: 'Cabinet supprime' });
+        this.cabinetService.deleteCabinet(cabinet.id).subscribe({
+          next: () => {
+            this.loadCabinets();
+            this.messageService.add({ severity: 'success', summary: 'Supprime', detail: 'Cabinet supprime' });
+          },
+          error: () => this.messageService.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de supprimer le cabinet' })
         });
       }
     });

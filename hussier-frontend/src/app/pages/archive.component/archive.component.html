@@ -147,8 +147,6 @@
       <textarea pInputTextarea [(ngModel)]="archive.raison_archivage" rows="3" class="w-full" style="border-radius:8px;"
         placeholder="Motif de l'archivage..."></textarea>
     </div>
-  </div>
-  
     <!-- Securisation optionnelle -->
     <div class="col-span-12">
       <div style="background:#f8fafc; border-radius:10px; padding:14px 16px; border-left:4px solid #f97316; margin-top:8px;">
@@ -167,8 +165,9 @@
         </div>
       </div>
     </div>
+  </div>
 
-<ng-template pTemplate="footer">
+  <ng-template pTemplate="footer">
     <p-button label="Annuler" icon="pi pi-times" text (click)="hideDialog()" />
     <p-button [label]="archive.id ? 'Mettre a jour' : 'Archiver'" icon="pi pi-check" (click)="saveArchive()" />
   </ng-template>

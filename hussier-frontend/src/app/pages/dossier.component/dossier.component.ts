@@ -10,6 +10,8 @@ import { ToolbarModule } from 'primeng/toolbar';
 import { InputTextModule } from 'primeng/inputtext';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { CheckboxModule } from 'primeng/checkbox';
+import { TextareaModule } from 'primeng/textarea';
+import { TooltipModule } from 'primeng/tooltip';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { DossierService } from 'src/services/dossiers/DossierService';
 import { Dossier, DossierCreate, DossierUpdate, StatutDossier, TypeDossier } from 'src/types/dossier';
@@ -22,7 +24,7 @@ import { forkJoin } from 'rxjs';
   imports: [
     CommonModule, FormsModule, TableModule, ButtonModule,
     DialogModule, ToastModule, ToolbarModule, InputTextModule,
-    ConfirmDialogModule, CheckboxModule, TagModule
+    ConfirmDialogModule, CheckboxModule, TagModule, TextareaModule, TooltipModule
   ],
   templateUrl: './dossier.component.html',
   providers: [MessageService, ConfirmationService]
@@ -286,6 +288,7 @@ export class DossierComponent implements OnInit {
     switch (statut) {
       case 'nouveau': return 'info';
       case 'en_cours': return 'warning';
+      case 'en_attente': return 'secondary';
       case 'termine': return 'success';
       case 'archive': return 'secondary';
       case 'annule': return 'danger';

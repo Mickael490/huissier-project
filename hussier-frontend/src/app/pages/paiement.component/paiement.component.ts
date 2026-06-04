@@ -115,8 +115,8 @@ export class PaiementComponent implements OnInit {
   }
 
   loadPaiements(): void {
-    this.http.get<any[]>(this.apiUrl, { headers: this.getHeaders() }).subscribe({
-      next: (data) => this.paiements.set(data),
+    this.http.get<any>(this.apiUrl, { headers: this.getHeaders() }).subscribe({
+      next: (data) => this.paiements.set(data.paiements || data),
       error: (err) => this.messageService.add({ severity: 'error', summary: 'Erreur', detail: JSON.stringify(err.error) })
     });
   }

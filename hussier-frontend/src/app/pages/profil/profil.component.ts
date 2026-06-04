@@ -54,11 +54,11 @@ export class ProfilComponent implements OnInit {
   }
 
   getRoleSeverity(role: string): string {
-    switch (role) {
-      case 'admin': return 'danger';
-      case 'huissier': return 'warning';
-      case 'clerc': return 'info';
-      case 'assistant': return 'success';
+    switch ((role || '').toUpperCase()) {
+      case 'ADMIN': return 'danger';
+      case 'HUISSIER': return 'warning';
+      case 'CLERC': return 'info';
+      case 'ASSISTANT': return 'success';
       default: return 'secondary';
     }
   }

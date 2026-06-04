@@ -70,7 +70,7 @@
 <!-- TABLE -->
 <div style="background:white; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,0.08); overflow:hidden;">
   <p-table #dt [value]="logs()" dataKey="id" [(selection)]="selectedLogs" [paginator]="true" [rows]="15" [rowHover]="true"
-    [globalFilterFields]="['action', 'table_name', 'user_id']"
+    [globalFilterFields]="['action', 'entity_type', 'id_utilisateur']"
     [sortField]="'created_at'" [sortOrder]="-1">
     <ng-template #header>
       <tr style="background:#f8fafc;">

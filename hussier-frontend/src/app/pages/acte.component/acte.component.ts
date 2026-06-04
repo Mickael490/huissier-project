@@ -128,8 +128,6 @@ export class ActeComponent implements OnInit {
   saveActe(): void {
     // Convertir type_acte en minuscule
     this.acte.type_acte = this.acte.type_acte.toLowerCase();
-    // Convertir type_acte en minuscule
-    this.acte.type_acte = this.acte.type_acte.toLowerCase();
     this.submitted = true;
     if (!this.acte.id_dossier || !this.acte.type_acte || !this.acte.date_acte) {
       this.messageService.add({

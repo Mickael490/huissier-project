@@ -141,8 +141,9 @@ import { hasRole, AppRole } from 'src/services/role.guard';
             </div>
           </div>
           <div style="display:flex; align-items:center; gap:6px;">
-            <i class="pi pi-arrow-up-right" style="color:#10b981; font-size:12px;"></i>
-            <span style="font-size:12px; color:#10b981; font-weight:600;">+{{ evolutionPaiements }}% vs mois precedent</span>
+            <i [class]="evolutionPaiements >= 0 ? 'pi pi-arrow-up-right' : 'pi pi-arrow-down-right'"
+               [style]="'font-size:12px; color:' + (evolutionPaiements >= 0 ? '#10b981' : '#ef4444')"></i>
+            <span [style]="'font-size:12px; font-weight:600; color:' + (evolutionPaiements >= 0 ? '#10b981' : '#ef4444')">{{ evolutionPaiements >= 0 ? '+' : '' }}{{ evolutionPaiements }}% vs mois precedent</span>
           </div>
         </div>
 
@@ -311,6 +312,7 @@ import { hasRole, AppRole } from 'src/services/role.guard';
                 <div style="font-size:11px; color:#94a3b8; margin-top:2px;">{{ action.temps }}</div>
               </div>
             </div>
+            <div *ngIf="!dernieresActions.length" style="text-align:center; padding:24px; color:#94a3b8;">Aucune action recente</div>
           </div>
         </div>
 
@@ -460,14 +462,7 @@ export class Dashboard implements OnInit, OnDestroy {
 
     comparatif: any[] = [];
 
-    dernieresActions: any[] = [
-      { type: 'CREATE', texte: 'Nouveau dossier DOS-2026-0005 cree', temps: 'Il y a 5 min' },
-      { type: 'UPDATE', texte: 'Client Sawadogo Jean modifie', temps: 'Il y a 23 min' },
-      { type: 'PAYMENT', texte: 'Paiement 150 000 FCFA encaisse', temps: 'Il y a 1h' },
-      { type: 'DOCUMENT', texte: 'Document acte_signification.pdf uploade', temps: 'Il y a 2h' },
-      { type: 'AGENDA', texte: 'RDV Audience planifie demain 9h00', temps: 'Il y a 3h' },
-      { type: 'LOGIN', texte: 'Connexion depuis Ouagadougou', temps: 'Il y a 4h' },
-    ];
+    dernieresActions: any[] = [];
 
     // --- Visibilite par role (aligne sur role.guard.ts) ---
     get isAdmin(): boolean { return hasRole(['ADMIN']); }
@@ -494,7 +489,7 @@ export class Dashboard implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
-        this.nomUtilisateur = (localStorage.getItem('prenom') || '' + ' ' + (localStorage.getItem('nom') || '')).trim() || 'Utilisateur';
+        this.nomUtilisateur = ((localStorage.getItem('prenom') || '') + ' ' + (localStorage.getItem('nom') || '')).trim() || 'Utilisateur';
         this.roleUtilisateur = localStorage.getItem('role') || '';
         this.dateAujourdhui = new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
         this.updateHeure();
@@ -513,9 +508,56 @@ export class Dashboard implements OnInit, OnDestroy {
     }
 
     generateHeatmap() {
-        this.heatmap = Array.from({ length: 4 }, () =>
-            Array.from({ length: 7 }, () => Math.floor(Math.random() * 15))
-        );
+        // Grille vide en attendant les vraies donnees de l'API.
+        this.heatmap = Array.from({ length: 4 }, () => Array.from({ length: 7 }, () => 0));
+    }
+
+    buildHeatmap(data: any) {
+        const grille = data?.heatmap_activite;
+        if (Array.isArray(grille) && grille.length) {
+            this.heatmap = grille;
+        }
+    }
+
+    buildDernieresActions(data: any) {
+        const logs = data?.dernieres_actions || [];
+        this.dernieresActions = logs.map((log: any) => ({
+            type: this.mapActionType(log.action, log.entity_type),
+            texte: log.description || this.libelleAction(log.action, log.entity_type),
+            temps: this.tempsRelatif(log.date)
+        }));
+    }
+
+    // Type d'affichage (icone/couleur) deduit de l'action et de l'entite concernee.
+    private mapActionType(action: string, entity: string): string {
+        if (action === 'LOGIN' || action === 'LOGOUT') return 'LOGIN';
+        if (entity === 'PAIEMENT') return 'PAYMENT';
+        if (entity === 'DOCUMENT') return 'DOCUMENT';
+        if (entity === 'AGENDA') return 'AGENDA';
+        return action || 'INFO';
+    }
+
+    private libelleAction(action: string, entity: string): string {
+        const verbe: any = { CREATE: 'Creation', UPDATE: 'Modification', DELETE: 'Suppression',
+            VIEW: 'Consultation', EXPORT: 'Export', PRINT: 'Impression', LOGIN: 'Connexion', LOGOUT: 'Deconnexion' };
+        const cible: any = { CABINET: 'cabinet', CLIENT: 'client', DOSSIER: 'dossier', ACTE: 'acte',
+            PARTIE: 'partie', DOCUMENT: 'document', PAIEMENT: 'paiement', UTILISATEUR: 'utilisateur',
+            ARCHIVE: 'archive', AGENDA: 'rendez-vous', AFFECTATION: 'affectation' };
+        if (action === 'LOGIN' || action === 'LOGOUT') return verbe[action] || action;
+        return `${verbe[action] || action} ${cible[entity] || (entity || '').toLowerCase()}`.trim();
+    }
+
+    private tempsRelatif(dateStr: string): string {
+        if (!dateStr) return '';
+        const diff = Date.now() - new Date(dateStr).getTime();
+        if (diff < 0) return "A l'instant";
+        const min = Math.floor(diff / 60000);
+        if (min < 1) return "A l'instant";
+        if (min < 60) return `Il y a ${min} min`;
+        const h = Math.floor(min / 60);
+        if (h < 24) return `Il y a ${h}h`;
+        const j = Math.floor(h / 24);
+        return j === 1 ? 'Hier' : `Il y a ${j} jours`;
     }
 
     getHeatColor(val: number): string {
@@ -535,6 +577,8 @@ export class Dashboard implements OnInit, OnDestroy {
                 this.buildCharts(data);
                 this.buildComparatif(data);
                 this.calculateKpis(data);
+                this.buildHeatmap(data);
+                this.buildDernieresActions(data);
                 this.simulateDossiersUrgents(data);
             },
             error: () => {}
@@ -560,13 +604,33 @@ export class Dashboard implements OnInit, OnDestroy {
     }
 
     buildComparatif(data: any) {
-        const items: any[] = [
-            { label: 'Dossiers', actuel: data?.kpis?.total_dossiers || 0, precedent: Math.max(0, (data?.kpis?.total_dossiers || 0) - 2), hausse: true, pct: 75 },
-        ];
-        if (this.canClients) items.push({ label: 'Clients', actuel: data?.kpis?.total_clients || 0, precedent: Math.max(0, (data?.kpis?.total_clients || 0) - 1), hausse: true, pct: 80 });
-        if (this.canFinance) items.push({ label: 'Paiements (FCFA)', actuel: data?.kpis?.paiements_mois || 0, precedent: Math.max(0, (data?.kpis?.paiements_mois || 0) * 0.88), hausse: true, pct: 88 });
-        items.push({ label: 'RDV semaine', actuel: data?.kpis?.rdv_semaine || 0, precedent: Math.max(0, (data?.kpis?.rdv_semaine || 0) - 1), hausse: false, pct: 60 });
+        const c = data?.comparatif || {};
+        const items: any[] = [this.ligneComparatif('Dossiers', c.dossiers)];
+        if (this.canClients) items.push(this.ligneComparatif('Clients', c.clients));
+        if (this.canFinance) items.push(this.ligneComparatif('Paiements (FCFA)', c.paiements));
+        items.push(this.ligneComparatif('RDV ce mois', c.rdv));
         this.comparatif = items;
+
+        // Evolution reelle des encaissements affichee sur la carte KPI.
+        const p = c.paiements;
+        if (p && p.precedent > 0) {
+            this.evolutionPaiements = Math.round(((p.actuel - p.precedent) / p.precedent) * 100);
+        } else {
+            this.evolutionPaiements = p && p.actuel > 0 ? 100 : 0;
+        }
+    }
+
+    private ligneComparatif(label: string, valeurs: any) {
+        const actuel = valeurs?.actuel || 0;
+        const precedent = valeurs?.precedent || 0;
+        const total = actuel + precedent;
+        return {
+            label,
+            actuel,
+            precedent: Math.round(precedent),
+            hausse: actuel >= precedent,
+            pct: total > 0 ? Math.round((actuel / total) * 100) : 50
+        };
     }
 
     buildCharts(data: any) {

@@ -9,6 +9,7 @@ import { ToolbarModule } from 'primeng/toolbar';
 import { InputTextModule } from 'primeng/inputtext';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TagModule } from 'primeng/tag';
+import { TooltipModule } from 'primeng/tooltip';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { ClientService } from 'src/services/clients/ClientService';
 import { Client, ClientCreate, ClientUpdate, TypeClient } from 'src/types/client';
@@ -22,7 +23,7 @@ import { forkJoin } from 'rxjs';
   imports: [
     CommonModule, FormsModule, TableModule, ButtonModule,
     DialogModule, ToastModule, ToolbarModule, InputTextModule,
-    ConfirmDialogModule, TagModule
+    ConfirmDialogModule, TagModule, TooltipModule
   ],
   templateUrl: './client.component.html',
   providers: [MessageService, ConfirmationService]

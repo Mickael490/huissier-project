@@ -81,6 +81,7 @@ export class PartieComponent implements OnInit {
   editPartie(partie: any): void {
     this.partie = { ...partie };
     this.isEditMode = true;
+    this.submitted = false;
     this.partieDialog = true;
   }
 

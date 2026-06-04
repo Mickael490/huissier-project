@@ -233,8 +233,7 @@
       <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Note de caisse / Libellé</label>
       <textarea pInputTextarea [(ngModel)]="paiement.note_caisse" rows="2" class="w-full" style="border-radius:8px;" placeholder="Description du paiement..."></textarea>
     </div>
-  </div>
-  
+
     <!-- Securisation optionnelle -->
     <div class="col-span-12">
       <div style="background:#f8fafc; border-radius:10px; padding:14px 16px; border-left:4px solid #f97316; margin-top:8px;">
@@ -253,6 +252,7 @@
         </div>
       </div>
     </div>
+  </div>
 
 <ng-template pTemplate="footer">
     <p-button label="Annuler" icon="pi pi-times" text (click)="hideDialog()" />

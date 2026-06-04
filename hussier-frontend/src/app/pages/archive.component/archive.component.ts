@@ -92,6 +92,7 @@ export class ArchiveComponent implements OnInit {
   editArchive(archive: any): void {
     this.archive = { ...archive };
     this.protegerParMotDePasse = !!archive.mot_de_passe;
+    this.submitted = false;
     this.archiveDialog = true;
   }
 

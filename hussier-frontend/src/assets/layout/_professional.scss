@@ -1,0 +1,228 @@
+/* =====================================================================
+   THÈME PROFESSIONNEL GLOBAL — Étude Hussier
+   Aligne toutes les pages sur le design du tableau de bord.
+   Palette : navy #1e3a5f · indigo #4f46e5 · vert #10b981 · orange #f97316
+   ===================================================================== */
+
+:root {
+  --hu-navy:       #1e3a5f;
+  --hu-navy-deep:  #0f1f3d;
+  --hu-indigo:     #4f46e5;
+  --hu-indigo-50:  #eef2ff;
+  --hu-green:      #10b981;
+  --hu-orange:     #f97316;
+  --hu-cyan:       #06b6d4;
+  --hu-purple:     #8b5cf6;
+  --hu-muted:      #94a3b8;
+  --hu-text:       #1e293b;
+  --hu-bg:         #f5f7fb;
+  --hu-card-radius: 14px;
+  --hu-card-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  --hu-card-shadow-hover: 0 8px 28px rgba(30, 58, 95, 0.12);
+}
+
+/* ---- Fond de l'application ---- */
+.layout-main-container,
+.layout-main {
+  background: var(--hu-bg);
+}
+
+/* =====================================================================
+   EN-TÊTE DE PAGE STANDARD (réutilisable sur toutes les pages)
+   <div class="hu-page-header"> ... </div>
+   ===================================================================== */
+.hu-page-header {
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 60%, #4f46e5 100%);
+  border-radius: 16px;
+  padding: 22px 28px;
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(30, 58, 95, 0.3);
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  h1, h2, .hu-page-title {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+    color: #fff;
+  }
+  .hu-page-subtitle {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.75);
+    margin-top: 4px;
+  }
+}
+
+/* =====================================================================
+   CARTES / SURFACES — uniformise PrimeNG <p-card>, .card, panels
+   ===================================================================== */
+.card,
+.p-card,
+.p-panel,
+.hu-card {
+  background: #fff;
+  border-radius: var(--hu-card-radius) !important;
+  box-shadow: var(--hu-card-shadow) !important;
+  border: none !important;
+  transition: box-shadow .2s ease, transform .2s ease;
+}
+.p-card .p-card-body { padding: 1.25rem 1.5rem; }
+.hu-card:hover { box-shadow: var(--hu-card-shadow-hover); }
+
+/* =====================================================================
+   TABLEAUX — en-tête navy léger, lignes aérées, survol doux
+   ===================================================================== */
+.p-datatable {
+  border-radius: var(--hu-card-radius);
+  overflow: hidden;
+
+  .p-datatable-header {
+    background: #fff;
+    border: none;
+    font-weight: 700;
+    color: var(--hu-navy);
+  }
+  .p-datatable-thead > tr > th {
+    background: #f8fafc;
+    color: var(--hu-navy);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    border-color: #eef2f7;
+    padding: 0.75rem 1rem;
+  }
+  .p-datatable-tbody > tr {
+    transition: background .12s ease;
+    > td {
+      border-color: #f1f5f9;
+      color: #475569;
+      font-size: 13px;
+      padding: 0.7rem 1rem;
+    }
+    &:hover > td { background: #f8fafc; }
+  }
+  .p-paginator {
+    background: #fff;
+    border: none;
+    border-top: 1px solid #f1f5f9;
+  }
+}
+
+/* =====================================================================
+   BOUTONS — coins arrondis, ombre indigo douce sur le bouton principal
+   ===================================================================== */
+.p-button {
+  border-radius: 10px;
+  font-weight: 600;
+  transition: transform .12s ease, box-shadow .2s ease, filter .2s ease;
+
+  &:not(.p-button-text):not(.p-button-outlined):not(.p-button-link):not(:disabled) {
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.18);
+  }
+  &:not(:disabled):hover { transform: translateY(-1px); filter: brightness(1.03); }
+  &:not(:disabled):active { transform: translateY(0); }
+}
+.p-button.p-button-rounded { border-radius: 50%; }
+
+/* =====================================================================
+   CHAMPS DE FORMULAIRE — focus indigo cohérent
+   ===================================================================== */
+.p-inputtext,
+.p-dropdown,
+.p-multiselect,
+.p-inputnumber-input,
+.p-textarea,
+.p-password-input,
+.p-calendar .p-inputtext,
+.p-select {
+  border-radius: 10px;
+  transition: border-color .15s ease, box-shadow .15s ease;
+  &:enabled:focus,
+  &:not(.p-disabled).p-focus {
+    border-color: var(--hu-indigo);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+  }
+}
+
+/* =====================================================================
+   TAGS / BADGES — pastilles arrondies pro
+   ===================================================================== */
+.p-tag {
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 11px;
+  padding: 0.22rem 0.7rem;
+}
+
+/* =====================================================================
+   DIALOGS — coins doux, en-tête navy
+   ===================================================================== */
+.p-dialog {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(15, 31, 61, 0.25);
+
+  .p-dialog-header {
+    background: #fff;
+    color: var(--hu-navy);
+    font-weight: 700;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .p-dialog-content { padding: 1.5rem; }
+  .p-dialog-footer { border-top: 1px solid #f1f5f9; }
+}
+
+/* =====================================================================
+   MENU LATÉRAL — élément actif indigo, survol doux
+   ===================================================================== */
+.layout-menu {
+  .layout-menuitem-link.active-route,
+  li.active-menuitem > .layout-menuitem-link {
+    background: var(--hu-indigo-50);
+    color: var(--hu-indigo);
+    font-weight: 600;
+    border-radius: 10px;
+  }
+  .layout-menuitem-link {
+    border-radius: 10px;
+    transition: background .12s ease, color .12s ease;
+    &:hover { background: #f1f5f9; }
+  }
+}
+
+/* =====================================================================
+   ÉTATS UTILITAIRES — vides, chargement
+   ===================================================================== */
+.hu-empty {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--hu-muted);
+  i { font-size: 36px; display: block; margin-bottom: 10px; opacity: .6; }
+}
+
+/* =====================================================================
+   SCROLLBAR FINE & DISCRÈTE
+   ===================================================================== */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+*::-webkit-scrollbar { width: 9px; height: 9px; }
+*::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover { background: #94a3b8; background-clip: padding-box; }
+
+/* ---- Animations partagées ---- */
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .5; transform: scale(1.15); }
+}
