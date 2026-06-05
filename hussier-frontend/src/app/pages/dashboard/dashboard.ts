@@ -38,11 +38,11 @@ import { hasRole, AppRole } from 'src/services/role.guard';
             <!-- Cloche notifications -->
             <div style="position:relative; cursor:pointer;" (click)="notifDialog = true">
               <div style="width:48px; height:48px; border-radius:12px; background:rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; backdrop-filter:blur(8px);">
-                <i class="pi pi-bell" style="font-size:20px; color:white;"></i>
+                <i class="pi pi-bell" [style]="'font-size:20px; color:white;' + (totalAlertes > 0 ? ' animation:bellRing 1.2s ease-in-out infinite; transform-origin:top center;' : '')"></i>
               </div>
-              <span *ngIf="dossiersUrgents.length > 0"
-                style="position:absolute; top:-6px; right:-6px; background:#ef4444; color:white; border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; border:2px solid #1e3a5f;">
-                {{ dossiersUrgents.length }}
+              <span *ngIf="totalAlertes > 0"
+                style="position:absolute; top:-6px; right:-6px; background:#ef4444; color:white; border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; border:2px solid #1e3a5f; animation:pulse 1s infinite;">
+                {{ totalAlertes }}
               </span>
             </div>
 
@@ -415,10 +415,26 @@ import { hasRole, AppRole } from 'src/services/role.guard';
 
     <!-- DIALOG NOTIFICATIONS -->
     <p-dialog [(visible)]="notifDialog" header="Alertes et notifications" [modal]="true" [style]="{width:'500px'}">
-      <div *ngIf="dossiersUrgents.length === 0" style="text-align:center; padding:30px; color:#94a3b8;">
+      <div *ngIf="totalAlertes === 0" style="text-align:center; padding:30px; color:#94a3b8;">
         <i class="pi pi-check-circle" style="font-size:36px; display:block; margin-bottom:8px; color:#10b981;"></i>
-        Aucune alerte urgente
+        Aucune alerte
       </div>
+
+      <!-- Rendez-vous imminents -->
+      <div *ngIf="rdvImminents.length > 0" style="font-size:12px; font-weight:700; color:#06b6d4; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Rendez-vous imminents</div>
+      <div *ngFor="let r of rdvImminents" style="display:flex; align-items:center; gap:14px; padding:14px; border-radius:10px; border:1px solid #a5f3fc; background:#ecfeff; margin-bottom:10px;">
+        <div style="width:40px; height:40px; border-radius:10px; background:#06b6d4; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+          <i class="pi pi-calendar-clock" style="color:white; font-size:16px;"></i>
+        </div>
+        <div style="flex:1;">
+          <div style="font-weight:700; color:#1e293b; font-size:14px;">{{ r.titre }}</div>
+          <div style="font-size:12px; color:#0891b2; font-weight:600;">{{ r.echeance_texte }}</div>
+          <div style="font-size:12px; color:#94a3b8;">{{ r.date_debut | date:"EEEE d MMM 'à' HH:mm" : '' : 'fr' }}{{ r.lieu ? ' · ' + r.lieu : '' }}</div>
+        </div>
+      </div>
+
+      <!-- Dossiers a delai critique -->
+      <div *ngIf="dossiersUrgents.length > 0" style="font-size:12px; font-weight:700; color:#ef4444; text-transform:uppercase; letter-spacing:1px; margin:14px 0 8px;">Dossiers a delai critique</div>
       <div *ngFor="let d of dossiersUrgents" style="display:flex; align-items:center; gap:14px; padding:14px; border-radius:10px; border:1px solid #fecaca; background:#fef2f2; margin-bottom:10px;">
         <div style="width:40px; height:40px; border-radius:10px; background:#ef4444; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
           <i class="pi pi-exclamation-triangle" style="color:white; font-size:16px;"></i>
@@ -431,10 +447,21 @@ import { hasRole, AppRole } from 'src/services/role.guard';
       </div>
       <ng-template pTemplate="footer">
         <p-button label="Fermer" icon="pi pi-times" text (click)="notifDialog = false" />
-        <p-button label="Voir tous les dossiers" icon="pi pi-folder" routerLink="/pages/dossier" (click)="notifDialog = false" />
+        <p-button label="Voir l'agenda" icon="pi pi-calendar" routerLink="/pages/agenda" (click)="notifDialog = false" />
       </ng-template>
     </p-dialog>
-    `
+    `,
+    styles: [`
+      @keyframes pulse { 0%,100% { transform:scale(1); opacity:1; } 50% { transform:scale(1.15); opacity:.7; } }
+      @keyframes bellRing {
+        0%,100% { transform:rotate(0); }
+        15% { transform:rotate(12deg); }
+        30% { transform:rotate(-10deg); }
+        45% { transform:rotate(8deg); }
+        60% { transform:rotate(-6deg); }
+        75% { transform:rotate(3deg); }
+      }
+    `]
 })
 export class Dashboard implements OnInit, OnDestroy {
     stats: any = null;
@@ -448,11 +475,16 @@ export class Dashboard implements OnInit, OnDestroy {
     heureActuelle: string = '';
     notifDialog = false;
     dossiersUrgents: any[] = [];
+    rdvImminents: any[] = [];
     rdvAujourdhui = 0;
+
+    // Nombre total d'alertes affiche sur la cloche (RDV imminents + dossiers critiques)
+    get totalAlertes(): number { return this.rdvImminents.length + this.dossiersUrgents.length; }
     tauxCloture = 0;
     progressionMois = 0;
     evolutionPaiements = 12;
     private timer: any;
+    private refreshTimer: any;
 
     sparkDossiers = [30,50,40,70,60,80,100];
     sparkClients = [60,40,80,50,90,70,100];
@@ -497,10 +529,14 @@ export class Dashboard implements OnInit, OnDestroy {
         this.generateHeatmap();
         this.buildQuickActions();
         this.loadStats();
+        // Recharge les donnees toutes les 60s pour que la cloche signale
+        // les RDV au fur et a mesure que leur date approche.
+        this.refreshTimer = setInterval(() => this.loadStats(), 60000);
     }
 
     ngOnDestroy() {
         if (this.timer) clearInterval(this.timer);
+        if (this.refreshTimer) clearInterval(this.refreshTimer);
     }
 
     updateHeure() {
@@ -579,7 +615,8 @@ export class Dashboard implements OnInit, OnDestroy {
                 this.calculateKpis(data);
                 this.buildHeatmap(data);
                 this.buildDernieresActions(data);
-                this.simulateDossiersUrgents(data);
+                this.buildDossiersUrgents(data);
+                this.buildRdvImminents(data);
             },
             error: () => {}
         });
@@ -595,12 +632,36 @@ export class Dashboard implements OnInit, OnDestroy {
         this.rdvAujourdhui = data?.kpis?.rdv_aujourd_hui || data?.kpis?.rdv_semaine || 0;
     }
 
-    simulateDossiersUrgents(data: any) {
-        const dossiers = data?.derniers_dossiers || [];
-        this.dossiersUrgents = dossiers.slice(0, 2).map((d: any, i: number) => ({
-            ...d,
-            jours_restants: 3 + i * 2
-        }));
+    buildDossiersUrgents(data: any) {
+        // Dossiers avec delai critique : echeances reelles (RDV a venir < 7 jours)
+        this.dossiersUrgents = data?.dossiers_urgents || [];
+    }
+
+    buildRdvImminents(data: any) {
+        // RDV planifies dont la date approche (dans les 48 prochaines heures).
+        // La cloche signale alors le compteur et affiche le detail dans la modale.
+        const SEUIL_HEURES = 48;
+        const maintenant = Date.now();
+        const limite = maintenant + SEUIL_HEURES * 3600 * 1000;
+        const rdv = data?.prochains_rdv || [];
+        this.rdvImminents = rdv
+            .filter((r: any) => {
+                if (!r.date_debut) return false;
+                const t = new Date(r.date_debut).getTime();
+                return t >= maintenant && t <= limite;
+            })
+            .map((r: any) => ({ ...r, echeance_texte: this.echeanceRdv(r.date_debut) }));
+    }
+
+    private echeanceRdv(dateStr: string): string {
+        const diff = new Date(dateStr).getTime() - Date.now();
+        if (diff <= 0) return "Maintenant";
+        const min = Math.round(diff / 60000);
+        if (min < 60) return `Dans ${min} min`;
+        const h = Math.floor(min / 60);
+        if (h < 24) return `Dans ${h}h${(min % 60).toString().padStart(2, '0')}`;
+        const j = Math.floor(h / 24);
+        return j === 1 ? "Demain" : `Dans ${j} jours`;
     }
 
     buildComparatif(data: any) {
