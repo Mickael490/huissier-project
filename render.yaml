@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: huissier-backend
+    runtime: python
+    rootDir: hussier-backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: bash start.sh
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: huissier-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ENVIRONMENT
+        value: production
+
+  - type: static
+    name: huissier-frontend
+    rootDir: hussier-frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist/sakai-ng/browser
+
+databases:
+  - name: huissier-db
+    databaseName: huissier_bd
+    plan: free
