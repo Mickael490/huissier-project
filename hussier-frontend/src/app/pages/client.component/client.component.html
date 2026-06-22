@@ -29,6 +29,23 @@
   </div>
 </div>
 
+
+<!-- KPI CARDS -->
+<div style="display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;">
+  <div style="flex: 1; min-width: 200px; background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 14px; border-left: 4px solid #4f46e5;">
+    <div style="background: #ede9fe; border-radius: 10px; padding: 10px 12px;"><i class="pi pi-users" style="color: #4f46e5; font-size: 18px;"></i></div>
+    <div><div style="font-size: 22px; font-weight: 700; color: #1e293b;">{{ nbTotal() }}</div><div style="font-size: 12px; color: #94a3b8;">Total clients</div></div>
+  </div>
+  <div style="flex: 1; min-width: 200px; background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 14px; border-left: 4px solid #10b981;">
+    <div style="background: #d1fae5; border-radius: 10px; padding: 10px 12px;"><i class="pi pi-check-circle" style="color: #10b981; font-size: 18px;"></i></div>
+    <div><div style="font-size: 22px; font-weight: 700; color: #1e293b;">{{ nbParticulier() }}</div><div style="font-size: 12px; color: #94a3b8;">Particuliers</div></div>
+  </div>
+  <div style="flex: 1; min-width: 200px; background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 14px; border-left: 4px solid #ef4444;">
+    <div style="background: #fef2f2; border-radius: 10px; padding: 10px 12px;"><i class="pi pi-times" style="color: #ef4444; font-size: 18px;"></i></div>
+    <div><div style="font-size: 22px; font-weight: 700; color: #1e293b;">{{ nbEntreprise() }}</div><div style="font-size: 12px; color: #94a3b8;">Entreprises / Autres</div></div>
+  </div>
+</div>
+
 <!-- TABLE -->
 <div style="background: white; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: hidden;">
   <p-table

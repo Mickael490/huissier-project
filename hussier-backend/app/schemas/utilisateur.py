@@ -1,16 +1,23 @@
 # app/schemas/utilisateur.py
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional
 from datetime import datetime
+from enum import Enum
 
+class RoleEnum(str, Enum):
+    ADMIN = "ADMIN"
+    HUISSIER = "HUISSIER"
+    CLERC = "CLERC"
+    ASSISTANT = "ASSISTANT"
+    SECRETAIRE = "SECRETAIRE"
 
 class UtilisateurBase(BaseModel):
     """Schéma de base pour un utilisateur"""
     email: EmailStr
     nom: str
-    prenom: str
+    prenom: str = ""
     telephone: Optional[str] = None
-    role: str = "utilisateur"  # admin, huissier, assistant, utilisateur
+    role: RoleEnum = RoleEnum.SECRETAIRE
     actif: bool = True
 
 

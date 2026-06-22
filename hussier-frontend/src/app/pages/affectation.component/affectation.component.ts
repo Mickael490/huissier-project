@@ -79,6 +79,9 @@ export class AffectationComponent implements OnInit {
     { label: 'Haute / Urgente', value: 'haute' }
   ];
 
+  // SÉLECTION MULTIPLE
+  selectedAffectations: any[] = [];
+
   constructor(
     private http: HttpClient,
     private messageService: MessageService,
@@ -291,5 +294,77 @@ export class AffectationComponent implements OnInit {
       case 'annule': return 'danger';
       default: return 'secondary';
     }
+  }
+
+  toggleSelectAll(affectations: any[]): void {
+    if (this.selectedAffectations.length === affectations.length) {
+      this.selectedAffectations = [];
+    } else {
+      this.selectedAffectations = [...affectations];
+    }
+  }
+
+  toggleSelect(affectation: any): void {
+    const index = this.selectedAffectations.indexOf(affectation);
+    if (index > -1) {
+      this.selectedAffectations.splice(index, 1);
+    } else {
+      this.selectedAffectations.push(affectation);
+    }
+  }
+
+  isSelected(affectation: any): boolean {
+    return this.selectedAffectations.includes(affectation);
+  }
+
+  exportPDF(): void {
+    if (this.selectedAffectations.length === 0) {
+      this.messageService.add({ severity: 'warn', summary: 'Attention', detail: 'Sélectionnez au moins une affectation' });
+      return;
+    }
+
+    let csv = 'ACTE,DOSSIER,AGENT,PRIORITÉ,STATUT,DATE\n';
+    this.selectedAffectations.forEach((a: any) => {
+      csv += `"${this.getActeLabel(a.id_acte)}","${this.getDossierNumeroParActe(a.id_acte)}","${this.getUtilisateurNom(a.id_utilisateur)}","${a.priorite}","${a.statut}","${a.date_limite}"\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `affectations_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+
+    this.messageService.add({ severity: 'success', summary: 'Succès', detail: `${this.selectedAffectations.length} affectation(s) exportée(s)` });
+  }
+
+  deleteSelectedAffectations(): void {
+    if (this.selectedAffectations.length === 0) {
+      this.messageService.add({ severity: 'warn', summary: 'Attention', detail: 'Sélectionnez au moins une affectation' });
+      return;
+    }
+
+    this.confirmationService.confirm({
+      message: `Êtes-vous sûr de vouloir supprimer ${this.selectedAffectations.length} affectation(s) ?`,
+      header: 'Confirmation',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        this.selectedAffectations.forEach((affectation: any) => {
+          this.http.delete(`${this.apiUrl}/${affectation.id}`, {
+            headers: new HttpHeaders({ Authorization: `Bearer ${localStorage.getItem('token')}` })
+          }).subscribe({
+            next: () => {
+              this.affectations.set(this.affectations().filter((a: any) => a.id !== affectation.id));
+            },
+            error: () => {
+              this.messageService.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de supprimer l\'affectation' });
+            }
+          });
+        });
+        this.selectedAffectations = [];
+        this.messageService.add({ severity: 'success', summary: 'Succès', detail: 'Affectation(s) supprimée(s)' });
+      }
+    });
   }
 }

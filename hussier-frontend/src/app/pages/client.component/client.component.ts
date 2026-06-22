@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, OnInit, signal, ViewChild, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Table, TableModule } from 'primeng/table';
@@ -31,6 +31,10 @@ import { forkJoin } from 'rxjs';
 export class ClientComponent implements OnInit {
 
   clients = signal<Client[]>([]);
+  readonly nbTotal = computed(() => this.clients().length);
+  readonly nbParticulier = computed(() => this.clients().filter(c => c.type_client === "particulier").length);
+  readonly nbEntreprise = computed(() => this.clients().filter(c => c.type_client === "entreprise" || c.type_client === "avocat" || c.type_client === "juridiction").length);
+
   selectedClients: Client[] = [];
   client: Partial<Client> = {};
   clientDialog = false;

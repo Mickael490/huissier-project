@@ -129,7 +129,7 @@ import { hasRole, AppRole } from 'src/services/role.guard';
           </div>
         </div>
 
-        <div *ngIf="isAdmin || canFinance" style="background:white; border-radius:14px; padding:20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); border-left:4px solid #10b981;">
+        <div *ngIf="isAdmin || canFinance" style="background:linear-gradient(135deg, #d1fae5 0%, #f0fdf4 100%); border-radius:14px; padding:20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); border-left:4px solid #10b981;">
           <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
             <div>
               <div style="font-size:12px; color:#94a3b8; margin-bottom:4px; text-transform:uppercase; letter-spacing:1px;">Encaissements</div>
@@ -162,7 +162,7 @@ import { hasRole, AppRole } from 'src/services/role.guard';
           </div>
         </div>
 
-        <div style="background:white; border-radius:14px; padding:20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); border-left:4px solid #06b6d4;">
+        <div style="background:linear-gradient(135deg, #cffafe 0%, #f0fdff 100%); border-radius:14px; padding:20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); border-left:4px solid #06b6d4;">
           <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
             <div>
               <div style="font-size:12px; color:#94a3b8; margin-bottom:4px; text-transform:uppercase; letter-spacing:1px;">RDV aujourd'hui</div>

@@ -108,13 +108,25 @@ export class UtilisateurComponent implements OnInit {
         role: this.utilisateur.role,
         actif: this.utilisateur.actif
       };
+      if (this.utilisateur.mot_de_passe && this.utilisateur.mot_de_passe.trim()) {
+        updateData.mot_de_passe = this.utilisateur.mot_de_passe;
+      }
       this.utilisateurService.updateUtilisateur(this.utilisateur.id, updateData).subscribe({
         next: () => {
           this.loadUtilisateurs();
           this.messageService.add({ severity: 'success', summary: 'Succes', detail: 'Utilisateur mis a jour' });
           this.hideDialog();
         },
-        error: () => this.messageService.add({ severity: 'error', summary: 'Erreur', detail: 'Erreur mise a jour' })
+        error: (err: any) => {
+          const raw = err?.error?.detail;
+          let detail = 'Impossible de mettre à jour l\'utilisateur.';
+          if (typeof raw === 'string') detail = raw;
+          else if (Array.isArray(raw)) {
+            const pwdErr = raw.find((e: any) => e?.loc?.includes('mot_de_passe') || JSON.stringify(e).includes('min_length'));
+            detail = pwdErr ? 'Mot de passe trop court (8 caractères minimum).' : 'Données invalides.';
+          }
+          this.messageService.add({ severity: 'error', summary: 'Erreur', detail });
+        }
       });
     } else {
       if (!this.utilisateur.mot_de_passe) {
@@ -137,7 +149,10 @@ export class UtilisateurComponent implements OnInit {
           this.messageService.add({ severity: 'success', summary: 'Succes', detail: 'Utilisateur cree' });
           this.hideDialog();
         },
-        error: () => this.messageService.add({ severity: 'error', summary: 'Erreur', detail: 'Erreur creation' })
+        error: (err: any) => {
+          const detail = typeof err?.error?.detail === 'string' ? err.error.detail : 'Impossible de créer l\'utilisateur.';
+          this.messageService.add({ severity: 'error', summary: 'Erreur', detail });
+        }
       });
     }
   }

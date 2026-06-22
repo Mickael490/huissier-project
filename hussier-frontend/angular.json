@@ -32,6 +32,8 @@
                             }
                         ],
                         "styles": [
+                            "src/styles.global.scss",
+                            "src/styles.global.scss",
                             "src/assets/styles.scss"
                         ],
                         "scripts": []
@@ -79,6 +81,8 @@
                             }
                         ],
                         "styles": [
+                            "src/styles.global.scss",
+                            "src/styles.global.scss",
                             "src/assets/styles.scss"
                         ],
                         "scripts": []

@@ -1,5 +1,5 @@
 import { PdfService } from 'src/services/pdf.service';
-import { Component, OnInit, ViewChild, signal } from '@angular/core';
+import { Component, OnInit, ViewChild, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Table, TableModule } from 'primeng/table';
@@ -295,4 +295,11 @@ export class DossierComponent implements OnInit {
       default: return 'info';
     }
   }
+
+  readonly nbTotal = computed(() => this.dossiers().length);
+  readonly nbEnCours = computed(() => this.dossiers().filter(d => d.statut === 'en_cours').length);
+  readonly nbTermines = computed(() => this.dossiers().filter(d => d.statut === 'termine').length);
+  readonly nbArchives = computed(() => this.dossiers().filter(d => d.statut === 'archive').length);
+  readonly nbNouveaux = computed(() => this.dossiers().filter(d => d.statut === 'nouveau').length);
+  readonly nbAnnules = computed(() => this.dossiers().filter(d => d.statut === 'annule').length);
 }

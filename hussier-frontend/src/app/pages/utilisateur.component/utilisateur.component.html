@@ -152,10 +152,11 @@
       <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Telephone</label>
       <input pInputText [(ngModel)]="utilisateur.telephone" class="w-full" style="border-radius:8px;" placeholder="+226 70 00 00 00" />
     </div>
-    <div class="col-span-6" *ngIf="!isEditMode">
-      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Mot de passe *</label>
-      <input pInputText type="password" [(ngModel)]="utilisateur.mot_de_passe" class="w-full" style="border-radius:8px;" placeholder="Mot de passe" />
-      <small class="p-error" *ngIf="submitted && !utilisateur.mot_de_passe">Obligatoire</small>
+    <div class="col-span-6">
+      <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Mot de passe <span *ngIf="!isEditMode">*</span><span *ngIf="isEditMode" style="color:#94a3b8; font-size:11px;">(laisser vide = ne pas modifier)</span></label>
+      <input pInputText type="password" [(ngModel)]="utilisateur.mot_de_passe" class="w-full" style="border-radius:8px;" [placeholder]="isEditMode ? 'Laisser vide pour ne pas modifier' : 'Minimum 8 caractères'" />
+      <small class="p-error" *ngIf="submitted && !isEditMode && !utilisateur.mot_de_passe">Le mot de passe est obligatoire.</small>
+      <small class="p-error" *ngIf="utilisateur.mot_de_passe && utilisateur.mot_de_passe.length < 8">Le mot de passe doit contenir au moins 8 caractères.</small>
     </div>
     <div class="col-span-6">
       <label style="font-weight:700; color:#1e3a5f; font-size:13px; display:block; margin-bottom:6px;">Statut</label>

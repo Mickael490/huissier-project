@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, signal } from '@angular/core';
+import { Component, OnInit, ViewChild, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Table, TableModule } from 'primeng/table';
@@ -140,4 +140,9 @@ export class CabinetComponent implements OnInit {
       this.pdfService.exportFicheCabinet(this.cabinetSelectionne);
     }
   }
+
+  // 📊 KPI COMPUTED PROPERTIES
+  readonly nbTotal = computed(() => this.cabinets().length);
+  readonly nbActif = computed(() => this.cabinets().filter(c => c.actif).length);
+  readonly nbInactif = computed(() => this.cabinets().filter(c => !c.actif).length);
 }
