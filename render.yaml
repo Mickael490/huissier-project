@@ -15,8 +15,9 @@ services:
       - key: ENVIRONMENT
         value: production
 
-  - type: static
+  - type: web
     name: huissier-frontend
+    runtime: static
     rootDir: hussier-frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist/sakai-ng/browser
