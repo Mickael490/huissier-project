@@ -17,6 +17,7 @@ class Settings(BaseSettings):
         "http://127.0.0.1:4200",
         "http://localhost:3000",
         "http://localhost:5173",
+        "https://lighthearted-monstera-5aaf13.netlify.app",
     ]
     
     # Database
