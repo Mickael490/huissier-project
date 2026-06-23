@@ -1,6 +1,6 @@
 import { Component, Renderer2, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NavigationEnd, Router, RouterModule } from '@angular/router';
+import { NavigationEnd, NavigationStart, Router, RouterModule } from '@angular/router';
 import { filter, Subscription } from 'rxjs';
 import { AppTopbar } from './app.topbar';
 import { AppSidebar } from './app.sidebar';
@@ -54,6 +54,18 @@ export class AppLayout {
 
         this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe(() => {
             this.hideMenu();
+        });
+        this.router.events.subscribe((event) => {
+            const bar = document.getElementById('route-progress');
+            if (!bar) return;
+            if (event instanceof NavigationStart) {
+                bar.style.width = '0%';
+                bar.classList.add('loading');
+            } else if (event instanceof NavigationEnd) {
+                bar.classList.remove('loading');
+                bar.style.width = '100%';
+                setTimeout(() => { bar.style.width = '0%'; }, 400);
+            }
         });
     }
 
