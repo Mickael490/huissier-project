@@ -7,7 +7,7 @@ import { tap } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://127.0.0.1:8000/api/v1';
+  private apiUrl = 'https://huissier-backend.onrender.com/api/v1';
 
   constructor(private http: HttpClient, private router: Router) {}
 
