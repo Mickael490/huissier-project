@@ -277,3 +277,77 @@ html.app-dark .p-dialog .p-dialog-content {
 }
 
 /* Sidebar deja sombre par defaut, on garde tel quel */
+
+/* ===== RESPONSIVE MOBILE ===== */
+@media (max-width: 768px) {
+
+  /* Toolbars : empiler verticalement au lieu d'etirer horizontalement */
+  div[style*="display: flex; justify-content: space-between"][style*="align-items: center"] {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  /* Grilles KPI : passer en 1 colonne */
+  div[style*="grid-template-columns: repeat(2"],
+  div[style*="grid-template-columns: repeat(3"],
+  div[style*="grid-template-columns: repeat(4"],
+  div[style*="grid-template-columns: repeat(5"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Tables : scroll horizontal force */
+  .p-datatable-wrapper {
+    overflow-x: auto !important;
+  }
+
+  .p-datatable table {
+    min-width: 700px !important;
+  }
+
+  /* Recherche topbar : reduire la largeur */
+  input[placeholder*="Rechercher"] {
+    width: 100% !important;
+    max-width: 200px;
+  }
+
+  /* Boutons toolbar : empiler et pleine largeur */
+  div[style*="display: flex; gap: 10px; align-items: center"] {
+    flex-wrap: wrap !important;
+  }
+
+  /* Cartes dashboard : pleine largeur */
+  div[style*="grid-template-columns: 5fr 7fr"],
+  div[style*="grid-template-columns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Padding general reduit */
+  .layout-main {
+    padding: 12px !important;
+  }
+
+  /* Modales : pleine largeur sur mobile */
+  .p-dialog {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    margin: 0 auto;
+  }
+
+  /* Topbar : masquer la recherche centrale si trop large */
+  .layout-topbar-logo-container .layout-topbar-logo div:last-child {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Tres petit ecran : titre topbar simplifie */
+  .layout-topbar-logo div {
+    font-size: 12px !important;
+  }
+
+  /* Cacher l'heure dans la topbar sur tres petit ecran */
+  div[style*="font-family:monospace"] {
+    display: none !important;
+  }
+}

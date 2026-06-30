@@ -7,6 +7,7 @@ from app.schemas.paiement import PaiementCreate, PaiementUpdate, PaiementRespons
 from app.services import audit
 from app.models.audit_log import ActionType, EntityType
 from app.services.email import envoyer_email, template_paiement_recu
+import threading
 from app.models.dossier import Dossier
 from app.models.client import Client
 
@@ -29,7 +30,7 @@ def create_paiement(*, db: Session = Depends(deps.get_db), paiement_in: Paiement
     db.commit()
     db.refresh(paiement)
 
-    # Notification email au client
+    # Notification email au client (en arriere-plan, ne bloque jamais la reponse)
     try:
         dossier = db.query(Dossier).filter(Dossier.id == paiement.id_dossier).first()
         if dossier and dossier.client_id:
@@ -40,11 +41,11 @@ def create_paiement(*, db: Session = Depends(deps.get_db), paiement_in: Paiement
                     montant=float(paiement.montant),
                     type_paiement=paiement.type_paiement
                 )
-                envoyer_email(
-                    destinataire=client.email,
-                    sujet=f"Confirmation de paiement - Dossier {dossier.numero_dossier}",
-                    corps_html=corps
-                )
+                threading.Thread(
+                    target=envoyer_email,
+                    args=(client.email, f"Confirmation de paiement - Dossier {dossier.numero_dossier}", corps),
+                    daemon=True
+                ).start()
     except Exception:
         pass  # Ne jamais bloquer la requete si l'email echoue
 

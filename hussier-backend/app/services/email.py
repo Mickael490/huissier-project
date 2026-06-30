@@ -28,7 +28,7 @@ def envoyer_email(destinataire: str, sujet: str, corps_html: str) -> bool:
 
         msg.attach(MIMEText(corps_html, "html", "utf-8"))
 
-        with smtplib.SMTP(settings.MAIL_SERVER, settings.MAIL_PORT) as server:
+        with smtplib.SMTP(settings.MAIL_SERVER, settings.MAIL_PORT, timeout=5) as server:
             server.starttls()
             server.login(settings.MAIL_USERNAME, settings.MAIL_PASSWORD)
             server.sendmail(settings.MAIL_FROM, destinataire, msg.as_string())

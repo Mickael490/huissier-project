@@ -10,6 +10,7 @@ from app.models.dossier import StatutDossier, TypeDossier
 from app.services import audit
 from app.models.audit_log import ActionType, EntityType
 from app.services.email import envoyer_email, template_changement_statut
+import threading
 from app.models.client import Client
 
 router = APIRouter()  # ✅ défini en premier
@@ -95,11 +96,11 @@ def modifier_dossier(*, db: Session = Depends(deps.get_db), dossier_id: int, dos
                     ancien_statut=ancien_statut.value if hasattr(ancien_statut, "value") else str(ancien_statut),
                     nouveau_statut=nouveau_statut.value if hasattr(nouveau_statut, "value") else str(nouveau_statut)
                 )
-                envoyer_email(
-                    destinataire=client.email,
-                    sujet=f"Mise a jour de votre dossier {dossier.numero_dossier}",
-                    corps_html=corps
-                )
+                threading.Thread(
+                    target=envoyer_email,
+                    args=(client.email, f"Mise a jour de votre dossier {dossier.numero_dossier}", corps),
+                    daemon=True
+                ).start()
             except Exception:
                 pass  # Ne jamais bloquer la requete si l'email echoue
 
