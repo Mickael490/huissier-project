@@ -14,6 +14,7 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 import { PdfService } from 'src/services/pdf.service';
+import { ExcelService } from 'src/services/excel.service';
 
 @Component({
   selector: 'app-acte',
@@ -58,7 +59,8 @@ export class ActeComponent implements OnInit {
     private http: HttpClient,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
-    private pdfService: PdfService
+    private pdfService: PdfService,
+    public excelService: ExcelService
   ) {}
 
   ngOnInit(): void {
@@ -248,5 +250,54 @@ export class ActeComponent implements OnInit {
 
   exportPDF(): void {
     this.pdfService.exportActes(this.actes());
+  }
+  // ===== SELECTION MULTIPLE =====
+  selectedActes: any[] = [];
+
+  toggleSelectAll(items: any[]): void {
+    if (this.selectedActes.length === items.length) {
+      this.selectedActes = [];
+    } else {
+      this.selectedActes = [...items];
+    }
+  }
+
+  toggleSelect(item: any): void {
+    const i = this.selectedActes.findIndex((x: any) => x.id === item.id);
+    if (i >= 0) { this.selectedActes.splice(i, 1); }
+    else { this.selectedActes.push(item); }
+  }
+
+  isSelected(item: any): boolean {
+    return this.selectedActes.some((x: any) => x.id === item.id);
+  }
+
+  exportSelectionActesPDF(): void {
+    if (this.selectedActes.length === 0) return;
+    this.pdfService.exportActes(this.selectedActes);
+  }
+
+  deleteSelected(): void {
+    if (this.selectedActes.length === 0) return;
+    this.confirmationService.confirm({
+      message: `Supprimer ${this.selectedActes.length} element(s) ?`,
+      header: 'Confirmation', icon: 'pi pi-trash',
+      accept: () => {
+        const ids = this.selectedActes.map((x: any) => x.id);
+        let done = 0;
+        ids.forEach((id: any) => {
+          this.http.delete(`${this.apiUrl}/${id}`, { headers: this.getHeaders() }).subscribe({
+            next: () => {
+              done++;
+              if (done === ids.length) {
+                this.messageService.add({ severity: 'success', summary: 'Supprime', detail: `${ids.length} element(s) supprimes` });
+                this.selectedActes = [];
+                this.loadActes();
+              }
+            }
+          });
+        });
+      }
+    });
   }
 }

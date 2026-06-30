@@ -21,57 +21,123 @@
     <p-button label="Nouvel acte" icon="pi pi-plus" (click)="openNew()"
       [ngStyle]="{'background': 'linear-gradient(135deg, #1e3a5f, #2d6a9f)'}"
       styleClass="border-0"></p-button>
+    <ng-container *ngIf="selectedActes.length > 0">
+      <span style="background:#ede9fe; color:#4f46e5; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:600;">
+        {{ selectedActes.length }} sélectionné(s)
+      </span>
+      <p-button label="Export sélection" icon="pi pi-download" severity="warn" [outlined]="true"
+        (click)="exportSelectionActesPDF()"></p-button>
+      <p-button label="Supprimer" icon="pi pi-trash" severity="danger" [outlined]="true"
+        (click)="deleteSelected()"></p-button>
+    </ng-container>
     <p-button label="Export PDF" icon="pi pi-file-pdf" severity="danger" (click)="exportPDF()"></p-button>
+    <p-button label="Export Excel" icon="pi pi-file-excel" severity="success" (click)="excelService.exportActes(actes())"></p-button>
   </div>
 </div>
 
 <!-- STATS — comptage via méthode countByType() -->
-<div style="display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;">
-  <div style="flex: 1; min-width: 150px; background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 14px; border-left: 4px solid #4f46e5;">
-    <div style="background: #eff6ff; border-radius: 10px; padding: 10px 12px;">
-      <i class="pi pi-send" style="color: #2d6a9f; font-size: 18px;"></i>
+<div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 20px;">
+
+  <!-- Significations -->
+  <div style="background: white; border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-top: 3px solid #4f46e5;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px;">
+      <div style="background: #eff6ff; border-radius: 10px; padding: 6px 8px;">
+        <i class="pi pi-send" style="color: #2d6a9f; font-size: 16px;"></i>
+      </div>
+      <span style="background: #eff6ff; color: #1d4ed8; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px;">Acte</span>
     </div>
-    <div>
-      <div style="font-size: 22px; font-weight: 700; color: #1e293b;">{{ countByType('signification') }}</div>
-      <div style="font-size: 12px; color: #94a3b8;">Significations</div>
+    <div style="font-size: 16px; font-weight: 700; color: #1e293b; line-height: 1;">{{ countByType('signification') }}</div>
+    <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px; margin-top: 1px;">Significations</div>
+    <div style="background: #f1f5f9; border-radius: 99px; height: 5px; overflow: hidden;">
+      <div [style.width]="actes().length > 0 ? (countByType('signification') / actes().length * 100) + '%' : '0%'"
+           style="height: 100%; background: #4f46e5; border-radius: 99px; transition: width 0.8s ease;"></div>
     </div>
-  </div>
-  <div style="flex: 1; min-width: 150px; background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 14px; border-left: 4px solid #f59e0b;">
-    <div style="background: #fffbeb; border-radius: 10px; padding: 10px 12px;">
-      <i class="pi pi-eye" style="color: #d97706; font-size: 18px;"></i>
-    </div>
-    <div>
-      <div style="font-size: 22px; font-weight: 700; color: #1e293b;">{{ countByType('constat') }}</div>
-      <div style="font-size: 12px; color: #94a3b8;">Constats</div>
-    </div>
-  </div>
-  <div style="flex: 1; min-width: 150px; background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 14px; border-left: 4px solid #ef4444;">
-    <div style="background: #fef2f2; border-radius: 10px; padding: 10px 12px;">
-      <i class="pi pi-lock" style="color: #ef4444; font-size: 18px;"></i>
-    </div>
-    <div>
-      <div style="font-size: 22px; font-weight: 700; color: #1e293b;">{{ countByType('saisie') }}</div>
-      <div style="font-size: 12px; color: #94a3b8;">Saisies</div>
+    <div style="display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; margin-top: 4px;">
+      <span>Part</span>
+      <span>{{ actes().length > 0 ? ((countByType('signification') / actes().length * 100) | number:'1.0-0') : 0 }}%</span>
     </div>
   </div>
-  <div style="flex: 1; min-width: 150px; background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 14px; border-left: 4px solid #10b981;">
-    <div style="background: #f0fdf4; border-radius: 10px; padding: 10px 12px;">
-      <i class="pi pi-dollar" style="color: #059669; font-size: 18px;"></i>
+
+  <!-- Constats -->
+  <div style="background: white; border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-top: 3px solid #f59e0b;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px;">
+      <div style="background: #fffbeb; border-radius: 10px; padding: 6px 8px;">
+        <i class="pi pi-eye" style="color: #d97706; font-size: 16px;"></i>
+      </div>
+      <span style="background: #fffbeb; color: #b45309; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px;">Acte</span>
     </div>
-    <div>
-      <div style="font-size: 22px; font-weight: 700; color: #1e293b;">{{ countByType('recouvrement') }}</div>
-      <div style="font-size: 12px; color: #94a3b8;">Recouvrements</div>
+    <div style="font-size: 16px; font-weight: 700; color: #1e293b; line-height: 1;">{{ countByType('constat') }}</div>
+    <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px; margin-top: 1px;">Constats</div>
+    <div style="background: #f1f5f9; border-radius: 99px; height: 5px; overflow: hidden;">
+      <div [style.width]="actes().length > 0 ? (countByType('constat') / actes().length * 100) + '%' : '0%'"
+           style="height: 100%; background: #f59e0b; border-radius: 99px; transition: width 0.8s ease;"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; margin-top: 4px;">
+      <span>Part</span>
+      <span>{{ actes().length > 0 ? ((countByType('constat') / actes().length * 100) | number:'1.0-0') : 0 }}%</span>
     </div>
   </div>
-  <div style="flex: 1; min-width: 150px; background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 14px; border-left: 4px solid #10b981;">
-    <div style="background: #f0fdf4; border-radius: 10px; padding: 10px 12px;">
-      <i class="pi pi-file-edit" style="color: #059669; font-size: 18px;"></i>
+
+  <!-- Saisies -->
+  <div style="background: white; border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-top: 3px solid #ef4444;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px;">
+      <div style="background: #fef2f2; border-radius: 10px; padding: 6px 8px;">
+        <i class="pi pi-lock" style="color: #ef4444; font-size: 16px;"></i>
+      </div>
+      <span style="background: #fef2f2; color: #991b1b; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px;">Acte</span>
     </div>
-    <div>
-      <div style="font-size: 22px; font-weight: 700; color: #1e293b;">{{ actes().length }}</div>
-      <div style="font-size: 12px; color: #94a3b8;">Total actes</div>
+    <div style="font-size: 16px; font-weight: 700; color: #1e293b; line-height: 1;">{{ countByType('saisie') }}</div>
+    <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px; margin-top: 1px;">Saisies</div>
+    <div style="background: #f1f5f9; border-radius: 99px; height: 5px; overflow: hidden;">
+      <div [style.width]="actes().length > 0 ? (countByType('saisie') / actes().length * 100) + '%' : '0%'"
+           style="height: 100%; background: #ef4444; border-radius: 99px; transition: width 0.8s ease;"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; margin-top: 4px;">
+      <span>Part</span>
+      <span>{{ actes().length > 0 ? ((countByType('saisie') / actes().length * 100) | number:'1.0-0') : 0 }}%</span>
     </div>
   </div>
+
+  <!-- Recouvrements -->
+  <div style="background: white; border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-top: 3px solid #10b981;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px;">
+      <div style="background: #f0fdf4; border-radius: 10px; padding: 6px 8px;">
+        <i class="pi pi-dollar" style="color: #059669; font-size: 16px;"></i>
+      </div>
+      <span style="background: #f0fdf4; color: #065f46; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px;">Acte</span>
+    </div>
+    <div style="font-size: 16px; font-weight: 700; color: #1e293b; line-height: 1;">{{ countByType('recouvrement') }}</div>
+    <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px; margin-top: 1px;">Recouvrements</div>
+    <div style="background: #f1f5f9; border-radius: 99px; height: 5px; overflow: hidden;">
+      <div [style.width]="actes().length > 0 ? (countByType('recouvrement') / actes().length * 100) + '%' : '0%'"
+           style="height: 100%; background: #10b981; border-radius: 99px; transition: width 0.8s ease;"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; margin-top: 4px;">
+      <span>Part</span>
+      <span>{{ actes().length > 0 ? ((countByType('recouvrement') / actes().length * 100) | number:'1.0-0') : 0 }}%</span>
+    </div>
+  </div>
+
+  <!-- Total -->
+  <div style="background: white; border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-top: 3px solid #a855f7;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px;">
+      <div style="background: #fdf4ff; border-radius: 10px; padding: 6px 8px;">
+        <i class="pi pi-file-edit" style="color: #9333ea; font-size: 16px;"></i>
+      </div>
+      <span style="background: #fdf4ff; color: #7e22ce; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px;">Total</span>
+    </div>
+    <div style="font-size: 16px; font-weight: 700; color: #1e293b; line-height: 1;">{{ actes().length }}</div>
+    <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px; margin-top: 1px;">Total actes</div>
+    <div style="background: #f1f5f9; border-radius: 99px; height: 5px; overflow: hidden;">
+      <div [style.width]="(actes().length / 20 * 100) + '%'"
+           style="height: 100%; background: #a855f7; border-radius: 99px; transition: width 0.8s ease;"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; margin-top: 4px;">
+      <span>Capacité</span>
+      <span>{{ (actes().length / 20 * 100) | number:'1.0-0' }}%</span>
+    </div>
+  </div>
+
 </div>
 
 <!-- TABLE -->
@@ -89,6 +155,10 @@
   >
     <ng-template #header>
       <tr style="background: #f8fafc;">
+        <th style="width: 3rem; padding: 14px;">
+          <input type="checkbox" [checked]="selectedActes.length === actes().length && actes().length > 0"
+            (change)="toggleSelectAll(actes())" style="cursor:pointer; width:16px; height:16px;">
+        </th>
         <th style="min-width: 14rem; padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">TYPE D'ACTE</th>
         <th style="min-width: 16rem; padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">DOSSIER</th>
         <th style="min-width: 12rem; padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">DATE</th>
@@ -99,15 +169,18 @@
     </ng-template>
 
     <ng-template #body let-acte>
-      <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.2s;">
+      <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.2s;" [style.background]="isSelected(acte) ? '#f5f3ff' : 'white'">
 
+        <td style="padding: 14px; width: 3rem;">
+          <input type="checkbox" [checked]="isSelected(acte)" (change)="toggleSelect(acte)" style="cursor:pointer; width:16px; height:16px;">
+        </td>
         <td style="padding: 14px;">
           <div style="display: flex; align-items: center; gap: 10px;">
             <div [style]="'width:38px; height:38px; border-radius:10px; background:' + getTypeColor(acte.type_acte) + '; display:flex; align-items:center; justify-content:center; flex-shrink:0;'">
               <i [class]="getTypeIcon(acte.type_acte)" style="color:white; font-size:15px;"></i>
             </div>
             <div>
-              <p-tag [value]="getTypeLabel(acte.type_acte)" [severity]="getTypeSeverity(acte.type_acte)"></p-tag>
+              <span class="statut-badge" [ngClass]="'statut-badge--' + (acte.type_acte.toLowerCase())">{{ getTypeLabel(acte.type_acte) }}</span>
               <div style="font-size: 11px; color: #94a3b8; margin-top: 3px;">ID #{{ acte.id }}</div>
             </div>
           </div>
@@ -168,17 +241,7 @@
       </tr>
     </ng-template>
 
-    <ng-template #empty>
-      <tr>
-        <td colspan="6" style="text-align: center; padding: 60px 20px;">
-          <div style="color: #94a3b8;">
-            <i class="pi pi-file-edit" style="font-size: 48px; display: block; margin-bottom: 12px;"></i>
-            <div style="font-size: 16px; font-weight: 600; margin-bottom: 4px;">Aucun acte enregistré</div>
-            <div style="font-size: 13px;">Créez un nouvel acte pour commencer</div>
-          </div>
-        </td>
-      </tr>
-    </ng-template>
+    <ng-template #empty><tr><td colspan="7"><div style="text-align:center; padding:60px 20px;"><div style="width:80px; height:80px; border-radius:50%; background:#7c3aed22; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;"><i class="pi pi-file-edit" style="font-size:36px; color:#7c3aed;"></i></div><div style="font-size:18px; font-weight:700; color:#1e293b; margin-bottom:6px;">Aucun acte enregistré</div><div style="font-size:13px; color:#94a3b8;">Rédigez votre premier acte</div><button type="button" (click)="openNew()" style="margin-top:16px; padding:10px 24px; border-radius:10px; border:none; background:#7c3aed; color:white; font-size:13px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:8px;"><i class="pi pi-plus"></i> Nouveau</button></div></td></tr></ng-template>
   </p-table>
 </div>
 
@@ -288,7 +351,7 @@
           </div>
         </div>
         <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
-          <p-tag [value]="getTypeLabel(acteSelectionne.type_acte)" [severity]="getTypeSeverity(acteSelectionne.type_acte)"></p-tag>
+          <span class="statut-badge" [ngClass]="'statut-badge--' + (acteSelectionne.type_acte.toLowerCase())">{{ getTypeLabel(acteSelectionne.type_acte) }}</span>
           <div style="color: rgba(255,255,255,0.6); font-size: 11px;">ID #{{ acteSelectionne.id }}</div>
           <button type="button" (click)="detailsDialog = false"
             style="background: rgba(255,255,255,0.15); border: none; border-radius: 6px; color: white; cursor: pointer; padding: 5px 10px; font-size: 12px;">
@@ -332,7 +395,7 @@
             <div style="display: flex; flex-direction: column; gap: 12px;">
               <div style="display: flex; justify-content: space-between; align-items: center;">
                 <span style="color: #64748b; font-size: 13px;">Type</span>
-                <p-tag [value]="getTypeLabel(acteSelectionne.type_acte)" [severity]="getTypeSeverity(acteSelectionne.type_acte)"></p-tag>
+                <span class="statut-badge" [ngClass]="'statut-badge--' + (acteSelectionne.type_acte.toLowerCase())">{{ getTypeLabel(acteSelectionne.type_acte) }}</span>
               </div>
               <div style="display: flex; justify-content: space-between; align-items: center;">
                 <span style="color: #64748b; font-size: 13px;">Date d'exécution</span>

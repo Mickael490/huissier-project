@@ -22,7 +22,7 @@
       </div>
       <h3 class="text-xl font-bold mb-1">{{ utilisateur.prenom }} {{ utilisateur.nom }}</h3>
       <p class="text-muted-color mb-4">{{ utilisateur.email }}</p>
-      <p-tag [value]="utilisateur.role" [severity]="getRoleSeverity(utilisateur.role)"></p-tag>
+      <span class="statut-badge" [ngClass]="'statut-badge--' + (utilisateur.role.toLowerCase())">{{ utilisateur.role }}</span>
     </div>
   </div>
 

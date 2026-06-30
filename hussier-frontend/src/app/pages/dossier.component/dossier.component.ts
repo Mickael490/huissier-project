@@ -1,4 +1,7 @@
 import { PdfService } from 'src/services/pdf.service';
+import { environment } from 'src/environments/environment';
+import { HttpClient } from '@angular/common/http';
+import { ExcelService } from 'src/services/excel.service';
 import { Component, OnInit, ViewChild, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -32,6 +35,8 @@ import { forkJoin } from 'rxjs';
 export class DossierComponent implements OnInit {
 
   dossiers = signal<Dossier[]>([]);
+  isLoading = true;
+  historiqueDossier: any[] = [];
   dossier: any = {};
   selectedDossiers: Dossier[] = [];
   dossierDialog = false;
@@ -46,6 +51,9 @@ export class DossierComponent implements OnInit {
   dossiersDeverrouilles = new Set<number>();
 
   filterCabinetId?: number;
+  showFilters = false;
+  filterDateDebut?: string;
+  filterDateFin?: string;
   filterClientId?: number;
   filterStatut?: StatutDossier;
   filterType?: TypeDossier;
@@ -79,7 +87,9 @@ export class DossierComponent implements OnInit {
     private dossierService: DossierService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
-    private pdfService: PdfService
+    private pdfService: PdfService,
+    public excelService: ExcelService,
+    private http: HttpClient
   ) {}
 
   ngOnInit(): void {
@@ -209,10 +219,32 @@ export class DossierComponent implements OnInit {
   }
 
   loadDossiers(): void {
+    this.isLoading = true;
     this.dossierService.getDossiers(0, 100, this.filterCabinetId, this.filterClientId, this.filterStatut, this.filterType).subscribe({
-      next: (response: any) => this.dossiers.set(response.dossiers),
-      error: () => this.messageService.add({ severity: 'error', summary: 'Erreur', detail: 'Erreur lors du chargement des dossiers' })
+      next: (response: any) => { this.dossiers.set(response.dossiers); this.isLoading = false; },
+      error: () => { this.isLoading = false; this.messageService.add({ severity: 'error', summary: 'Erreur', detail: 'Erreur lors du chargement des dossiers' }); }
     });
+  }
+
+  loadHistorique(dossierId: number): void {
+    const token = localStorage.getItem('token');
+    const headers = { Authorization: `Bearer ${token}` };
+    this.http.get<any[]>(`${environment.apiUrl}/audit_logs/`, { headers }).subscribe({
+      next: (data) => {
+        this.historiqueDossier = (data || []).filter((log: any) =>
+          log.entity_type === 'DOSSIER' && Number(log.entity_id) === Number(dossierId)
+        );
+      },
+      error: () => { this.historiqueDossier = []; }
+    });
+  }
+
+  getActionLabel(action: string): string {
+    const map: any = {
+      CREATE: 'Dossier créé', UPDATE: 'Dossier modifié', DELETE: 'Dossier supprimé',
+      VIEW: 'Dossier consulté', EXPORT: 'Export effectué', PRINT: 'Impression effectuée'
+    };
+    return map[action] || action;
   }
 
   voirDetails(dossier: any): void {
@@ -223,6 +255,7 @@ export class DossierComponent implements OnInit {
     } else {
       this.dossierSelectionne = dossier;
       this.detailsDialog = true;
+      if (dossier.id) { this.loadHistorique(dossier.id); }
     }
   }
 
@@ -284,6 +317,18 @@ export class DossierComponent implements OnInit {
     return `${year}-${month}-${day}`;
   }
 
+  getStatutLabel(statut: string): string {
+    switch (statut) {
+      case 'nouveau': return 'Nouveau';
+      case 'en_cours': return 'En cours';
+      case 'en_attente': return 'En attente';
+      case 'termine': return 'Terminé';
+      case 'archive': return 'Archivé';
+      case 'annule': return 'Annulé';
+      default: return statut;
+    }
+  }
+
   getStatutSeverity(statut: string): string {
     switch (statut) {
       case 'nouveau': return 'info';
@@ -302,4 +347,15 @@ export class DossierComponent implements OnInit {
   readonly nbArchives = computed(() => this.dossiers().filter(d => d.statut === 'archive').length);
   readonly nbNouveaux = computed(() => this.dossiers().filter(d => d.statut === 'nouveau').length);
   readonly nbAnnules = computed(() => this.dossiers().filter(d => d.statut === 'annule').length);
+  appliquerFiltres(): void {
+    this.loadDossiers();
+  }
+
+  resetFiltres(): void {
+    this.filterStatut = undefined;
+    this.filterType = undefined;
+    this.filterDateDebut = undefined;
+    this.filterDateFin = undefined;
+    this.loadDossiers();
+  }
 }

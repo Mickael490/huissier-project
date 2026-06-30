@@ -8,6 +8,7 @@ import { DialogModule } from 'primeng/dialog';
 import { BadgeModule } from 'primeng/badge';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
+import { PdfService } from 'src/services/pdf.service';
 import { RouterModule } from '@angular/router';
 import { hasRole, AppRole } from 'src/services/role.guard';
 
@@ -51,6 +52,12 @@ import { hasRole, AppRole } from 'src/services/role.guard';
               <div style="font-size:11px; color:rgba(255,255,255,0.6); margin-bottom:2px;">Connecte en tant que</div>
               <div style="font-size:15px; font-weight:700; text-transform:uppercase; letter-spacing:1px;">{{ roleUtilisateur }}</div>
             </div>
+            <!-- Export PDF -->
+            <button (click)="exportDashboard()" title="Exporter le rapport PDF"
+              style="width:48px; height:48px; border-radius:12px; background:rgba(239,68,68,0.2); border:1px solid rgba(239,68,68,0.4); color:#fca5a5; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:2px;">
+              <i class="pi pi-file-pdf" style="font-size:18px;"></i>
+              <span style="font-size:8px; font-weight:600;">PDF</span>
+            </button>
           </div>
         </div>
 
@@ -506,7 +513,7 @@ export class Dashboard implements OnInit, OnDestroy {
     // Actions rapides specifiques au profil connecte
     quickActions: { label: string; icon: string; color: string; link: string }[] = [];
 
-    constructor(private http: HttpClient) {}
+    constructor(private http: HttpClient, private pdfService: PdfService) {}
 
     private buildQuickActions() {
         const a: any[] = [];
@@ -698,14 +705,27 @@ export class Dashboard implements OnInit, OnDestroy {
         const types = data.graphiques?.dossiers_par_type || [];
         const statuts = data.graphiques?.dossiers_par_statut || [];
         const colors = ['#4f46e5','#10b981','#f97316','#ef4444','#8b5cf6','#06b6d4','#f59e0b','#ec4899'];
+        const cleanLabel = (val: string): string => {
+            if (!val) return val;
+            const v = val.includes('.') ? val.split('.').pop() as string : val;
+            const map: { [key: string]: string } = {
+                'RECOUVREMENT': 'Recouvrement', 'CONTENTIEUX': 'Contentieux',
+                'SIGNIFICATION': 'Signification', 'SAISIE': 'Saisie',
+                'CONSTAT': 'Constat', 'DILIGENCE': 'Diligence',
+                'NOUVEAU': 'Nouveau', 'EN_COURS': 'En cours',
+                'EN_ATTENTE': 'En attente', 'TERMINE': 'Termine',
+                'ARCHIVE': 'Archive', 'ANNULE': 'Annule'
+            };
+            return map[v] || (v.charAt(0).toUpperCase() + v.slice(1).toLowerCase().replace(/_/g, ' '));
+        };
 
         this.chartType = {
-            labels: types.map((t: any) => t.type),
+            labels: types.map((t: any) => cleanLabel(t.type)),
             datasets: [{ data: types.map((t: any) => t.count), backgroundColor: colors.slice(0, types.length), borderWidth: 3, borderColor: '#ffffff' }]
         };
 
         this.chartStatut = {
-            labels: statuts.map((s: any) => s.statut),
+            labels: statuts.map((s: any) => cleanLabel(s.statut)),
             datasets: [{ label: 'Dossiers', data: statuts.map((s: any) => s.count), backgroundColor: colors.slice(0, statuts.length), borderRadius: 10, borderSkipped: false }]
         };
 
@@ -773,5 +793,9 @@ export class Dashboard implements OnInit, OnDestroy {
             case 'LOGIN': return '#dbeafe';
             default: return '#f1f5f9';
         }
+    }
+
+    exportDashboard() {
+        this.pdfService.exportDashboard(this.stats);
     }
 }

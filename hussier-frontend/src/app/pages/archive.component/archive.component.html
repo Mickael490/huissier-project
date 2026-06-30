@@ -16,39 +16,78 @@
     <p-button label="Nouvelle archive" icon="pi pi-plus" (click)="openNew()"
       [ngStyle]="{'background': 'linear-gradient(135deg, #1e3a5f, #2d6a9f)'}"
       styleClass="border-0"></p-button>
+    <ng-container *ngIf="selectedArchives.length > 0">
+      <span style="background:#ede9fe; color:#4f46e5; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:600;">{{ selectedArchives.length }} sélectionné(s)</span>
+      <p-button label="Export sélection" icon="pi pi-download" severity="warn" [outlined]="true" (click)="exportSelectionPDF()"></p-button>
+      <p-button label="Supprimer" icon="pi pi-trash" severity="danger" [outlined]="true" (click)="deleteSelectedArchives()"></p-button>
+    </ng-container>
     <p-button label="Export PDF" icon="pi pi-file-pdf" severity="danger" (click)="exportListePDF()"></p-button>
   </div>
 </div>
 
 <!-- STATS -->
-<div style="display:flex; gap:16px; margin-bottom:20px;">
-  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #4f46e5;">
-    <div style="background:#ede9fe; border-radius:10px; padding:10px 12px;">
-      <i class="pi pi-inbox" style="color:#4f46e5; font-size:18px;"></i>
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px;">
+
+  <!-- Total archives -->
+  <div style="background: white; border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-top: 3px solid #4f46e5;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px;">
+      <div style="background: #ede9fe; border-radius: 10px; padding: 6px 8px;">
+        <i class="pi pi-inbox" style="color: #4f46e5; font-size: 16px;"></i>
+      </div>
+      <span style="background: #ede9fe; color: #4f46e5; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px;">Total</span>
     </div>
-    <div>
-      <div style="font-size:22px; font-weight:700; color:#1e293b;">{{ totalArchives() }}</div>
-      <div style="font-size:12px; color:#94a3b8;">Total archives</div>
+    <div style="font-size: 16px; font-weight: 700; color: #1e293b; line-height: 1;">{{ totalArchives() }}</div>
+    <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px; margin-top: 1px;">Total archives</div>
+    <div style="background: #f1f5f9; border-radius: 99px; height: 5px; overflow: hidden;">
+      <div [style.width]="(totalArchives() / 20 * 100) + '%'"
+           style="height: 100%; background: #4f46e5; border-radius: 99px; transition: width 0.8s ease;"></div>
     </div>
-  </div>
-  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #3b82f6;">
-    <div style="background:#dbeafe; border-radius:10px; padding:10px 12px;">
-      <i class="pi pi-folder" style="color:#3b82f6; font-size:18px;"></i>
-    </div>
-    <div>
-      <div style="font-size:22px; font-weight:700; color:#1e293b;">{{ archivesDossier() }}</div>
-      <div style="font-size:12px; color:#94a3b8;">Dossiers archivés</div>
-    </div>
-  </div>
-  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #f97316;">
-    <div style="background:#fff7ed; border-radius:10px; padding:10px 12px;">
-      <i class="pi pi-file-edit" style="color:#f97316; font-size:18px;"></i>
-    </div>
-    <div>
-      <div style="font-size:22px; font-weight:700; color:#1e293b;">{{ archivesActe() }}</div>
-      <div style="font-size:12px; color:#94a3b8;">Actes archivés</div>
+    <div style="display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; margin-top: 4px;">
+      <span>Capacité</span>
+      <span>{{ (totalArchives() / 20 * 100) | number:'1.0-0' }}%</span>
     </div>
   </div>
+
+  <!-- Dossiers archivés -->
+  <div style="background: white; border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-top: 3px solid #3b82f6;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px;">
+      <div style="background: #dbeafe; border-radius: 10px; padding: 6px 8px;">
+        <i class="pi pi-folder" style="color: #3b82f6; font-size: 16px;"></i>
+      </div>
+      <span style="background: #dbeafe; color: #1d4ed8; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px;">Dossiers</span>
+    </div>
+    <div style="font-size: 16px; font-weight: 700; color: #1e293b; line-height: 1;">{{ archivesDossier() }}</div>
+    <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px; margin-top: 1px;">Dossiers archivés</div>
+    <div style="background: #f1f5f9; border-radius: 99px; height: 5px; overflow: hidden;">
+      <div [style.width]="totalArchives() > 0 ? (archivesDossier() / totalArchives() * 100) + '%' : '0%'"
+           style="height: 100%; background: #3b82f6; border-radius: 99px; transition: width 0.8s ease;"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; margin-top: 4px;">
+      <span>Part du total</span>
+      <span>{{ totalArchives() > 0 ? ((archivesDossier() / totalArchives() * 100) | number:'1.0-0') : 0 }}%</span>
+    </div>
+  </div>
+
+  <!-- Actes archivés -->
+  <div style="background: white; border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-top: 3px solid #f97316;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px;">
+      <div style="background: #fff7ed; border-radius: 10px; padding: 6px 8px;">
+        <i class="pi pi-file-edit" style="color: #f97316; font-size: 16px;"></i>
+      </div>
+      <span style="background: #fff7ed; color: #c2410c; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px;">Actes</span>
+    </div>
+    <div style="font-size: 16px; font-weight: 700; color: #1e293b; line-height: 1;">{{ archivesActe() }}</div>
+    <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px; margin-top: 1px;">Actes archivés</div>
+    <div style="background: #f1f5f9; border-radius: 99px; height: 5px; overflow: hidden;">
+      <div [style.width]="totalArchives() > 0 ? (archivesActe() / totalArchives() * 100) + '%' : '0%'"
+           style="height: 100%; background: #f97316; border-radius: 99px; transition: width 0.8s ease;"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; margin-top: 4px;">
+      <span>Part du total</span>
+      <span>{{ totalArchives() > 0 ? ((archivesActe() / totalArchives() * 100) | number:'1.0-0') : 0 }}%</span>
+    </div>
+  </div>
+
 </div>
 
 <!-- TABLE -->
@@ -56,22 +95,24 @@
   <p-table [value]="archives()" dataKey="id" [paginator]="true" [rows]="10" [rowHover]="true">
     <ng-template #header>
       <tr style="background:#f8fafc;">
-        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">TYPE</th>
+        <th style="width:3rem; padding:14px;"><input type="checkbox" [checked]="selectedArchives.length === archives().length && archives().length > 0" (change)="toggleSelectAll(archives())" style="cursor:pointer; width:16px; height:16px;"></th>
+        <th pSortableColumn="type_archive" style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;" style="cursor:pointer;">TYPE <p-sortIcon field="type_archive"/></th>
         <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">DOSSIER</th>
-        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">RAISON ARCHIVAGE</th>
-        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">DATE ARCHIVAGE</th>
+        <th pSortableColumn="raison_archivage" style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;" style="cursor:pointer;">RAISON ARCHIVAGE <p-sortIcon field="raison_archivage"/></th>
+        <th pSortableColumn="date_archivage" style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;" style="cursor:pointer;">DATE ARCHIVAGE <p-sortIcon field="date_archivage"/></th>
         <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">SUPPRESSION PRÉVUE</th>
         <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">ACTIONS</th>
       </tr>
     </ng-template>
     <ng-template #body let-archive>
-      <tr style="border-bottom:1px solid #f1f5f9;">
+      <tr style="border-bottom:1px solid #f1f5f9;" [style.background]="isSelected(archive) ? '#f5f3ff' : 'white'">
+        <td style="padding:14px; width:3rem;"><input type="checkbox" [checked]="isSelected(archive)" (change)="toggleSelect(archive)" style="cursor:pointer; width:16px; height:16px;"></td>
         <td style="padding:14px;">
           <div style="display:flex; align-items:center; gap:8px;">
             <div [style]="'width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:' + (archive.type_archive === 'DOSSIER' ? '#ede9fe' : archive.type_archive === 'ACTE' ? '#fff7ed' : archive.type_archive === 'DOCUMENT' ? '#d1fae5' : '#fef2f2')">
               <i [class]="getTypeInfo(archive.type_archive)?.icon" [style]="'font-size:15px; color:' + getTypeInfo(archive.type_archive)?.color"></i>
             </div>
-            <p-tag [value]="getTypeLabel(archive.type_archive)" [severity]="getTypeSeverity(archive.type_archive)"></p-tag>
+            <span class="statut-badge" [ngClass]="'statut-badge--' + (archive.type_archive.toLowerCase())">{{ getTypeLabel(archive.type_archive) }}</span>
           </div>
         </td>
         <td style="padding:14px;">
@@ -106,14 +147,7 @@
         </td>
       </tr>
     </ng-template>
-    <ng-template #empty>
-      <tr>
-        <td colspan="6" style="text-align:center; padding:40px; color:#94a3b8;">
-          <i class="pi pi-inbox" style="font-size:36px; display:block; margin-bottom:8px;"></i>
-          Aucune archive disponible
-        </td>
-      </tr>
-    </ng-template>
+    <ng-template #empty><tr><td colspan="7"><div style="text-align:center; padding:60px 20px;"><div style="width:80px; height:80px; border-radius:50%; background:#4f46e522; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;"><i class="pi pi-inbox" style="font-size:36px; color:#4f46e5;"></i></div><div style="font-size:18px; font-weight:700; color:#1e293b; margin-bottom:6px;">Aucune archive disponible</div><div style="font-size:13px; color:#94a3b8;">Les dossiers archivés apparaîtront ici</div><button type="button" (click)="openNew()" style="margin-top:16px; padding:10px 24px; border-radius:10px; border:none; background:#4f46e5; color:white; font-size:13px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:8px;"><i class="pi pi-plus"></i> Nouveau</button></div></td></tr></ng-template>
   </p-table>
 </div>
 

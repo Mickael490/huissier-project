@@ -16,39 +16,78 @@
     <p-button label="Nouvel utilisateur" icon="pi pi-plus" (click)="openNew()"
       [ngStyle]="{'background': 'linear-gradient(135deg, #1e3a5f, #2d6a9f)'}"
       styleClass="border-0"></p-button>
+    <ng-container *ngIf="selectedUtilisateurs.length > 0">
+      <span style="background:#ede9fe; color:#4f46e5; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:600;">{{ selectedUtilisateurs.length }} sélectionné(s)</span>
+      <p-button label="Export sélection" icon="pi pi-download" severity="warn" [outlined]="true" (click)="exportSelectionPDF()"></p-button>
+      <p-button label="Supprimer" icon="pi pi-trash" severity="danger" [outlined]="true" (click)="deleteSelectedUtilisateurs()"></p-button>
+    </ng-container>
     <p-button label="Export PDF" icon="pi pi-file-pdf" severity="danger" (click)="exportListePDF()"></p-button>
   </div>
 </div>
 
 <!-- STATS -->
-<div style="display:flex; gap:16px; margin-bottom:20px;">
-  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #4f46e5;">
-    <div style="background:#ede9fe; border-radius:10px; padding:10px 12px;">
-      <i class="pi pi-users" style="color:#4f46e5; font-size:18px;"></i>
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px;">
+
+  <!-- Total utilisateurs -->
+  <div style="background: white; border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-top: 3px solid #4f46e5;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px;">
+      <div style="background: #ede9fe; border-radius: 10px; padding: 6px 8px;">
+        <i class="pi pi-users" style="color: #4f46e5; font-size: 16px;"></i>
+      </div>
+      <span style="background: #ede9fe; color: #4f46e5; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px;">Total</span>
     </div>
-    <div>
-      <div style="font-size:22px; font-weight:700; color:#1e293b;">{{ totalUtilisateurs() }}</div>
-      <div style="font-size:12px; color:#94a3b8;">Total utilisateurs</div>
+    <div style="font-size: 16px; font-weight: 700; color: #1e293b; line-height: 1;">{{ totalUtilisateurs() }}</div>
+    <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px; margin-top: 1px;">Total utilisateurs</div>
+    <div style="background: #f1f5f9; border-radius: 99px; height: 5px; overflow: hidden;">
+      <div [style.width]="(totalUtilisateurs() / 20 * 100) + '%'"
+           style="height: 100%; background: #4f46e5; border-radius: 99px; transition: width 0.8s ease;"></div>
     </div>
-  </div>
-  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #10b981;">
-    <div style="background:#d1fae5; border-radius:10px; padding:10px 12px;">
-      <i class="pi pi-check-circle" style="color:#10b981; font-size:18px;"></i>
-    </div>
-    <div>
-      <div style="font-size:22px; font-weight:700; color:#1e293b;">{{ totalActifs() }}</div>
-      <div style="font-size:12px; color:#94a3b8;">Comptes actifs</div>
-    </div>
-  </div>
-  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #ef4444;">
-    <div style="background:#fef2f2; border-radius:10px; padding:10px 12px;">
-      <i class="pi pi-shield" style="color:#ef4444; font-size:18px;"></i>
-    </div>
-    <div>
-      <div style="font-size:22px; font-weight:700; color:#1e293b;">{{ totalAdmins() }}</div>
-      <div style="font-size:12px; color:#94a3b8;">Administrateurs</div>
+    <div style="display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; margin-top: 4px;">
+      <span>Capacité</span>
+      <span>{{ (totalUtilisateurs() / 20 * 100) | number:'1.0-0' }}%</span>
     </div>
   </div>
+
+  <!-- Comptes actifs -->
+  <div style="background: white; border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-top: 3px solid #10b981;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px;">
+      <div style="background: #d1fae5; border-radius: 10px; padding: 6px 8px;">
+        <i class="pi pi-check-circle" style="color: #10b981; font-size: 16px;"></i>
+      </div>
+      <span style="background: #d1fae5; color: #065f46; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px;">Actif</span>
+    </div>
+    <div style="font-size: 16px; font-weight: 700; color: #1e293b; line-height: 1;">{{ totalActifs() }}</div>
+    <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px; margin-top: 1px;">Comptes actifs</div>
+    <div style="background: #f1f5f9; border-radius: 99px; height: 5px; overflow: hidden;">
+      <div [style.width]="totalUtilisateurs() > 0 ? (totalActifs() / totalUtilisateurs() * 100) + '%' : '0%'"
+           style="height: 100%; background: #10b981; border-radius: 99px; transition: width 0.8s ease;"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; margin-top: 4px;">
+      <span>Taux d'activité</span>
+      <span>{{ totalUtilisateurs() > 0 ? ((totalActifs() / totalUtilisateurs() * 100) | number:'1.0-0') : 0 }}%</span>
+    </div>
+  </div>
+
+  <!-- Administrateurs -->
+  <div style="background: white; border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-top: 3px solid #ef4444;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px;">
+      <div style="background: #fef2f2; border-radius: 10px; padding: 6px 8px;">
+        <i class="pi pi-shield" style="color: #ef4444; font-size: 16px;"></i>
+      </div>
+      <span style="background: #fef2f2; color: #991b1b; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px;">Admin</span>
+    </div>
+    <div style="font-size: 16px; font-weight: 700; color: #1e293b; line-height: 1;">{{ totalAdmins() }}</div>
+    <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px; margin-top: 1px;">Administrateurs</div>
+    <div style="background: #f1f5f9; border-radius: 99px; height: 5px; overflow: hidden;">
+      <div [style.width]="totalUtilisateurs() > 0 ? (totalAdmins() / totalUtilisateurs() * 100) + '%' : '0%'"
+           style="height: 100%; background: #ef4444; border-radius: 99px; transition: width 0.8s ease;"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; margin-top: 4px;">
+      <span>Part admins</span>
+      <span>{{ totalUtilisateurs() > 0 ? ((totalAdmins() / totalUtilisateurs() * 100) | number:'1.0-0') : 0 }}%</span>
+    </div>
+  </div>
+
 </div>
 
 <!-- TABLE -->
@@ -56,16 +95,18 @@
   <p-table [value]="utilisateurs()" dataKey="id" [paginator]="true" [rows]="10" [rowHover]="true">
     <ng-template #header>
       <tr style="background:#f8fafc;">
-        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">UTILISATEUR</th>
+        <th style="width:3rem; padding:14px;"><input type="checkbox" [checked]="selectedUtilisateurs.length === utilisateurs().length && utilisateurs().length > 0" (change)="toggleSelectAll(utilisateurs())" style="cursor:pointer; width:16px; height:16px;"></th>
+        <th pSortableColumn="nom" style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;" style="cursor:pointer;">UTILISATEUR <p-sortIcon field="nom"/></th>
         <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">CONTACT</th>
-        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">ROLE</th>
-        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">STATUT</th>
+        <th pSortableColumn="role" style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;" style="cursor:pointer;">ROLE <p-sortIcon field="role"/></th>
+        <th pSortableColumn="statut" style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;" style="cursor:pointer;">STATUT <p-sortIcon field="statut"/></th>
         <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">DERNIERE CONNEXION</th>
         <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">ACTIONS</th>
       </tr>
     </ng-template>
     <ng-template #body let-utilisateur>
-      <tr style="border-bottom:1px solid #f1f5f9;">
+      <tr style="border-bottom:1px solid #f1f5f9;" [style.background]="isSelected(utilisateur) ? '#f5f3ff' : 'white'">
+        <td style="padding:14px; width:3rem;"><input type="checkbox" [checked]="isSelected(utilisateur)" (change)="toggleSelect(utilisateur)" style="cursor:pointer; width:16px; height:16px;"></td>
         <td style="padding:14px;">
           <div style="display:flex; align-items:center; gap:12px;">
             <div [style]="'width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:15px; font-weight:700; background:' + getRoleInfo(utilisateur.role)?.color">
@@ -83,7 +124,7 @@
         <td style="padding:14px;">
           <div style="display:flex; align-items:center; gap:8px;">
             <i [class]="getRoleInfo(utilisateur.role)?.icon" [style]="'color:' + getRoleInfo(utilisateur.role)?.color + '; font-size:14px;'"></i>
-            <p-tag [value]="getRoleLabel(utilisateur.role)" [severity]="getRoleSeverity(utilisateur.role)"></p-tag>
+            <span class="statut-badge" [ngClass]="'statut-badge--' + (utilisateur.role.toLowerCase())">{{ getRoleLabel(utilisateur.role) }}</span>
           </div>
         </td>
         <td style="padding:14px;">
@@ -102,6 +143,7 @@
               style="width:34px; height:34px; border-radius:50%; border:1.5px solid #0ea5e9; background:transparent; color:#0ea5e9; cursor:pointer; display:flex; align-items:center; justify-content:center;">
               <i class="pi pi-pencil" style="font-size:13px;"></i>
             </button>
+
             <button type="button" pTooltip="Supprimer" (click)="deleteUtilisateur(utilisateur)"
               style="width:34px; height:34px; border-radius:50%; border:1.5px solid #ef4444; background:transparent; color:#ef4444; cursor:pointer; display:flex; align-items:center; justify-content:center;">
               <i class="pi pi-trash" style="font-size:13px;"></i>
@@ -110,14 +152,7 @@
         </td>
       </tr>
     </ng-template>
-    <ng-template #empty>
-      <tr>
-        <td colspan="6" style="text-align:center; padding:40px; color:#94a3b8;">
-          <i class="pi pi-users" style="font-size:36px; display:block; margin-bottom:8px;"></i>
-          Aucun utilisateur enregistre
-        </td>
-      </tr>
-    </ng-template>
+    <ng-template #empty><tr><td colspan="7"><div style="text-align:center; padding:60px 20px;"><div style="width:80px; height:80px; border-radius:50%; background:#8b5cf622; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;"><i class="pi pi-users" style="font-size:36px; color:#8b5cf6;"></i></div><div style="font-size:18px; font-weight:700; color:#1e293b; margin-bottom:6px;">Aucun utilisateur enregistré</div><div style="font-size:13px; color:#94a3b8;">Ajoutez un utilisateur pour commencer</div><button type="button" (click)="openNew()" style="margin-top:16px; padding:10px 24px; border-radius:10px; border:none; background:#8b5cf6; color:white; font-size:13px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:8px;"><i class="pi pi-plus"></i> Nouveau</button></div></td></tr></ng-template>
   </p-table>
 </div>
 
@@ -190,7 +225,7 @@
           </div>
         </div>
         <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
-          <p-tag [value]="getRoleLabel(utilisateurSelectionne.role)" [severity]="getRoleSeverity(utilisateurSelectionne.role)"></p-tag>
+          <span class="statut-badge" [ngClass]="'statut-badge--' + (utilisateurSelectionne.role.toLowerCase())">{{ getRoleLabel(utilisateurSelectionne.role) }}</span>
           <p-tag [value]="utilisateurSelectionne.actif ? 'Actif' : 'Inactif'" [severity]="utilisateurSelectionne.actif ? 'success' : 'danger'"></p-tag>
           <button type="button" (click)="detailsDialog = false"
             style="background:rgba(255,255,255,0.15); border:none; border-radius:6px; color:white; cursor:pointer; padding:5px 10px; font-size:12px;">
@@ -252,6 +287,7 @@
     <!-- Footer -->
     <div style="padding:16px 28px; background:white; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; gap:10px;">
       <p-button label="Fermer" icon="pi pi-times" [outlined]="true" severity="secondary" (click)="detailsDialog = false" />
+      <p-button label="Exporter PDF" icon="pi pi-file-pdf" severity="danger" (click)="pdfService.exportUtilisateurs([utilisateurSelectionne])" />
       <p-button label="Modifier" icon="pi pi-pencil" severity="info" (click)="editFromDetails()" />
     </div>
 

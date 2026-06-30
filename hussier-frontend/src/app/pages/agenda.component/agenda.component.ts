@@ -82,7 +82,7 @@ export class AgendaComponent implements OnInit {
     private http: HttpClient,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
-    private pdfService: PdfService
+    public pdfService: PdfService
   ) {}
 
   ngOnInit(): void {
@@ -259,5 +259,54 @@ export class AgendaComponent implements OnInit {
 
   exportListePDF(): void {
     this.pdfService.exportAgendas(this.agendas());
+  }
+  // ===== SELECTION MULTIPLE =====
+  selectedAgendas: any[] = [];
+
+  toggleSelectAll(items: any[]): void {
+    if (this.selectedAgendas.length === items.length) {
+      this.selectedAgendas = [];
+    } else {
+      this.selectedAgendas = [...items];
+    }
+  }
+
+  toggleSelect(item: any): void {
+    const i = this.selectedAgendas.findIndex((x: any) => x.id === item.id);
+    if (i >= 0) { this.selectedAgendas.splice(i, 1); }
+    else { this.selectedAgendas.push(item); }
+  }
+
+  isSelected(item: any): boolean {
+    return this.selectedAgendas.some((x: any) => x.id === item.id);
+  }
+
+  exportSelectionPDF(): void {
+    if (this.selectedAgendas.length === 0) return;
+    this.pdfService.exportAgendas(this.selectedAgendas);
+  }
+
+  deleteSelectedAgendas(): void {
+    if (this.selectedAgendas.length === 0) return;
+    this.confirmationService.confirm({
+      message: `Supprimer ${this.selectedAgendas.length} element(s) selectionne(s) ?`,
+      header: 'Confirmation', icon: 'pi pi-trash',
+      accept: () => {
+        const ids = this.selectedAgendas.map((x: any) => x.id);
+        let done = 0;
+        ids.forEach((id: any) => {
+          this.http.delete(`${this.apiUrl}/${id}`, { headers: this.getHeaders() }).subscribe({
+            next: () => {
+              done++;
+              if (done === ids.length) {
+                this.messageService.add({ severity: 'success', summary: 'Supprime', detail: `${ids.length} element(s) supprimes` });
+                this.selectedAgendas = [];
+                this.loadAgendas();
+              }
+            }
+          });
+        });
+      }
+    });
   }
 }

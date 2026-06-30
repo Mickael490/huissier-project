@@ -1,0 +1,22 @@
+# Terminal Environment Changes
+
+## Extension: Anthropic.claude-code
+
+- `CLAUDE_CODE_SSE_PORT=33725`
+
+## Extension: ms-python.python
+
+Enables `python.terminal.shellIntegration.enabled` by modifying `PYTHONSTARTUP` and `PYTHON_BASIC_REPL`
+
+- `PYTHONSTARTUP=/Users/air2015/Library/Application Support/Code/User/workspaceStorage/08d3aa7ae42b8696372f1e4e6aa4068e/ms-python.python/pythonrc.py`
+- `PYTHON_BASIC_REPL=1`
+
+## Extension: vscode.git
+
+Enables the following features: git auth provider
+
+- `GIT_ASKPASS=/private/var/folders/rh/88zz60c55wgcgz2hg2xjqwww0000gn/T/AppTranslocation/0E968F80-ED82-43A9-A08D-7D8D3BE23CFC/d/Visual Studio Code.app/Contents/Resources/app/extensions/git/dist/askpass.sh`
+- `VSCODE_GIT_ASKPASS_NODE=/private/var/folders/rh/88zz60c55wgcgz2hg2xjqwww0000gn/T/AppTranslocation/0E968F80-ED82-43A9-A08D-7D8D3BE23CFC/d/Visual Studio Code.app/Contents/Frameworks/Code Helper (Plugin).app/Contents/MacOS/Code Helper (Plugin)`
+- `VSCODE_GIT_ASKPASS_EXTRA_ARGS=`
+- `VSCODE_GIT_ASKPASS_MAIN=/private/var/folders/rh/88zz60c55wgcgz2hg2xjqwww0000gn/T/AppTranslocation/0E968F80-ED82-43A9-A08D-7D8D3BE23CFC/d/Visual Studio Code.app/Contents/Resources/app/extensions/git/dist/askpass-main.js`
+- `VSCODE_GIT_IPC_HANDLE=/var/folders/rh/88zz60c55wgcgz2hg2xjqwww0000gn/T/vscode-git-06c0bb09bb.sock`

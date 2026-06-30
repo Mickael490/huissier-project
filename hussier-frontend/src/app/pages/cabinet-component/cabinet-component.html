@@ -27,19 +27,68 @@
 
 
 <!-- KPI CARDS -->
-<div style="display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;">
-  <div style="flex: 1; min-width: 200px; background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 14px; border-left: 4px solid #4f46e5;">
-    <div style="background: #ede9fe; border-radius: 10px; padding: 10px 12px;"><i class="pi pi-building" style="color: #4f46e5; font-size: 18px;"></i></div>
-    <div><div style="font-size: 22px; font-weight: 700; color: #1e293b;">{{ nbTotal() }}</div><div style="font-size: 12px; color: #94a3b8;">Total cabinets</div></div>
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px;">
+
+  <!-- Total cabinets -->
+  <div style="background: white; border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-top: 3px solid #4f46e5;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px;">
+      <div style="background: #ede9fe; border-radius: 10px; padding: 6px 8px;">
+        <i class="pi pi-building" style="color: #4f46e5; font-size: 16px;"></i>
+      </div>
+      <span style="background: #ede9fe; color: #4f46e5; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px;">Total</span>
+    </div>
+    <div style="font-size: 16px; font-weight: 700; color: #1e293b; line-height: 1;">{{ nbTotal() }}</div>
+    <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px; margin-top: 1px;">Total cabinets</div>
+    <div style="background: #f1f5f9; border-radius: 99px; height: 5px; overflow: hidden;">
+      <div [style.width]="(nbTotal() / 10 * 100) + '%'"
+           style="height: 100%; background: #4f46e5; border-radius: 99px; transition: width 0.8s ease;"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; margin-top: 4px;">
+      <span>Capacité</span>
+      <span>{{ (nbTotal() / 10 * 100) | number:'1.0-0' }}%</span>
+    </div>
   </div>
-  <div style="flex: 1; min-width: 200px; background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 14px; border-left: 4px solid #10b981;">
-    <div style="background: #d1fae5; border-radius: 10px; padding: 10px 12px;"><i class="pi pi-check-circle" style="color: #10b981; font-size: 18px;"></i></div>
-    <div><div style="font-size: 22px; font-weight: 700; color: #1e293b;">{{ nbActif() }}</div><div style="font-size: 12px; color: #94a3b8;">Actifs</div></div>
+
+  <!-- Actifs -->
+  <div style="background: white; border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-top: 3px solid #10b981;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px;">
+      <div style="background: #d1fae5; border-radius: 10px; padding: 6px 8px;">
+        <i class="pi pi-check-circle" style="color: #10b981; font-size: 16px;"></i>
+      </div>
+      <span style="background: #d1fae5; color: #065f46; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px;">Actif</span>
+    </div>
+    <div style="font-size: 16px; font-weight: 700; color: #1e293b; line-height: 1;">{{ nbActif() }}</div>
+    <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px; margin-top: 1px;">Cabinets actifs</div>
+    <div style="background: #f1f5f9; border-radius: 99px; height: 5px; overflow: hidden;">
+      <div [style.width]="nbTotal() > 0 ? (nbActif() / nbTotal() * 100) + '%' : '0%'"
+           style="height: 100%; background: #10b981; border-radius: 99px; transition: width 0.8s ease;"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; margin-top: 4px;">
+      <span>Taux d'activité</span>
+      <span>{{ nbTotal() > 0 ? ((nbActif() / nbTotal() * 100) | number:'1.0-0') : 0 }}%</span>
+    </div>
   </div>
-  <div style="flex: 1; min-width: 200px; background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 14px; border-left: 4px solid #ef4444;">
-    <div style="background: #fef2f2; border-radius: 10px; padding: 10px 12px;"><i class="pi pi-times" style="color: #ef4444; font-size: 18px;"></i></div>
-    <div><div style="font-size: 22px; font-weight: 700; color: #1e293b;">{{ nbInactif() }}</div><div style="font-size: 12px; color: #94a3b8;">Inactifs</div></div>
+
+  <!-- Inactifs -->
+  <div style="background: white; border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-top: 3px solid #ef4444;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px;">
+      <div style="background: #fef2f2; border-radius: 10px; padding: 6px 8px;">
+        <i class="pi pi-times-circle" style="color: #ef4444; font-size: 16px;"></i>
+      </div>
+      <span style="background: #fef2f2; color: #991b1b; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px;">Inactif</span>
+    </div>
+    <div style="font-size: 16px; font-weight: 700; color: #1e293b; line-height: 1;">{{ nbInactif() }}</div>
+    <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px; margin-top: 1px;">Cabinets inactifs</div>
+    <div style="background: #f1f5f9; border-radius: 99px; height: 5px; overflow: hidden;">
+      <div [style.width]="nbTotal() > 0 ? (nbInactif() / nbTotal() * 100) + '%' : '0%'"
+           style="height: 100%; background: #ef4444; border-radius: 99px; transition: width 0.8s ease;"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; margin-top: 4px;">
+      <span>Taux d'inactivité</span>
+      <span>{{ nbTotal() > 0 ? ((nbInactif() / nbTotal() * 100) | number:'1.0-0') : 0 }}%</span>
+    </div>
   </div>
+
 </div>
 
 <!-- TABLE -->
@@ -112,14 +161,7 @@
         </td>
       </tr>
     </ng-template>
-    <ng-template #empty>
-      <tr>
-        <td colspan="6" style="text-align:center; padding:40px; color:#94a3b8;">
-          <i class="pi pi-building" style="font-size:36px; display:block; margin-bottom:8px;"></i>
-          Aucun cabinet enregistre
-        </td>
-      </tr>
-    </ng-template>
+    <ng-template #empty><tr><td colspan="6"><div style="text-align:center; padding:60px 20px;"><div style="width:80px; height:80px; border-radius:50%; background:#1e3a5f22; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;"><i class="pi pi-building" style="font-size:36px; color:#1e3a5f;"></i></div><div style="font-size:18px; font-weight:700; color:#1e293b; margin-bottom:6px;">Aucun cabinet enregistré</div><div style="font-size:13px; color:#94a3b8;">Créez un cabinet pour commencer</div><button type="button" (click)="openNew()" style="margin-top:16px; padding:10px 24px; border-radius:10px; border:none; background:#1e3a5f; color:white; font-size:13px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:8px;"><i class="pi pi-plus"></i> Nouveau</button></div></td></tr></ng-template>
   </p-table>
 </div>
 

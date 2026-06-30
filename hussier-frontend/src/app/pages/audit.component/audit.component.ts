@@ -40,7 +40,7 @@ export class AuditComponent implements OnInit {
     private http: HttpClient,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
-    private pdfService: PdfService
+    public pdfService: PdfService
   ) {}
 
   ngOnInit(): void {

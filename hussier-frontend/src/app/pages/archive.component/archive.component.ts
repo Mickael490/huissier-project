@@ -217,4 +217,53 @@ export class ArchiveComponent implements OnInit {
       );
     }
   }
+  // ===== SELECTION MULTIPLE =====
+  selectedArchives: any[] = [];
+
+  toggleSelectAll(items: any[]): void {
+    if (this.selectedArchives.length === items.length) {
+      this.selectedArchives = [];
+    } else {
+      this.selectedArchives = [...items];
+    }
+  }
+
+  toggleSelect(item: any): void {
+    const i = this.selectedArchives.findIndex((x: any) => x.id === item.id);
+    if (i >= 0) { this.selectedArchives.splice(i, 1); }
+    else { this.selectedArchives.push(item); }
+  }
+
+  isSelected(item: any): boolean {
+    return this.selectedArchives.some((x: any) => x.id === item.id);
+  }
+
+  exportSelectionPDF(): void {
+    if (this.selectedArchives.length === 0) return;
+    this.pdfService.exportArchives(this.selectedArchives, this.dossiers);
+  }
+
+  deleteSelectedArchives(): void {
+    if (this.selectedArchives.length === 0) return;
+    this.confirmationService.confirm({
+      message: `Supprimer ${this.selectedArchives.length} element(s) selectionne(s) ?`,
+      header: 'Confirmation', icon: 'pi pi-trash',
+      accept: () => {
+        const ids = this.selectedArchives.map((x: any) => x.id);
+        let done = 0;
+        ids.forEach((id: any) => {
+          this.http.delete(`${this.apiUrl}/${id}`, { headers: this.getHeaders() }).subscribe({
+            next: () => {
+              done++;
+              if (done === ids.length) {
+                this.messageService.add({ severity: 'success', summary: 'Supprime', detail: `${ids.length} element(s) supprimes` });
+                this.selectedArchives = [];
+                this.loadArchives();
+              }
+            }
+          });
+        });
+      }
+    });
+  }
 }

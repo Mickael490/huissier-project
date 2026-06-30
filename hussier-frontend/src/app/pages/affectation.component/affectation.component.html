@@ -32,43 +32,88 @@
 </div>
 
 <!-- STATS -->
-<div style="display:flex; gap:16px; margin-bottom:20px; flex-wrap:wrap;">
-  <div style="flex:1; min-width:180px; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #4f46e5;">
-    <div style="background:#ede9fe; border-radius:10px; padding:10px 12px;">
-      <i class="pi pi-list" style="color:#4f46e5; font-size:18px;"></i>
+<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px;">
+
+  <!-- Total -->
+  <div style="background: white; border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-top: 3px solid #4f46e5;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px;">
+      <div style="background: #ede9fe; border-radius: 10px; padding: 6px 8px;">
+        <i class="pi pi-list" style="color: #4f46e5; font-size: 16px;"></i>
+      </div>
+      <span style="background: #ede9fe; color: #4f46e5; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px;">Total</span>
     </div>
-    <div>
-      <div style="font-size:22px; font-weight:700; color:#1e293b;">{{ affectations().length }}</div>
-      <div style="font-size:12px; color:#94a3b8;">Total affectations</div>
+    <div style="font-size: 16px; font-weight: 700; color: #1e293b; line-height: 1;">{{ affectations().length }}</div>
+    <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px; margin-top: 1px;">Total affectations</div>
+    <div style="background: #f1f5f9; border-radius: 99px; height: 5px; overflow: hidden;">
+      <div [style.width]="(affectations().length / 20 * 100) + '%'"
+           style="height: 100%; background: #4f46e5; border-radius: 99px; transition: width 0.8s ease;"></div>
     </div>
-  </div>
-  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #f97316;">
-    <div style="background:#fff7ed; border-radius:10px; padding:10px 12px;">
-      <i class="pi pi-clock" style="color:#f97316; font-size:18px;"></i>
-    </div>
-    <div>
-      <div style="font-size:22px; font-weight:700; color:#1e293b;">{{ nbEnCours() }}</div>
-      <div style="font-size:12px; color:#94a3b8;">En cours</div>
-    </div>
-  </div>
-  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #10b981;">
-    <div style="background:#d1fae5; border-radius:10px; padding:10px 12px;">
-      <i class="pi pi-check-circle" style="color:#10b981; font-size:18px;"></i>
-    </div>
-    <div>
-      <div style="font-size:22px; font-weight:700; color:#1e293b;">{{ nbTerminees() }}</div>
-      <div style="font-size:12px; color:#94a3b8;">Terminées</div>
+    <div style="display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; margin-top: 4px;">
+      <span>Capacité</span>
+      <span>{{ (affectations().length / 20 * 100) | number:'1.0-0' }}%</span>
     </div>
   </div>
-  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #ef4444;">
-    <div style="background:#fef2f2; border-radius:10px; padding:10px 12px;">
-      <i class="pi pi-exclamation-triangle" style="color:#ef4444; font-size:18px;"></i>
+
+  <!-- En cours -->
+  <div style="background: white; border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-top: 3px solid #f97316;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px;">
+      <div style="background: #fff7ed; border-radius: 10px; padding: 6px 8px;">
+        <i class="pi pi-clock" style="color: #f97316; font-size: 16px;"></i>
+      </div>
+      <span style="background: #fff7ed; color: #c2410c; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px;">Actif</span>
     </div>
-    <div>
-      <div style="font-size:22px; font-weight:700; color:#1e293b;">{{ nbUrgentes() }}</div>
-      <div style="font-size:12px; color:#94a3b8;">Urgentes</div>
+    <div style="font-size: 16px; font-weight: 700; color: #1e293b; line-height: 1;">{{ nbEnCours() }}</div>
+    <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px; margin-top: 1px;">En cours</div>
+    <div style="background: #f1f5f9; border-radius: 99px; height: 5px; overflow: hidden;">
+      <div [style.width]="affectations().length > 0 ? (nbEnCours() / affectations().length * 100) + '%' : '0%'"
+           style="height: 100%; background: #f97316; border-radius: 99px; transition: width 0.8s ease;"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; margin-top: 4px;">
+      <span>Part du total</span>
+      <span>{{ affectations().length > 0 ? ((nbEnCours() / affectations().length * 100) | number:'1.0-0') : 0 }}%</span>
     </div>
   </div>
+
+  <!-- Terminées -->
+  <div style="background: white; border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-top: 3px solid #10b981;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px;">
+      <div style="background: #d1fae5; border-radius: 10px; padding: 6px 8px;">
+        <i class="pi pi-check-circle" style="color: #10b981; font-size: 16px;"></i>
+      </div>
+      <span style="background: #d1fae5; color: #065f46; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px;">Clôturé</span>
+    </div>
+    <div style="font-size: 16px; font-weight: 700; color: #1e293b; line-height: 1;">{{ nbTerminees() }}</div>
+    <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px; margin-top: 1px;">Terminées</div>
+    <div style="background: #f1f5f9; border-radius: 99px; height: 5px; overflow: hidden;">
+      <div [style.width]="affectations().length > 0 ? (nbTerminees() / affectations().length * 100) + '%' : '0%'"
+           style="height: 100%; background: #10b981; border-radius: 99px; transition: width 0.8s ease;"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; margin-top: 4px;">
+      <span>Taux clôture</span>
+      <span>{{ affectations().length > 0 ? ((nbTerminees() / affectations().length * 100) | number:'1.0-0') : 0 }}%</span>
+    </div>
+  </div>
+
+  <!-- Urgentes -->
+  <div style="background: white; border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-top: 3px solid #ef4444;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px;">
+      <div style="background: #fef2f2; border-radius: 10px; padding: 6px 8px;">
+        <i class="pi pi-exclamation-triangle" style="color: #ef4444; font-size: 16px;"></i>
+      </div>
+      <span style="background: #fef2f2; color: #991b1b; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px;">Urgent</span>
+    </div>
+    <div style="font-size: 16px; font-weight: 700; color: #1e293b; line-height: 1;">{{ nbUrgentes() }}</div>
+    <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px; margin-top: 1px;">Urgentes</div>
+    <div style="background: #f1f5f9; border-radius: 99px; height: 5px; overflow: hidden;">
+      <div [style.width]="affectations().length > 0 ? (nbUrgentes() / affectations().length * 100) + '%' : '0%'"
+           style="height: 100%; background: #ef4444; border-radius: 99px; transition: width 0.8s ease;"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; margin-top: 4px;">
+      <span>Part urgentes</span>
+      <span>{{ affectations().length > 0 ? ((nbUrgentes() / affectations().length * 100) | number:'1.0-0') : 0 }}%</span>
+    </div>
+  </div>
+
 </div>
 
 <!-- TABLE -->
@@ -136,6 +181,7 @@
               style="width:34px; height:34px; border-radius:50%; border:1.5px solid #0ea5e9; background:transparent; color:#0ea5e9; cursor:pointer; display:flex; align-items:center; justify-content:center;">
               <i class="pi pi-pencil" style="font-size:13px;"></i>
             </button>
+
             <button type="button" pTooltip="Retirer" (click)="supprimerAffectation(affectation)"
               style="width:34px; height:34px; border-radius:50%; border:1.5px solid #ef4444; background:transparent; color:#ef4444; cursor:pointer; display:flex; align-items:center; justify-content:center;">
               <i class="pi pi-trash" style="font-size:13px;"></i>
@@ -290,6 +336,7 @@
     <!-- Footer -->
     <div style="padding:16px 28px; background:white; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; gap:10px;">
       <p-button label="Fermer" icon="pi pi-times" [outlined]="true" severity="secondary" (click)="detailsDialog = false" />
+      <p-button label="Exporter PDF" icon="pi pi-file-pdf" severity="danger" (click)="pdfService.exportAffectations([affectationSelectionne])" />
       <p-button label="Modifier" icon="pi pi-pencil" severity="info" (click)="editFromDetails()" />
     </div>
   </div>

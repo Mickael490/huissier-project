@@ -14,6 +14,7 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 import { PdfService } from 'src/services/pdf.service';
+import { ExcelService } from 'src/services/excel.service';
 
 registerLocaleData(localeFr, 'fr-FR');
 
@@ -92,7 +93,8 @@ export class PaiementComponent implements OnInit {
     private http: HttpClient,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
-    private pdfService: PdfService
+    private pdfService: PdfService,
+    public excelService: ExcelService
   ) {}
 
   ngOnInit(): void {
@@ -284,5 +286,54 @@ export class PaiementComponent implements OnInit {
 
   exportExcel(): void {
     this.pdfService.exportJournalPaiements(this.paiements());
+  }
+  // ===== SELECTION MULTIPLE =====
+  selectedPaiements: any[] = [];
+
+  toggleSelectAll(items: any[]): void {
+    if (this.selectedPaiements.length === items.length) {
+      this.selectedPaiements = [];
+    } else {
+      this.selectedPaiements = [...items];
+    }
+  }
+
+  toggleSelect(item: any): void {
+    const i = this.selectedPaiements.findIndex((x: any) => x.id === item.id);
+    if (i >= 0) { this.selectedPaiements.splice(i, 1); }
+    else { this.selectedPaiements.push(item); }
+  }
+
+  isSelected(item: any): boolean {
+    return this.selectedPaiements.some((x: any) => x.id === item.id);
+  }
+
+  exportSelectionPDF(): void {
+    if (this.selectedPaiements.length === 0) return;
+    this.pdfService.exportJournalPaiements(this.selectedPaiements);
+  }
+
+  deleteSelected(): void {
+    if (this.selectedPaiements.length === 0) return;
+    this.confirmationService.confirm({
+      message: `Supprimer ${this.selectedPaiements.length} element(s) ?`,
+      header: 'Confirmation', icon: 'pi pi-trash',
+      accept: () => {
+        const ids = this.selectedPaiements.map((x: any) => x.id);
+        let done = 0;
+        ids.forEach((id: any) => {
+          this.http.delete(`${this.apiUrl}/${id}`, { headers: this.getHeaders() }).subscribe({
+            next: () => {
+              done++;
+              if (done === ids.length) {
+                this.messageService.add({ severity: 'success', summary: 'Supprime', detail: `${ids.length} element(s) supprimes` });
+                this.selectedPaiements = [];
+                this.loadPaiements();
+              }
+            }
+          });
+        });
+      }
+    });
   }
 }

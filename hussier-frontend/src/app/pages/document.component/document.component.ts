@@ -241,4 +241,53 @@ export class DocumentComponent implements OnInit {
       );
     }
   }
+  // ===== SELECTION MULTIPLE =====
+  selectedDocuments: any[] = [];
+
+  toggleSelectAll(items: any[]): void {
+    if (this.selectedDocuments.length === items.length) {
+      this.selectedDocuments = [];
+    } else {
+      this.selectedDocuments = [...items];
+    }
+  }
+
+  toggleSelect(item: any): void {
+    const i = this.selectedDocuments.findIndex((x: any) => x.id === item.id);
+    if (i >= 0) { this.selectedDocuments.splice(i, 1); }
+    else { this.selectedDocuments.push(item); }
+  }
+
+  isSelected(item: any): boolean {
+    return this.selectedDocuments.some((x: any) => x.id === item.id);
+  }
+
+  exportSelectionPDF(): void {
+    if (this.selectedDocuments.length === 0) return;
+    this.pdfService.exportDocuments(this.selectedDocuments);
+  }
+
+  deleteSelectedDocuments(): void {
+    if (this.selectedDocuments.length === 0) return;
+    this.confirmationService.confirm({
+      message: `Supprimer ${this.selectedDocuments.length} element(s) selectionne(s) ?`,
+      header: 'Confirmation', icon: 'pi pi-trash',
+      accept: () => {
+        const ids = this.selectedDocuments.map((x: any) => x.id);
+        let done = 0;
+        ids.forEach((id: any) => {
+          this.http.delete(`${this.apiUrl}/${id}`, { headers: this.getHeaders() }).subscribe({
+            next: () => {
+              done++;
+              if (done === ids.length) {
+                this.messageService.add({ severity: 'success', summary: 'Supprime', detail: `${ids.length} element(s) supprimes` });
+                this.selectedDocuments = [];
+                this.loadDocuments();
+              }
+            }
+          });
+        });
+      }
+    });
+  }
 }

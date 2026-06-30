@@ -192,4 +192,54 @@ export class PartieComponent implements OnInit {
       );
     }
   }
+
+  // ===== SELECTION MULTIPLE =====
+  selectedParties: any[] = [];
+
+  toggleSelectAll(parties: any[]): void {
+    if (this.selectedParties.length === parties.length) {
+      this.selectedParties = [];
+    } else {
+      this.selectedParties = [...parties];
+    }
+  }
+
+  toggleSelect(partie: any): void {
+    const idx = this.selectedParties.findIndex(p => p.id === partie.id);
+    if (idx >= 0) { this.selectedParties.splice(idx, 1); }
+    else { this.selectedParties.push(partie); }
+  }
+
+  isSelected(partie: any): boolean {
+    return this.selectedParties.some(p => p.id === partie.id);
+  }
+
+  deleteSelectedParties(): void {
+    if (this.selectedParties.length === 0) return;
+    this.confirmationService.confirm({
+      message: `Supprimer ${this.selectedParties.length} partie(s) ?`,
+      header: 'Confirmation', icon: 'pi pi-trash',
+      accept: () => {
+        const ids = this.selectedParties.map(p => p.id);
+        let done = 0;
+        ids.forEach(id => {
+          this.http.delete(`${this.apiUrl}/${id}`, { headers: this.getHeaders() }).subscribe({
+            next: () => {
+              done++;
+              if (done === ids.length) {
+                this.messageService.add({ severity: 'success', summary: 'Supprimé', detail: `${ids.length} partie(s) supprimée(s)` });
+                this.selectedParties = [];
+                this.loadParties();
+              }
+            }
+          });
+        });
+      }
+    });
+  }
+
+  exportSelectionPDF(): void {
+    if (this.selectedParties.length === 0) return;
+    this.pdfService.exportParties(this.selectedParties);
+  }
 }

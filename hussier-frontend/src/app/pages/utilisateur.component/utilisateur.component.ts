@@ -51,7 +51,7 @@ export class UtilisateurComponent implements OnInit {
     private utilisateurService: UtilisateurService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
-    private pdfService: PdfService
+    public pdfService: PdfService
   ) {}
 
   ngOnInit(): void {
@@ -200,5 +200,54 @@ export class UtilisateurComponent implements OnInit {
 
   exportListePDF(): void {
     this.pdfService.exportUtilisateurs(this.utilisateurs());
+  }
+  // ===== SELECTION MULTIPLE =====
+  selectedUtilisateurs: any[] = [];
+
+  toggleSelectAll(items: any[]): void {
+    if (this.selectedUtilisateurs.length === items.length) {
+      this.selectedUtilisateurs = [];
+    } else {
+      this.selectedUtilisateurs = [...items];
+    }
+  }
+
+  toggleSelect(item: any): void {
+    const i = this.selectedUtilisateurs.findIndex((x: any) => x.id === item.id);
+    if (i >= 0) { this.selectedUtilisateurs.splice(i, 1); }
+    else { this.selectedUtilisateurs.push(item); }
+  }
+
+  isSelected(item: any): boolean {
+    return this.selectedUtilisateurs.some((x: any) => x.id === item.id);
+  }
+
+  exportSelectionPDF(): void {
+    if (this.selectedUtilisateurs.length === 0) return;
+    this.pdfService.exportUtilisateurs(this.selectedUtilisateurs);
+  }
+
+  deleteSelectedUtilisateurs(): void {
+    if (this.selectedUtilisateurs.length === 0) return;
+    this.confirmationService.confirm({
+      message: `Supprimer ${this.selectedUtilisateurs.length} element(s) selectionne(s) ?`,
+      header: 'Confirmation', icon: 'pi pi-trash',
+      accept: () => {
+        const ids = this.selectedUtilisateurs.map((x: any) => x.id);
+        let done = 0;
+        ids.forEach((id: any) => {
+          this.utilisateurService.deleteUtilisateur(id).subscribe({
+            next: () => {
+              done++;
+              if (done === ids.length) {
+                this.messageService.add({ severity: 'success', summary: 'Supprime', detail: `${ids.length} element(s) supprimes` });
+                this.selectedUtilisateurs = [];
+                this.loadUtilisateurs();
+              }
+            }
+          });
+        });
+      }
+    });
   }
 }

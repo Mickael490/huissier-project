@@ -21,48 +21,102 @@
     <p-button label="Nouvelle partie" icon="pi pi-plus" (click)="openNew()"
       [ngStyle]="{'background': 'linear-gradient(135deg, #1e3a5f, #2d6a9f)'}"
       styleClass="border-0"></p-button>
+    <ng-container *ngIf="selectedParties.length > 0">
+      <span style="background:#ede9fe; color:#4f46e5; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:600;">
+        {{ selectedParties.length }} sélectionné(s)
+      </span>
+      <p-button label="Export sélection" icon="pi pi-download" severity="warn" [outlined]="true"
+        (click)="exportSelectionPDF()"></p-button>
+      <p-button label="Supprimer" icon="pi pi-trash" severity="danger" [outlined]="true"
+        (click)="deleteSelectedParties()"></p-button>
+    </ng-container>
     <p-button label="Export PDF" icon="pi pi-file-pdf" severity="danger" (click)="exportListePDF()"></p-button>
   </div>
 </div>
 
 <!-- STATS -->
-<div style="display: flex; gap: 16px; margin-bottom: 20px;">
-  <div style="flex: 1; background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 14px; border-left: 4px solid #ef4444;">
-    <div style="background: #fef2f2; border-radius: 10px; padding: 10px 12px;">
-      <i class="pi pi-arrow-down-left" style="color: #ef4444; font-size: 18px;"></i>
+<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px;">
+
+  <!-- Débiteurs -->
+  <div style="background: white; border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-top: 3px solid #ef4444;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px;">
+      <div style="background: #fef2f2; border-radius: 10px; padding: 6px 8px;">
+        <i class="pi pi-arrow-down-left" style="color: #ef4444; font-size: 16px;"></i>
+      </div>
+      <span style="background: #fef2f2; color: #991b1b; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px;">Débiteur</span>
     </div>
-    <div>
-      <div style="font-size: 22px; font-weight: 700; color: #1e293b;">{{ getNombreDebiteurs() }}</div>
-      <div style="font-size: 12px; color: #94a3b8;">Débiteurs</div>
+    <div style="font-size: 16px; font-weight: 700; color: #1e293b; line-height: 1;">{{ getNombreDebiteurs() }}</div>
+    <div style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; margin-top: 1px;">Débiteurs</div>
+    <div style="background: #f1f5f9; border-radius: 99px; height: 6px; overflow: hidden;">
+      <div [style.width]="parties().length > 0 ? (getNombreDebiteurs() / parties().length * 100) + '%' : '0%'"
+           style="height: 100%; background: #ef4444; border-radius: 99px; transition: width 0.8s ease;"></div>
     </div>
-  </div>
-  <div style="flex: 1; background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 14px; border-left: 4px solid #3b82f6;">
-    <div style="background: #eff6ff; border-radius: 10px; padding: 10px 12px;">
-      <i class="pi pi-arrow-up-right" style="color: #3b82f6; font-size: 18px;"></i>
-    </div>
-    <div>
-      <div style="font-size: 22px; font-weight: 700; color: #1e293b;">{{ getNombreDestinataires() }}</div>
-      <div style="font-size: 12px; color: #94a3b8;">Créanciers</div>
-    </div>
-  </div>
-  <div style="flex: 1; background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 14px; border-left: 4px solid #10b981;">
-    <div style="background: #f0fdf4; border-radius: 10px; padding: 10px 12px;">
-      <i class="pi pi-users" style="color: #22c55e; font-size: 18px;"></i>
-    </div>
-    <div>
-      <div style="font-size: 22px; font-weight: 700; color: #1e293b;">{{ getNombreAutres() }}</div>
-      <div style="font-size: 12px; color: #94a3b8;">Autres parties</div>
+    <div style="display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; margin-top: 5px;">
+      <span>Part du total</span>
+      <span>{{ parties().length > 0 ? ((getNombreDebiteurs() / parties().length * 100) | number:'1.0-0') : 0 }}%</span>
     </div>
   </div>
-  <div style="flex: 1; background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 14px; border-left: 4px solid #a855f7;">
-    <div style="background: #fdf4ff; border-radius: 10px; padding: 10px 12px;">
-      <i class="pi pi-list" style="color: #9333ea; font-size: 18px;"></i>
+
+  <!-- Créanciers -->
+  <div style="background: white; border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-top: 3px solid #3b82f6;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px;">
+      <div style="background: #eff6ff; border-radius: 10px; padding: 6px 8px;">
+        <i class="pi pi-arrow-up-right" style="color: #3b82f6; font-size: 16px;"></i>
+      </div>
+      <span style="background: #eff6ff; color: #1d4ed8; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px;">Créancier</span>
     </div>
-    <div>
-      <div style="font-size: 22px; font-weight: 700; color: #1e293b;">{{ parties().length }}</div>
-      <div style="font-size: 12px; color: #94a3b8;">Total parties</div>
+    <div style="font-size: 16px; font-weight: 700; color: #1e293b; line-height: 1;">{{ getNombreDestinataires() }}</div>
+    <div style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; margin-top: 1px;">Créanciers</div>
+    <div style="background: #f1f5f9; border-radius: 99px; height: 6px; overflow: hidden;">
+      <div [style.width]="parties().length > 0 ? (getNombreDestinataires() / parties().length * 100) + '%' : '0%'"
+           style="height: 100%; background: #3b82f6; border-radius: 99px; transition: width 0.8s ease;"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; margin-top: 5px;">
+      <span>Part du total</span>
+      <span>{{ parties().length > 0 ? ((getNombreDestinataires() / parties().length * 100) | number:'1.0-0') : 0 }}%</span>
     </div>
   </div>
+
+  <!-- Autres -->
+  <div style="background: white; border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-top: 3px solid #10b981;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px;">
+      <div style="background: #f0fdf4; border-radius: 10px; padding: 6px 8px;">
+        <i class="pi pi-users" style="color: #22c55e; font-size: 16px;"></i>
+      </div>
+      <span style="background: #f0fdf4; color: #065f46; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px;">Autre</span>
+    </div>
+    <div style="font-size: 16px; font-weight: 700; color: #1e293b; line-height: 1;">{{ getNombreAutres() }}</div>
+    <div style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; margin-top: 1px;">Autres parties</div>
+    <div style="background: #f1f5f9; border-radius: 99px; height: 6px; overflow: hidden;">
+      <div [style.width]="parties().length > 0 ? (getNombreAutres() / parties().length * 100) + '%' : '0%'"
+           style="height: 100%; background: #10b981; border-radius: 99px; transition: width 0.8s ease;"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; margin-top: 5px;">
+      <span>Part du total</span>
+      <span>{{ parties().length > 0 ? ((getNombreAutres() / parties().length * 100) | number:'1.0-0') : 0 }}%</span>
+    </div>
+  </div>
+
+  <!-- Total -->
+  <div style="background: white; border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-top: 3px solid #a855f7;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px;">
+      <div style="background: #fdf4ff; border-radius: 10px; padding: 6px 8px;">
+        <i class="pi pi-list" style="color: #9333ea; font-size: 16px;"></i>
+      </div>
+      <span style="background: #fdf4ff; color: #7e22ce; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px;">Total</span>
+    </div>
+    <div style="font-size: 16px; font-weight: 700; color: #1e293b; line-height: 1;">{{ parties().length }}</div>
+    <div style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; margin-top: 1px;">Total parties</div>
+    <div style="background: #f1f5f9; border-radius: 99px; height: 6px; overflow: hidden;">
+      <div [style.width]="(parties().length / 20 * 100) + '%'"
+           style="height: 100%; background: #a855f7; border-radius: 99px; transition: width 0.8s ease;"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; margin-top: 5px;">
+      <span>Capacité utilisée</span>
+      <span>{{ (parties().length / 20 * 100) | number:'1.0-0' }}%</span>
+    </div>
+  </div>
+
 </div>
 
 <!-- TABLE -->
@@ -71,15 +125,23 @@
     [rowHover]="true" [globalFilterFields]="['nom','role','contact','adresse']">
     <ng-template #header>
       <tr style="background: #f8fafc;">
-        <th style="padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">PARTIE</th>
-        <th style="padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">RÔLE</th>
+        <th style="width: 3rem; padding: 14px;">
+          <input type="checkbox" [checked]="selectedParties.length === parties().length && parties().length > 0"
+            (change)="toggleSelectAll(parties())" style="cursor:pointer; width:16px; height:16px;">
+        </th>
+        <th pSortableColumn="nom" style="padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;" style="cursor:pointer;">PARTIE <p-sortIcon field="nom"/></th>
+        <th pSortableColumn="role" style="padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;" style="cursor:pointer;">RÔLE <p-sortIcon field="role"/></th>
         <th style="padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">DOSSIER</th>
         <th style="padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">CONTACT</th>
         <th style="padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">ACTIONS</th>
       </tr>
     </ng-template>
     <ng-template #body let-partie>
-      <tr style="border-bottom: 1px solid #f1f5f9;">
+      <tr style="border-bottom: 1px solid #f1f5f9;" [style.background]="isSelected(partie) ? '#f5f3ff' : 'white'">
+        <td style="padding: 14px; width: 3rem;">
+          <input type="checkbox" [checked]="isSelected(partie)" (change)="toggleSelect(partie)"
+            style="cursor:pointer; width:16px; height:16px;">
+        </td>
         <td style="padding: 14px;">
           <div style="display: flex; align-items: center; gap: 10px;">
             <div [style]="'width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:14px; background:' + (partie.role === 'debiteur' ? '#ef4444' : partie.role === 'destinataire' ? '#3b82f6' : '#6b7280')">
@@ -92,7 +154,7 @@
           </div>
         </td>
         <td style="padding: 14px;">
-          <p-tag [value]="getRoleLabel(partie.role)" [severity]="getRoleSeverity(partie.role)"></p-tag>
+          <span class="statut-badge" [ngClass]="'statut-badge--' + (partie.role)">{{ getRoleLabel(partie.role) }}</span>
         </td>
         <td style="padding: 14px; font-size: 13px; color: #475569;">
           <div style="display: flex; align-items: center; gap: 6px;">
@@ -125,14 +187,7 @@
         </td>
       </tr>
     </ng-template>
-    <ng-template #empty>
-      <tr>
-        <td colspan="5" style="text-align:center; padding:40px; color:#94a3b8;">
-          <i class="pi pi-sitemap" style="font-size:36px; display:block; margin-bottom:8px;"></i>
-          Aucune partie enregistrée
-        </td>
-      </tr>
-    </ng-template>
+    <ng-template #empty><tr><td colspan="6"><div style="text-align:center; padding:60px 20px;"><div style="width:80px; height:80px; border-radius:50%; background:#ef444422; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;"><i class="pi pi-sitemap" style="font-size:36px; color:#ef4444;"></i></div><div style="font-size:18px; font-weight:700; color:#1e293b; margin-bottom:6px;">Aucune partie enregistrée</div><div style="font-size:13px; color:#94a3b8;">Ajoutez une partie pour commencer</div><button type="button" (click)="openNew()" style="margin-top:16px; padding:10px 24px; border-radius:10px; border:none; background:#ef4444; color:white; font-size:13px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:8px;"><i class="pi pi-plus"></i> Nouveau</button></div></td></tr></ng-template>
   </p-table>
 </div>
 
@@ -190,7 +245,7 @@
           <div>
             <div style="color:rgba(255,255,255,0.7); font-size:11px; font-weight:600; letter-spacing:2px; text-transform:uppercase; margin-bottom:4px;">FICHE PARTIE</div>
             <div style="color:white; font-size:20px; font-weight:700; margin-bottom:4px;">{{ partieSelectionnee.nom }}</div>
-            <p-tag [value]="getRoleLabel(partieSelectionnee.role)" severity="secondary"></p-tag>
+            <span class="statut-badge statut-badge--archive">{{ getRoleLabel(partieSelectionnee.role) }}</span>
           </div>
         </div>
         <button type="button" (click)="detailsDialog = false"
@@ -246,7 +301,7 @@
               </div>
               <div style="display:flex; justify-content:space-between;">
                 <span style="color:#64748b; font-size:13px;">Rôle</span>
-                <p-tag [value]="getRoleLabel(partieSelectionnee.role)" [severity]="getRoleSeverity(partieSelectionnee.role)"></p-tag>
+                <span class="statut-badge" [ngClass]="'statut-badge--' + (partieSelectionnee.role)">{{ getRoleLabel(partieSelectionnee.role) }}</span>
               </div>
             </div>
           </div>

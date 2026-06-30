@@ -14,6 +14,7 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { ClientService } from 'src/services/clients/ClientService';
 import { Client, ClientCreate, ClientUpdate, TypeClient } from 'src/types/client';
 import { PdfService } from 'src/services/pdf.service';
+import { ExcelService } from 'src/services/excel.service';
 import { environment } from 'src/environments/environment';
 import { forkJoin } from 'rxjs';
 
@@ -57,7 +58,8 @@ export class ClientComponent implements OnInit {
     private clientService: ClientService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
-    private pdfService: PdfService
+    private pdfService: PdfService,
+    public excelService: ExcelService
   ) {}
 
   ngOnInit(): void {

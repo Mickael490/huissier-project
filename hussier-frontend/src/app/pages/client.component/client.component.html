@@ -26,24 +26,74 @@
     <p-button label="Export sélection" icon="pi pi-file-pdf" severity="warn" [outlined]="true"
       (click)="exportSelectionPDF()" [disabled]="!selectedClients.length"></p-button>
     <p-button label="Export PDF" icon="pi pi-file-pdf" severity="danger" (click)="exportPDF()"></p-button>
+    <p-button label="Export Excel" icon="pi pi-file-excel" severity="success" (click)="excelService.exportClients(clients())"></p-button>
   </div>
 </div>
 
 
 <!-- KPI CARDS -->
-<div style="display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;">
-  <div style="flex: 1; min-width: 200px; background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 14px; border-left: 4px solid #4f46e5;">
-    <div style="background: #ede9fe; border-radius: 10px; padding: 10px 12px;"><i class="pi pi-users" style="color: #4f46e5; font-size: 18px;"></i></div>
-    <div><div style="font-size: 22px; font-weight: 700; color: #1e293b;">{{ nbTotal() }}</div><div style="font-size: 12px; color: #94a3b8;">Total clients</div></div>
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px;">
+
+  <!-- Total clients -->
+  <div style="background: white; border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-top: 3px solid #4f46e5;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px;">
+      <div style="background: #ede9fe; border-radius: 10px; padding: 6px 8px;">
+        <i class="pi pi-users" style="color: #4f46e5; font-size: 16px;"></i>
+      </div>
+      <span style="background: #ede9fe; color: #4f46e5; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px;">Total</span>
+    </div>
+    <div style="font-size: 16px; font-weight: 700; color: #1e293b; line-height: 1;">{{ nbTotal() }}</div>
+    <div style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; margin-top: 1px;">Total clients</div>
+    <div style="background: #f1f5f9; border-radius: 99px; height: 6px; overflow: hidden;">
+      <div [style.width]="(nbTotal() / 20 * 100) + '%'"
+           style="height: 100%; background: #4f46e5; border-radius: 99px; transition: width 0.8s ease;"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; margin-top: 5px;">
+      <span>Capacité utilisée</span>
+      <span>{{ (nbTotal() / 20 * 100) | number:'1.0-0' }}%</span>
+    </div>
   </div>
-  <div style="flex: 1; min-width: 200px; background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 14px; border-left: 4px solid #10b981;">
-    <div style="background: #d1fae5; border-radius: 10px; padding: 10px 12px;"><i class="pi pi-check-circle" style="color: #10b981; font-size: 18px;"></i></div>
-    <div><div style="font-size: 22px; font-weight: 700; color: #1e293b;">{{ nbParticulier() }}</div><div style="font-size: 12px; color: #94a3b8;">Particuliers</div></div>
+
+  <!-- Particuliers -->
+  <div style="background: white; border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-top: 3px solid #10b981;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px;">
+      <div style="background: #d1fae5; border-radius: 10px; padding: 6px 8px;">
+        <i class="pi pi-user" style="color: #10b981; font-size: 16px;"></i>
+      </div>
+      <span style="background: #d1fae5; color: #065f46; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px;">Particulier</span>
+    </div>
+    <div style="font-size: 16px; font-weight: 700; color: #1e293b; line-height: 1;">{{ nbParticulier() }}</div>
+    <div style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; margin-top: 1px;">Particuliers</div>
+    <div style="background: #f1f5f9; border-radius: 99px; height: 6px; overflow: hidden;">
+      <div [style.width]="nbTotal() > 0 ? (nbParticulier() / nbTotal() * 100) + '%' : '0%'"
+           style="height: 100%; background: #10b981; border-radius: 99px; transition: width 0.8s ease;"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; margin-top: 5px;">
+      <span>Part des particuliers</span>
+      <span>{{ nbTotal() > 0 ? ((nbParticulier() / nbTotal() * 100) | number:'1.0-0') : 0 }}%</span>
+    </div>
   </div>
-  <div style="flex: 1; min-width: 200px; background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 14px; border-left: 4px solid #ef4444;">
-    <div style="background: #fef2f2; border-radius: 10px; padding: 10px 12px;"><i class="pi pi-times" style="color: #ef4444; font-size: 18px;"></i></div>
-    <div><div style="font-size: 22px; font-weight: 700; color: #1e293b;">{{ nbEntreprise() }}</div><div style="font-size: 12px; color: #94a3b8;">Entreprises / Autres</div></div>
+
+  <!-- Entreprises -->
+  <div style="background: white; border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-top: 3px solid #ef4444;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px;">
+      <div style="background: #fef2f2; border-radius: 10px; padding: 6px 8px;">
+        <i class="pi pi-building" style="color: #ef4444; font-size: 16px;"></i>
+      </div>
+      <span style="background: #fef2f2; color: #991b1b; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px;">Entreprise</span>
+    </div>
+    <div style="font-size: 16px; font-weight: 700; color: #1e293b; line-height: 1;">{{ nbEntreprise() }}</div>
+    <div style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; margin-top: 1px;">Entreprises / Autres</div>
+    <div style="background: #f1f5f9; border-radius: 99px; height: 6px; overflow: hidden;">
+      <div [style.width]="nbTotal() > 0 ? (nbEntreprise() / nbTotal() * 100) + '%' : '0%'"
+           style="height: 100%; background: #ef4444; border-radius: 99px; transition: width 0.8s ease;"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; margin-top: 5px;">
+      <span>Part des entreprises</span>
+      <span>{{ nbTotal() > 0 ? ((nbEntreprise() / nbTotal() * 100) | number:'1.0-0') : 0 }}%</span>
+    </div>
   </div>
+
 </div>
 
 <!-- TABLE -->
@@ -63,10 +113,10 @@
     <ng-template #header>
       <tr style="background: #f8fafc;">
         <th style="width:3rem; padding: 14px;"><p-tableHeaderCheckbox /></th>
-        <th style="min-width: 16rem; padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">CLIENT</th>
-        <th style="min-width: 10rem; padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">TYPE</th>
-        <th style="min-width: 12rem; padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">TÉLÉPHONE</th>
-        <th style="min-width: 16rem; padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">EMAIL</th>
+        <th pSortableColumn="nom" style="min-width: 16rem; padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;" style="cursor:pointer;">CLIENT <p-sortIcon field="nom"/></th>
+        <th pSortableColumn="type_client" style="min-width: 10rem; padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;" style="cursor:pointer;">TYPE <p-sortIcon field="type_client"/></th>
+        <th pSortableColumn="telephone" style="min-width: 12rem; padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;" style="cursor:pointer;">TÉLÉPHONE <p-sortIcon field="telephone"/></th>
+        <th pSortableColumn="email" style="min-width: 16rem; padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;" style="cursor:pointer;">EMAIL <p-sortIcon field="email"/></th>
         <th style="min-width: 14rem; padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">ADRESSE</th>
         <th style="width: 14rem; padding: 14px; color: #1e3a5f; font-weight: 700; font-size: 13px;">ACTIONS</th>
       </tr>
@@ -94,7 +144,7 @@
         </td>
 
         <td style="padding: 14px;">
-          <p-tag [value]="getTypeLabel(client.type_client)" [severity]="getTypeSeverity(client.type_client)"></p-tag>
+          <span class="statut-badge" [ngClass]="'statut-badge--' + (client.type_client.toLowerCase())">{{ getTypeLabel(client.type_client) }}</span>
         </td>
 
         <td style="padding: 14px;">
@@ -336,7 +386,7 @@
           </div>
         </div>
         <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
-          <p-tag [value]="getTypeLabel(clientSelectionne.type_client)" [severity]="getTypeSeverity(clientSelectionne.type_client)"></p-tag>
+          <span class="statut-badge" [ngClass]="'statut-badge--' + (clientSelectionne.type_client.toLowerCase())">{{ getTypeLabel(clientSelectionne.type_client) }}</span>
           <div style="color: rgba(255,255,255,0.6); font-size: 11px; margin-top: 4px;">
             <i class="pi pi-calendar" style="margin-right: 4px;"></i>
             Enregistré le {{ clientSelectionne.date_creation | date:'dd/MM/yyyy' }}
@@ -400,7 +450,7 @@
             <div style="display: flex; flex-direction: column; gap: 12px;">
               <div style="display: flex; justify-content: space-between; align-items: center;">
                 <span style="color: #64748b; font-size: 13px;">Type</span>
-                <p-tag [value]="getTypeLabel(clientSelectionne.type_client)" [severity]="getTypeSeverity(clientSelectionne.type_client)"></p-tag>
+                <span class="statut-badge" [ngClass]="'statut-badge--' + (clientSelectionne.type_client.toLowerCase())">{{ getTypeLabel(clientSelectionne.type_client) }}</span>
               </div>
 
               <ng-container *ngIf="isPersonneMorale(clientSelectionne.type_client)">
@@ -485,7 +535,7 @@
             </div>
           </div>
           <div style="display: flex; align-items: center; gap: 8px;">
-            <p-tag [value]="dos.statut" [severity]="getStatutSeverity(dos.statut)"></p-tag>
+            <span class="statut-badge" [ngClass]="'statut-badge--' + (dos.statut)"><span *ngIf="dos.statut==='en_cours'||dos.statut==='nouveau'" class="statut-dot"></span>{{ dos.statut }}</span>
             <div style="font-size: 11px; color: #94a3b8;">{{ dos.date_ouverture | date:'dd/MM/yyyy' }}</div>
           </div>
         </div>

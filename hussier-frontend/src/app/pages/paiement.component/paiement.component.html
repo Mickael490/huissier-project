@@ -21,48 +21,101 @@
     <p-button label="Nouveau paiement" icon="pi pi-plus" (click)="openNew()"
       [ngStyle]="{'background': 'linear-gradient(135deg, #1e3a5f, #2d6a9f)'}"
       styleClass="border-0"></p-button>
+    <ng-container *ngIf="selectedPaiements.length > 0">
+      <span style="background:#ede9fe; color:#4f46e5; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:600;">
+        {{ selectedPaiements.length }} sélectionné(s)
+      </span>
+      <p-button label="Export sélection" icon="pi pi-download" severity="warn" [outlined]="true"
+        (click)="exportSelectionPDF()"></p-button>
+      <p-button label="Supprimer" icon="pi pi-trash" severity="danger" [outlined]="true"
+        (click)="deleteSelected()"></p-button>
+    </ng-container>
     <p-button label="Journal PDF" icon="pi pi-file-pdf" severity="danger" (click)="exportExcel()"></p-button>
+    <p-button label="Export Excel" icon="pi pi-file-excel" severity="success" (click)="excelService.exportPaiements(paiements())"></p-button>
   </div>
 </div>
 
 <!-- STATS -->
-<div style="display: flex; gap: 16px; margin-bottom: 20px;">
-  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #4f46e5;">
-    <div style="background:#ede9fe; border-radius:10px; padding:10px 12px;">
-      <i class="pi pi-dollar" style="color:#4f46e5; font-size:18px;"></i>
+<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px;">
+
+  <!-- Total encaissé -->
+  <div style="background: white; border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-top: 3px solid #4f46e5;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px;">
+      <div style="background: #ede9fe; border-radius: 10px; padding: 6px 8px;">
+        <i class="pi pi-dollar" style="color: #4f46e5; font-size: 16px;"></i>
+      </div>
+      <span style="background: #ede9fe; color: #4f46e5; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px;">Encaissé</span>
     </div>
-    <div>
-      <div style="font-size:20px; font-weight:700; color:#1e293b;">{{ totalEncaisse() | number:'1.0-0' }}</div>
-      <div style="font-size:12px; color:#94a3b8;">Total encaissé (FCFA)</div>
+    <div style="font-size: 15px; font-weight: 700; color: #1e293b; line-height: 1;">{{ totalEncaisse() | number:'1.0-0' }}</div>
+    <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px; margin-top: 1px;">Total encaissé (FCFA)</div>
+    <div style="background: #f1f5f9; border-radius: 99px; height: 5px; overflow: hidden;">
+      <div style="width: 100%; height: 100%; background: #4f46e5; border-radius: 99px;"></div>
     </div>
-  </div>
-  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #10b981;">
-    <div style="background:#d1fae5; border-radius:10px; padding:10px 12px;">
-      <i class="pi pi-check-circle" style="color:#10b981; font-size:18px;"></i>
-    </div>
-    <div>
-      <div style="font-size:20px; font-weight:700; color:#1e293b;">{{ paiements().length }}</div>
-      <div style="font-size:12px; color:#94a3b8;">Total paiements</div>
-    </div>
-  </div>
-  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #f97316;">
-    <div style="background:#fff7ed; border-radius:10px; padding:10px 12px;">
-      <i class="pi pi-clock" style="color:#f97316; font-size:18px;"></i>
-    </div>
-    <div>
-      <div style="font-size:20px; font-weight:700; color:#1e293b;">{{ totalEnAttente() }}</div>
-      <div style="font-size:12px; color:#94a3b8;">En attente</div>
+    <div style="display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; margin-top: 4px;">
+      <span>Montant total</span>
+      <span>100%</span>
     </div>
   </div>
-  <div style="flex:1; background:white; border-radius:12px; padding:16px 20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:14px; border-left:4px solid #06b6d4;">
-    <div style="background:#cffafe; border-radius:10px; padding:10px 12px;">
-      <i class="pi pi-chart-bar" style="color:#06b6d4; font-size:18px;"></i>
+
+  <!-- Total paiements -->
+  <div style="background: white; border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-top: 3px solid #10b981;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px;">
+      <div style="background: #d1fae5; border-radius: 10px; padding: 6px 8px;">
+        <i class="pi pi-check-circle" style="color: #10b981; font-size: 16px;"></i>
+      </div>
+      <span style="background: #d1fae5; color: #065f46; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px;">Total</span>
     </div>
-    <div>
-      <div style="font-size:20px; font-weight:700; color:#1e293b;">{{ moyennePaiement() | number:'1.0-0' }}</div>
-      <div style="font-size:12px; color:#94a3b8;">Montant moyen (FCFA)</div>
+    <div style="font-size: 15px; font-weight: 700; color: #1e293b; line-height: 1;">{{ paiements().length }}</div>
+    <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px; margin-top: 1px;">Total paiements</div>
+    <div style="background: #f1f5f9; border-radius: 99px; height: 5px; overflow: hidden;">
+      <div [style.width]="(paiements().length / 20 * 100) + '%'"
+           style="height: 100%; background: #10b981; border-radius: 99px; transition: width 0.8s ease;"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; margin-top: 4px;">
+      <span>Capacité</span>
+      <span>{{ (paiements().length / 20 * 100) | number:'1.0-0' }}%</span>
     </div>
   </div>
+
+  <!-- En attente -->
+  <div style="background: white; border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-top: 3px solid #f97316;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px;">
+      <div style="background: #fff7ed; border-radius: 10px; padding: 6px 8px;">
+        <i class="pi pi-clock" style="color: #f97316; font-size: 16px;"></i>
+      </div>
+      <span style="background: #fff7ed; color: #c2410c; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px;">Attente</span>
+    </div>
+    <div style="font-size: 15px; font-weight: 700; color: #1e293b; line-height: 1;">{{ totalEnAttente() }}</div>
+    <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px; margin-top: 1px;">En attente</div>
+    <div style="background: #f1f5f9; border-radius: 99px; height: 5px; overflow: hidden;">
+      <div [style.width]="paiements().length > 0 ? (totalEnAttente() / paiements().length * 100) + '%' : '0%'"
+           style="height: 100%; background: #f97316; border-radius: 99px; transition: width 0.8s ease;"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; margin-top: 4px;">
+      <span>Part en attente</span>
+      <span>{{ paiements().length > 0 ? ((totalEnAttente() / paiements().length * 100) | number:'1.0-0') : 0 }}%</span>
+    </div>
+  </div>
+
+  <!-- Montant moyen -->
+  <div style="background: white; border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-top: 3px solid #06b6d4;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px;">
+      <div style="background: #cffafe; border-radius: 10px; padding: 6px 8px;">
+        <i class="pi pi-chart-bar" style="color: #06b6d4; font-size: 16px;"></i>
+      </div>
+      <span style="background: #cffafe; color: #0e7490; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px;">Moyenne</span>
+    </div>
+    <div style="font-size: 15px; font-weight: 700; color: #1e293b; line-height: 1;">{{ moyennePaiement() | number:'1.0-0' }}</div>
+    <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px; margin-top: 1px;">Montant moyen (FCFA)</div>
+    <div style="background: #f1f5f9; border-radius: 99px; height: 5px; overflow: hidden;">
+      <div style="width: 60%; height: 100%; background: #06b6d4; border-radius: 99px;"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; margin-top: 4px;">
+      <span>Indicateur</span>
+      <span>moy.</span>
+    </div>
+  </div>
+
 </div>
 
 <!-- TABLE -->
@@ -71,17 +124,25 @@
     [rowHover]="true" [globalFilterFields]="['type_paiement','mode_paiement','note_caisse']">
     <ng-template #header>
       <tr style="background:#f8fafc;">
-        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">DATE</th>
+        <th style="width:3rem; padding:14px;">
+          <input type="checkbox" [checked]="selectedPaiements.length === paiements().length && paiements().length > 0"
+            (change)="toggleSelectAll(paiements())" style="cursor:pointer; width:16px; height:16px;">
+        </th>
+        <th pSortableColumn="date_paiement" style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;" style="cursor:pointer;">DATE <p-sortIcon field="date_paiement"/></th>
         <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">DOSSIER</th>
-        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">TYPE</th>
-        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">LIBELLÉ</th>
-        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">MODE</th>
-        <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">MONTANT</th>
+        <th pSortableColumn="type_paiement" style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;" style="cursor:pointer;">TYPE <p-sortIcon field="type_paiement"/></th>
+        <th pSortableColumn="libelle" style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;" style="cursor:pointer;">LIBELLÉ <p-sortIcon field="libelle"/></th>
+        <th pSortableColumn="mode_paiement" style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;" style="cursor:pointer;">MODE <p-sortIcon field="mode_paiement"/></th>
+        <th pSortableColumn="montant" style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;" style="cursor:pointer;">MONTANT <p-sortIcon field="montant"/></th>
         <th style="padding:14px; color:#1e3a5f; font-weight:700; font-size:13px;">ACTIONS</th>
       </tr>
     </ng-template>
     <ng-template #body let-paiement>
-      <tr style="border-bottom:1px solid #f1f5f9;">
+      <tr style="border-bottom:1px solid #f1f5f9;" [style.background]="isSelected(paiement) ? '#f5f3ff' : 'white'">
+        <td style="padding:14px; width:3rem;">
+          <input type="checkbox" [checked]="isSelected(paiement)" (change)="toggleSelect(paiement)"
+            style="cursor:pointer; width:16px; height:16px;">
+        </td>
         <td style="padding:14px;">
           <div style="font-weight:600; color:#1e293b; font-size:13px;">{{ paiement.date_paiement | date:'dd/MM/yyyy' }}</div>
         </td>
@@ -92,7 +153,7 @@
           </div>
         </td>
         <td style="padding:14px;">
-          <p-tag [value]="getTypeLabel(paiement.type_paiement)" [severity]="getTypeSeverity(paiement.type_paiement)"></p-tag>
+          <span class="statut-badge" [ngClass]="'statut-badge--' + (paiement.type_paiement.toLowerCase())">{{ getTypeLabel(paiement.type_paiement) }}</span>
         </td>
         <td style="padding:14px; font-size:13px; color:#475569;">{{ paiement.note_caisse || paiement.libelle || '—' }}</td>
         <td style="padding:14px;">
@@ -126,14 +187,7 @@
         </td>
       </tr>
     </ng-template>
-    <ng-template #empty>
-      <tr>
-        <td colspan="7" style="text-align:center; padding:40px; color:#94a3b8;">
-          <i class="pi pi-credit-card" style="font-size:36px; display:block; margin-bottom:8px;"></i>
-          Aucun paiement enregistré
-        </td>
-      </tr>
-    </ng-template>
+    <ng-template #empty><tr><td colspan="8"><div style="text-align:center; padding:60px 20px;"><div style="width:80px; height:80px; border-radius:50%; background:#10b98122; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;"><i class="pi pi-dollar" style="font-size:36px; color:#10b981;"></i></div><div style="font-size:18px; font-weight:700; color:#1e293b; margin-bottom:6px;">Aucun paiement enregistré</div><div style="font-size:13px; color:#94a3b8;">Enregistrez votre premier paiement</div><button type="button" (click)="openNew()" style="margin-top:16px; padding:10px 24px; border-radius:10px; border:none; background:#10b981; color:white; font-size:13px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:8px;"><i class="pi pi-plus"></i> Nouveau</button></div></td></tr></ng-template>
   </p-table>
 </div>
 
@@ -273,7 +327,7 @@
           <div style="color:rgba(255,255,255,0.8); font-size:13px; margin-top:4px;">{{ paiementSelectionne.date_paiement | date:'dd MMMM yyyy' }}</div>
         </div>
         <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
-          <p-tag [value]="getTypeLabel(paiementSelectionne.type_paiement)" [severity]="getTypeSeverity(paiementSelectionne.type_paiement)"></p-tag>
+          <span class="statut-badge" [ngClass]="'statut-badge--' + (paiementSelectionne.type_paiement.toLowerCase())">{{ getTypeLabel(paiementSelectionne.type_paiement) }}</span>
           <button type="button" (click)="detailsDialog = false"
             style="background:rgba(255,255,255,0.15); border:none; border-radius:6px; color:white; cursor:pointer; padding:5px 10px; font-size:12px;">
             <i class="pi pi-times" style="margin-right:4px;"></i>Fermer

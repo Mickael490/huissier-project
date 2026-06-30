@@ -37,7 +37,7 @@ export class PdfService {
         d.numero_dossier || '',
         d.objet || '',
         d.type_dossier || '',
-        d.statut || '',
+        (d.statut || '').replace('StatutDossier.', '').replace(/_/g, ' '),
         d.date_ouverture ? new Date(d.date_ouverture).toLocaleDateString('fr-FR') : ''
       ]),
       styles: { fontSize: 9 },
@@ -109,7 +109,7 @@ export class PdfService {
       autoTable(doc, {
         startY: dy + 4,
         head: [['Numero', 'Objet', 'Statut']],
-        body: dossiers.map(d => [d.numero_dossier || '', d.objet || '', d.statut || '']),
+        body: dossiers.map(d => [d.numero_dossier || '', d.objet || '', (d.statut || '').replace('StatutDossier.', '').replace(/_/g, ' ')]),
         styles: { fontSize: 8 },
         headStyles: { fillColor: [30, 58, 95] }
       });
@@ -620,6 +620,144 @@ export class PdfService {
       headStyles: { fillColor: [30, 58, 95] }
     });
     doc.save('audit-log.pdf');
+  }
+
+
+  exportDashboard(stats: any) {
+    const doc = new jsPDF();
+    const date = new Date().toLocaleDateString('fr-FR');
+    const heure = new Date().toLocaleTimeString('fr-FR');
+
+    // Header
+    doc.setFillColor(30, 58, 95);
+    doc.rect(0, 0, 210, 30, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('RAPPORT DE TABLEAU DE BORD', 14, 14);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Cabinet Me SAWADOGO — Huissier de Justice', 14, 22);
+    doc.text('Genere le : ' + date + ' a ' + heure, 140, 22);
+
+    // Bande verte
+    doc.setFillColor(16, 185, 129);
+    doc.rect(0, 30, 210, 2, 'F');
+
+    let y = 42;
+
+    // Titre section KPIs
+    doc.setTextColor(30, 58, 95);
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Indicateurs cles', 14, y);
+    y += 8;
+
+    // KPIs en grille 2x2
+    const kpis = [
+      { label: 'Total dossiers', val: stats?.kpis?.total_dossiers || 0, color: [79, 70, 229] },
+      { label: 'Dossiers actifs', val: stats?.kpis?.dossiers_actifs || 0, color: [16, 185, 129] },
+      { label: 'Total clients', val: stats?.kpis?.total_clients || 0, color: [249, 115, 22] },
+      { label: 'RDV cette semaine', val: stats?.kpis?.rdv_semaine || 0, color: [6, 182, 212] },
+      { label: 'Total actes', val: stats?.kpis?.total_actes || 0, color: [139, 92, 246] },
+      { label: 'Total parties', val: stats?.kpis?.total_parties || 0, color: [239, 68, 68] },
+      { label: 'Total documents', val: stats?.kpis?.total_documents || 0, color: [20, 184, 166] },
+      { label: 'Total archives', val: stats?.kpis?.total_archives || 0, color: [245, 158, 11] },
+    ];
+
+    const colW = 92;
+    const rowH = 18;
+    kpis.forEach((kpi, i) => {
+      const col = i % 2;
+      const row = Math.floor(i / 2);
+      const x = 14 + col * (colW + 6);
+      const ky = y + row * (rowH + 4);
+      doc.setFillColor(kpi.color[0], kpi.color[1], kpi.color[2]);
+      doc.roundedRect(x, ky, colW, rowH, 3, 3, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.text(kpi.label, x + 4, ky + 7);
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text(String(kpi.val), x + 4, ky + 14);
+    });
+
+    y += Math.ceil(kpis.length / 2) * (rowH + 4) + 10;
+
+    // Paiements du mois
+    if (stats?.kpis?.paiements_mois !== undefined) {
+      doc.setFillColor(240, 253, 244);
+      doc.roundedRect(14, y, 182, 16, 3, 3, 'F');
+      doc.setDrawColor(16, 185, 129);
+      doc.roundedRect(14, y, 182, 16, 3, 3, 'S');
+      doc.setTextColor(30, 58, 95);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Encaissements du mois :', 18, y + 10);
+      doc.setTextColor(16, 185, 129);
+      doc.setFontSize(12);
+      doc.text(Math.round(stats.kpis.paiements_mois || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA', 90, y + 10);
+      y += 24;
+    }
+
+    // Dossiers récents
+    if (stats?.derniers_dossiers?.length > 0) {
+      doc.setTextColor(30, 58, 95);
+      doc.setFontSize(13);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Derniers dossiers', 14, y);
+      y += 4;
+      autoTable(doc, {
+        startY: y,
+        head: [['Numero', 'Objet', 'Statut']],
+        body: stats.derniers_dossiers.map((d: any) => [
+          d.numero || d.numero_dossier || '',
+          d.objet || '',
+          (d.statut || '').replace('StatutDossier.', '').replace(/_/g, ' ')
+        ]),
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [30, 58, 95] },
+        margin: { left: 14, right: 14 }
+      });
+      y = (doc as any).lastAutoTable.finalY + 10;
+    }
+
+    // Prochains RDV
+    if (stats?.prochains_rdv?.length > 0) {
+      doc.setTextColor(30, 58, 95);
+      doc.setFontSize(13);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Prochains rendez-vous', 14, y);
+      y += 4;
+      autoTable(doc, {
+        startY: y,
+        head: [['Titre', 'Date', 'Lieu']],
+        body: stats.prochains_rdv.map((r: any) => [
+          r.titre || '',
+          r.date_debut ? new Date(r.date_debut).toLocaleDateString('fr-FR') : '',
+          r.lieu || '—'
+        ]),
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [6, 182, 212] },
+        margin: { left: 14, right: 14 }
+      });
+      y = (doc as any).lastAutoTable.finalY + 10;
+    }
+
+    // Footer
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFillColor(30, 58, 95);
+      doc.rect(0, 285, 210, 12, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(8);
+      doc.text('Cabinet Me SAWADOGO — Document confidentiel', 14, 292);
+      doc.text('Page ' + i + ' / ' + pageCount, 185, 292);
+    }
+
+    doc.save('rapport-dashboard.pdf');
   }
 
 }
