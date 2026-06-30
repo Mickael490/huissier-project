@@ -9,6 +9,8 @@ from app.schemas.dossier import DossierCreate, DossierUpdate, DossierResponse, D
 from app.models.dossier import StatutDossier, TypeDossier
 from app.services import audit
 from app.models.audit_log import ActionType, EntityType
+from app.services.email import envoyer_email, template_changement_statut
+from app.models.client import Client
 
 router = APIRouter()  # ✅ défini en premier
 
@@ -76,7 +78,31 @@ def modifier_dossier(*, db: Session = Depends(deps.get_db), dossier_id: int, dos
     principal = dossier_in.montant_principal if dossier_in.montant_principal is not None else (db_obj.montant_principal or 0)
     frais = dossier_in.montant_frais if dossier_in.montant_frais is not None else (db_obj.montant_frais or 0)
     dossier_in.montant_total = principal + frais
+
+    # ✅ Notification email si le statut change
+    ancien_statut = db_obj.statut
+    nouveau_statut = dossier_in.statut if dossier_in.statut is not None else ancien_statut
+
     dossier = crud_dossier.update(db=db, db_obj=db_obj, obj_in=dossier_in)
+
+    if nouveau_statut and ancien_statut and nouveau_statut != ancien_statut and dossier.client_id:
+        client = db.query(Client).filter(Client.id == dossier.client_id).first()
+        if client and client.email:
+            try:
+                corps = template_changement_statut(
+                    numero_dossier=dossier.numero_dossier,
+                    objet=dossier.objet or "",
+                    ancien_statut=ancien_statut.value if hasattr(ancien_statut, "value") else str(ancien_statut),
+                    nouveau_statut=nouveau_statut.value if hasattr(nouveau_statut, "value") else str(nouveau_statut)
+                )
+                envoyer_email(
+                    destinataire=client.email,
+                    sujet=f"Mise a jour de votre dossier {dossier.numero_dossier}",
+                    corps_html=corps
+                )
+            except Exception:
+                pass  # Ne jamais bloquer la requete si l'email echoue
+
     audit.record(db, current_user, request, action=ActionType.UPDATE,
                  entity_type=EntityType.DOSSIER, entity_id=dossier_id,
                  description=f"Modification du dossier {dossier.numero_dossier}")
