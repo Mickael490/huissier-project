@@ -184,3 +184,96 @@
   color: white !important;
   border-radius: 8px !important;
 }
+
+/* ===== MODE SOMBRE - OVERRIDES POUR STYLES INLINE ===== */
+html.app-dark {
+  background: #0f172a;
+}
+
+html.app-dark body,
+html.app-dark .layout-main,
+html.app-dark .layout-content {
+  background: #0f172a !important;
+}
+
+/* Cartes/conteneurs blancs -> sombre */
+html.app-dark div[style*="background: white"],
+html.app-dark div[style*="background:white"],
+html.app-dark div[style*="background: #fff"],
+html.app-dark div[style*="background:#fff"],
+html.app-dark div[style*="background: #ffffff"],
+html.app-dark div[style*="background:#ffffff"] {
+  background: #1e293b !important;
+  color: #e2e8f0 !important;
+}
+
+/* Backgrounds clairs de fond (f8fafc, f1f5f9) -> gris fonce */
+html.app-dark div[style*="background: #f8fafc"],
+html.app-dark div[style*="background:#f8fafc"],
+html.app-dark div[style*="background: #f1f5f9"],
+html.app-dark div[style*="background:#f1f5f9"] {
+  background: #0f172a !important;
+}
+
+/* Textes sombres -> clairs */
+html.app-dark div[style*="color: #1e293b"],
+html.app-dark div[style*="color:#1e293b"],
+html.app-dark span[style*="color: #1e293b"],
+html.app-dark span[style*="color:#1e293b"] {
+  color: #e2e8f0 !important;
+}
+
+html.app-dark div[style*="color: #1e3a5f"],
+html.app-dark div[style*="color:#1e3a5f"],
+html.app-dark span[style*="color: #1e3a5f"],
+html.app-dark span[style*="color:#1e3a5f"] {
+  color: #93c5fd !important;
+}
+
+html.app-dark div[style*="color: #475569"],
+html.app-dark span[style*="color: #475569"],
+html.app-dark div[style*="color: #64748b"],
+html.app-dark span[style*="color: #64748b"] {
+  color: #94a3b8 !important;
+}
+
+/* Bordures claires -> sombres */
+html.app-dark div[style*="border: 1px solid #e2e8f0"],
+html.app-dark div[style*="border:1px solid #e2e8f0"],
+html.app-dark div[style*="border-bottom: 1px solid #f1f5f9"],
+html.app-dark div[style*="border-bottom:1px solid #f1f5f9"] {
+  border-color: #334155 !important;
+}
+
+/* Tables PrimeNG */
+html.app-dark .p-datatable,
+html.app-dark .p-datatable .p-datatable-tbody > tr {
+  background: #1e293b !important;
+  color: #e2e8f0 !important;
+}
+
+html.app-dark .p-datatable .p-datatable-tbody > tr:hover {
+  background: #334155 !important;
+}
+
+/* Inputs et selects */
+html.app-dark input,
+html.app-dark select,
+html.app-dark textarea {
+  background: #1e293b !important;
+  color: #e2e8f0 !important;
+  border-color: #334155 !important;
+}
+
+/* Dialogs */
+html.app-dark .p-dialog {
+  background: #1e293b !important;
+  color: #e2e8f0 !important;
+}
+
+html.app-dark .p-dialog .p-dialog-content {
+  background: #1e293b !important;
+  color: #e2e8f0 !important;
+}
+
+/* Sidebar deja sombre par defaut, on garde tel quel */
