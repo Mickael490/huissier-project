@@ -3,12 +3,30 @@ Service d'envoi d'emails de notification.
 Utilise smtplib (module standard Python) - aucune dependance externe.
 """
 import smtplib
+import socket
 import logging
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
+
+
+class SMTPForceIPv4(smtplib.SMTP):
+    """
+    Variante de smtplib.SMTP qui force la resolution DNS en IPv4.
+    Necessaire sur Render (plan gratuit) dont l'infrastructure ne route
+    pas correctement les connexions sortantes en IPv6, provoquant
+    l'erreur "[Errno 101] Network is unreachable" avec smtp.gmail.com.
+    Le nom d'hote d'origine est conserve pour la verification TLS
+    (starttls) ; seule la connexion TCP passe par l'IPv4 resolue.
+    """
+    def _get_socket(self, host, port, timeout):
+        infos = socket.getaddrinfo(host, port, socket.AF_INET, socket.SOCK_STREAM)
+        ip = infos[0][4][0]
+        if timeout is not None and not timeout:
+            raise ValueError("Non-blocking socket (timeout=0) is not supported")
+        return socket.create_connection((ip, port), timeout)
 
 
 def envoyer_email(destinataire: str, sujet: str, corps_html: str) -> bool:
@@ -28,7 +46,7 @@ def envoyer_email(destinataire: str, sujet: str, corps_html: str) -> bool:
 
         msg.attach(MIMEText(corps_html, "html", "utf-8"))
 
-        with smtplib.SMTP(settings.MAIL_SERVER, settings.MAIL_PORT, timeout=5) as server:
+        with SMTPForceIPv4(settings.MAIL_SERVER, settings.MAIL_PORT, timeout=15) as server:
             server.starttls()
             server.login(settings.MAIL_USERNAME, settings.MAIL_PASSWORD)
             server.sendmail(settings.MAIL_FROM, destinataire, msg.as_string())
