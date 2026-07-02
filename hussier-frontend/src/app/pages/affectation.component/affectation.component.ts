@@ -233,6 +233,25 @@ export class AffectationComponent implements OnInit {
     });
   }
 
+  marquerTerminee(affectation: any): void {
+    this.confirmationService.confirm({
+      message: `Marquer cette mission comme terminée ?`,
+      header: 'Clôture de mission',
+      icon: 'pi pi-check-circle',
+      accept: () => {
+        this.http.put(`${this.apiUrl}/${affectation.id}`, { statut: 'termine' }, { headers: this.getHeaders() }).subscribe({
+          next: () => {
+            this.loadAffectations();
+            this.messageService.add({ severity: 'success', summary: 'Succès', detail: 'Affectation clôturée' });
+          },
+          error: (err) => this.messageService.add({
+            severity: 'error', summary: 'Erreur', detail: err.error?.detail || 'Erreur lors de la clôture'
+          })
+        });
+      }
+    });
+  }
+
   exportListePDF(): void {
     this.pdfService.exportAffectations(this.affectations());
   }
