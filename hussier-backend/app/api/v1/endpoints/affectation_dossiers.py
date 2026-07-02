@@ -6,6 +6,10 @@ from app.api import deps
 from app.models.affectation_dossier import AffectationDossier
 from app.services import audit
 from app.models.audit_log import ActionType, EntityType
+from app.services.email import envoyer_email, template_nouvelle_affectation
+from app.models.utilisateur import Utilisateur
+from app.models.dossier import Dossier
+import threading
 
 router = APIRouter()
 
@@ -66,6 +70,28 @@ def create_affectation(affectation_in: AffectationIn, request: Request,
     db.add(affectation)
     db.commit()
     db.refresh(affectation)
+
+    # Notification email a l'agent affecte (en arriere-plan, ne bloque jamais la reponse)
+    try:
+        if affectation.id_utilisateur:
+            agent = db.query(Utilisateur).filter(Utilisateur.id == affectation.id_utilisateur).first()
+            if agent and agent.email:
+                dossier = db.query(Dossier).filter(Dossier.id == affectation.id_dossier).first() if affectation.id_dossier else None
+                corps = template_nouvelle_affectation(
+                    numero_dossier=dossier.numero_dossier if dossier else "N/A",
+                    objet=dossier.objet if dossier else "",
+                    priorite=affectation.priorite or "normale",
+                    date_limite=str(affectation.date_limite) if affectation.date_limite else "",
+                    instructions=affectation.instructions or ""
+                )
+                threading.Thread(
+                    target=envoyer_email,
+                    args=(agent.email, f"Nouvelle mission affectee - Dossier {dossier.numero_dossier if dossier else affectation.id}", corps),
+                    daemon=True
+                ).start()
+    except Exception:
+        pass  # Ne jamais bloquer la requete si l'email echoue
+
     audit.record(db, current_user, request, action=ActionType.CREATE,
                  entity_type=EntityType.AFFECTATION, entity_id=affectation.id,
                  description=f"Création de l'affectation #{affectation.id}")

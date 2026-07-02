@@ -42,6 +42,9 @@ class Settings(BaseSettings):
     MAIL_PORT: int = 587
     MAIL_SERVER: str = "smtp.gmail.com"
     
+    # Cron / taches planifiees (rappels d'echeances)
+    CRON_SECRET_KEY: str = "changeme-cron-secret-a-definir-en-prod"
+
     # Redis (optionnel)
     REDIS_URL: str = "redis://localhost:6379/0"
     

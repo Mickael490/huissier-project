@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from app.api import deps
 from app.models.utilisateur import RoleEnum
-from app.api.v1.endpoints import cabinets, clients, utilisateurs, dossiers, parties, actes, documents, archives, agendas, audit_logs, statistics, affectation_dossiers, auth, paiements
+from app.api.v1.endpoints import cabinets, clients, utilisateurs, dossiers, parties, actes, documents, archives, agendas, audit_logs, statistics, affectation_dossiers, auth, paiements, notifications
 
 api_router = APIRouter()
 
@@ -77,4 +77,8 @@ api_router.include_router(
 api_router.include_router(
     agendas.router, prefix="/agendas", tags=["agendas"],
     dependencies=roles(ADMIN, HUISSIER, CLERC, ASSISTANT, SECRETAIRE),
+)
+# Cron externe uniquement : protege par cle secrete (voir notifications.py), pas par JWT
+api_router.include_router(
+    notifications.router, prefix="/notifications", tags=["notifications"],
 )

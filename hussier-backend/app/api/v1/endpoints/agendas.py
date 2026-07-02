@@ -11,6 +11,8 @@ from app.crud.crud_dossier import crud_dossier
 from app.crud.crud_client import crud_client
 from app.services import audit
 from app.models.audit_log import ActionType, EntityType
+from app.services.email import envoyer_email, template_nouveau_rendezvous
+import threading
 from app.schemas.agenda import (
     AgendaCreate,
     AgendaUpdate,
@@ -59,6 +61,26 @@ def create_agenda(
 
     # Créer l'agenda
     agenda = crud_agenda.create(db, obj_in=agenda_in)
+
+    # Notification email au client (en arriere-plan, ne bloque jamais la reponse)
+    try:
+        if agenda.id_client:
+            client = crud_client.get(db, id=agenda.id_client)
+            if client and client.email:
+                corps = template_nouveau_rendezvous(
+                    titre=agenda.titre,
+                    date_debut=agenda.date_debut.strftime("%d/%m/%Y a %H:%M"),
+                    lieu=agenda.lieu or "",
+                    type_rdv=agenda.type_rdv.value if hasattr(agenda.type_rdv, "value") else str(agenda.type_rdv)
+                )
+                threading.Thread(
+                    target=envoyer_email,
+                    args=(client.email, f"Rendez-vous planifie - {agenda.titre}", corps),
+                    daemon=True
+                ).start()
+    except Exception:
+        pass  # Ne jamais bloquer la requete si l'email echoue
+
     audit.record(db, current_user, request, action=ActionType.CREATE,
                  entity_type=EntityType.AGENDA, entity_id=agenda.id,
                  description=f"Création du rendez-vous #{agenda.id}")
