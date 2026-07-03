@@ -16,3 +16,5 @@ __pycache__/
 
 # Environment
 .env
+*.sql
+backup_*.sql
