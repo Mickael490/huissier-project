@@ -26,15 +26,16 @@ import { forkJoin } from 'rxjs';
 })
 export class AuditComponent implements OnInit {
   logs = signal<any[]>([]);
+  stats = signal<any | null>(null);
   selectedLogs: any[] = [];
   detailsDialog = false;
   logSelectionne: any = null;
   private apiUrl = `${environment.apiUrl}/audit_logs`;
 
-  readonly totalLogs = computed(() => this.logs().length);
-  readonly totalCreations = computed(() => this.logs().filter(l => l.action === 'CREATE').length);
-  readonly totalModifications = computed(() => this.logs().filter(l => l.action === 'UPDATE').length);
-  readonly totalSuppressions = computed(() => this.logs().filter(l => l.action === 'DELETE').length);
+  readonly totalLogs = computed(() => this.stats()?.total ?? this.logs().length);
+  readonly totalCreations = computed(() => this.stats()?.creations ?? this.logs().filter(l => l.action === 'CREATE').length);
+  readonly totalModifications = computed(() => this.stats()?.modifications ?? this.logs().filter(l => l.action === 'UPDATE').length);
+  readonly totalSuppressions = computed(() => this.stats()?.suppressions ?? this.logs().filter(l => l.action === 'DELETE').length);
 
   constructor(
     private http: HttpClient,
@@ -45,6 +46,7 @@ export class AuditComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadLogs();
+    this.loadStats();
   }
 
   private getHeaders(): HttpHeaders {
@@ -56,6 +58,13 @@ export class AuditComponent implements OnInit {
     this.http.get<any[]>(`${this.apiUrl}/`, { headers: this.getHeaders() }).subscribe({
       next: (data) => this.logs.set(data),
       error: (err) => this.messageService.add({ severity: 'error', summary: 'Erreur', detail: JSON.stringify(err.error) })
+    });
+  }
+
+  loadStats(): void {
+    this.http.get<any>(`${this.apiUrl}/stats`, { headers: this.getHeaders() }).subscribe({
+      next: (data) => this.stats.set(data),
+      error: () => {} // repli silencieux : les computed retombent sur le calcul local
     });
   }
 
