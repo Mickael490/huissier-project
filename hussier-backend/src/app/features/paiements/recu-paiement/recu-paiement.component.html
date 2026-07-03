@@ -1,0 +1,30 @@
+<div class="recu-container" *ngIf="paiement">
+  <div class="recu-actions no-print">
+    <button (click)="imprimer()">Imprimer le reçu</button>
+  </div>
+
+  <div class="fiche">
+    <div class="entete">
+      <h1>Cabinet Me SAWADOGO</h1>
+      <p>Huissier de Justice — Ouagadougou, Burkina Faso</p>
+      <h2>REÇU DE PAIEMENT</h2>
+    </div>
+
+    <div class="reference">
+      <p><strong>N° Reçu :</strong> {{ paiement.id_paiement }}</p>
+      <p><strong>Date :</strong> {{ paiement.date_paiement }}</p>
+    </div>
+
+    <table class="details">
+      <tr><td>Dossier concerné</td><td>{{ paiement.dossier_numero }}</td></tr>
+      <tr><td>Client</td><td>{{ paiement.client_nom }}</td></tr>
+      <tr><td>Montant</td><td>{{ paiement.montant }} FCFA</td></tr>
+      <tr><td>Mode de paiement</td><td>{{ paiement.mode_paiement }}</td></tr>
+      <tr><td>Type</td><td>{{ paiement.type_paiement }}</td></tr>
+    </table>
+
+    <div class="signature">
+      <p>Signature et cachet du cabinet</p>
+    </div>
+  </div>
+</div>

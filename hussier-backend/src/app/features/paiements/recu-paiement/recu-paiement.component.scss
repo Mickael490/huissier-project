@@ -1,0 +1,20 @@
+.recu-container {
+  max-width: 700px;
+  margin: 40px auto;
+  font-family: Arial, sans-serif;
+}
+.fiche {
+  border: 1px solid #333;
+  padding: 40px;
+}
+.entete { text-align: center; margin-bottom: 30px; }
+.reference { display: flex; justify-content: space-between; margin-bottom: 20px; }
+.details { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
+.details td { padding: 10px; border-bottom: 1px solid #ddd; }
+.details td:first-child { font-weight: bold; width: 40%; }
+.signature { text-align: right; margin-top: 60px; }
+
+@media print {
+  .no-print { display: none !important; }
+  .recu-container { margin: 0; }
+}
