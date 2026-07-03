@@ -28,13 +28,18 @@ api_router.include_router(
 )
 
 # Administration : ADMIN uniquement
+# Cabinets : lecture ouverte (infos du cabinet necessaires aux formulaires),
+# ecriture restreinte ADMIN au niveau des endpoints.
 api_router.include_router(
     cabinets.router, prefix="/cabinets", tags=["cabinets"],
-    dependencies=roles(ADMIN),
+    dependencies=[Depends(deps.get_current_active_user)],
 )
+# Utilisateurs : lecture ouverte (liste des agents necessaire aux modules
+# Dossiers, Agenda, Affectations) ; le schema UtilisateurInDB n'expose pas
+# le hash de mot de passe. Ecriture restreinte ADMIN au niveau des endpoints.
 api_router.include_router(
     utilisateurs.router, prefix="/utilisateurs", tags=["utilisateurs"],
-    dependencies=roles(ADMIN),
+    dependencies=[Depends(deps.get_current_active_user)],
 )
 api_router.include_router(
     audit_logs.router, prefix="/audit_logs", tags=["audit_logs"],
@@ -42,9 +47,12 @@ api_router.include_router(
 )
 
 # Gestion métier (matrice identique au frontend)
+# Clients : lecture ouverte a tout utilisateur authentifie (donnee de reference
+# necessaire aux modules Dossiers et Agenda) ; ecriture restreinte au niveau
+# des endpoints POST/PUT/DELETE dans clients.py.
 api_router.include_router(
     clients.router, prefix="/clients", tags=["clients"],
-    dependencies=roles(ADMIN, HUISSIER, CLERC, SECRETAIRE),
+    dependencies=[Depends(deps.get_current_active_user)],
 )
 api_router.include_router(
     dossiers.router, prefix="/dossiers", tags=["dossiers"],

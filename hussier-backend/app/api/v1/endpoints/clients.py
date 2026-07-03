@@ -6,10 +6,14 @@ from app.crud import crud_client
 from app.schemas.client import ClientCreate, ClientUpdate, ClientResponse
 from app.services import audit
 from app.models.audit_log import ActionType, EntityType
+from app.models.utilisateur import RoleEnum
 
 router = APIRouter()
 
-@router.post("", response_model=ClientResponse, status_code=status.HTTP_201_CREATED)
+# Roles autorises a modifier les clients (la lecture est ouverte a tous les authentifies)
+ecriture_clients = Depends(deps.require_roles(RoleEnum.ADMIN, RoleEnum.HUISSIER, RoleEnum.CLERC, RoleEnum.SECRETAIRE))
+
+@router.post("", response_model=ClientResponse, status_code=status.HTTP_201_CREATED, dependencies=[ecriture_clients])
 def create_client(*, db: Session = Depends(deps.get_db), client_in: ClientCreate,
                   request: Request, current_user=Depends(deps.get_current_active_user)):
     if client_in.email:
@@ -39,7 +43,7 @@ def read_client(*, db: Session = Depends(deps.get_db), client_id: int):
         raise HTTPException(status_code=404, detail="Client non trouvé")
     return client
 
-@router.put("/{client_id}", response_model=ClientResponse)
+@router.put("/{client_id}", response_model=ClientResponse, dependencies=[ecriture_clients])
 def update_client(*, db: Session = Depends(deps.get_db), client_id: int, client_in: ClientUpdate,
                   request: Request, current_user=Depends(deps.get_current_active_user)):
     db_obj = crud_client.get(db, id=client_id)
@@ -51,7 +55,7 @@ def update_client(*, db: Session = Depends(deps.get_db), client_id: int, client_
                  description=f"Modification du client #{client_id}")
     return client
 
-@router.delete("/{client_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{client_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[ecriture_clients])
 def delete_client(*, db: Session = Depends(deps.get_db), client_id: int,
                   request: Request, current_user=Depends(deps.get_current_active_user)):
     client = crud_client.delete(db, id=client_id)

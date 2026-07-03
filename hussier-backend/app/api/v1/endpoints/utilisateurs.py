@@ -8,10 +8,14 @@ from app.crud import crud_utilisateur
 from app.schemas.utilisateur import UtilisateurCreate, UtilisateurUpdate, UtilisateurInDB
 from app.services import audit
 from app.models.audit_log import ActionType, EntityType
+from app.models.utilisateur import RoleEnum
 
 router = APIRouter()
 
-@router.post("", response_model=UtilisateurInDB, status_code=status.HTTP_201_CREATED)
+# Seul l'ADMIN gere les comptes ; la lecture est ouverte a tous les authentifies
+ecriture_admin = Depends(deps.require_roles(RoleEnum.ADMIN))
+
+@router.post("", response_model=UtilisateurInDB, status_code=status.HTTP_201_CREATED, dependencies=[ecriture_admin])
 def create_utilisateur(
     *,
     db: Session = Depends(deps.get_db),
@@ -59,7 +63,7 @@ def read_utilisateur(*, db: Session = Depends(deps.get_db), utilisateur_id: int)
     return utilisateur
 
 
-@router.put("/{utilisateur_id}", response_model=UtilisateurInDB)
+@router.put("/{utilisateur_id}", response_model=UtilisateurInDB, dependencies=[ecriture_admin])
 def update_utilisateur(
     *, db: Session = Depends(deps.get_db), utilisateur_id: int, utilisateur_in: UtilisateurUpdate,
     request: Request, current_user=Depends(deps.get_current_active_user)
@@ -74,7 +78,7 @@ def update_utilisateur(
     return utilisateur
 
 
-@router.delete("/{utilisateur_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{utilisateur_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[ecriture_admin])
 def delete_utilisateur(*, db: Session = Depends(deps.get_db), utilisateur_id: int,
                        request: Request, current_user=Depends(deps.get_current_active_user)):
     utilisateur = crud_utilisateur.remove(db, id=utilisateur_id)

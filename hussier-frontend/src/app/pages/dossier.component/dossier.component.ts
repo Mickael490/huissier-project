@@ -20,6 +20,7 @@ import { DossierService } from 'src/services/dossiers/DossierService';
 import { Dossier, DossierCreate, DossierUpdate, StatutDossier, TypeDossier } from 'src/types/dossier';
 import { TagModule } from 'primeng/tag';
 import { forkJoin } from 'rxjs';
+import { hasRole } from 'src/services/role.guard';
 
 @Component({
   selector: 'app-dossier',
@@ -227,6 +228,8 @@ export class DossierComponent implements OnInit {
   }
 
   loadHistorique(dossierId: number): void {
+    // Le journal d'audit est reserve ADMIN cote backend : on evite un appel 403 inutile
+    if (!hasRole(['ADMIN'])) { this.historiqueDossier = []; return; }
     const token = localStorage.getItem('token');
     const headers = { Authorization: `Bearer ${token}` };
     this.http.get<any[]>(`${environment.apiUrl}/audit_logs/`, { headers }).subscribe({
