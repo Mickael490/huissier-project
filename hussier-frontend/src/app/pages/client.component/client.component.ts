@@ -16,6 +16,7 @@ import { Client, ClientCreate, ClientUpdate, TypeClient } from 'src/types/client
 import { PdfService } from 'src/services/pdf.service';
 import { ExcelService } from 'src/services/excel.service';
 import { environment } from 'src/environments/environment';
+import { hasRole } from 'src/services/role.guard';
 import { forkJoin } from 'rxjs';
 
 @Component({
@@ -314,6 +315,8 @@ chargerDossiersDuClient(clientId: number): void {
     const headers = { 'Authorization': `Bearer ${token}` };
     
     // Charger les dossiers
+    // Le module Dossiers est exclu pour SECRETAIRE : on evite un appel 403 inutile
+    if (!hasRole(['ADMIN', 'HUISSIER', 'CLERC', 'ASSISTANT'])) { return; }
     fetch(`${environment.apiUrl}/dossiers?client_id=${clientId}`, { headers })
         .then(r => r.json())
         .then(data => {
