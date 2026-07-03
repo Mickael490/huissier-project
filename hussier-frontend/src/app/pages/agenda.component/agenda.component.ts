@@ -13,6 +13,7 @@ import { TextareaModule } from 'primeng/textarea';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
+import { hasRole } from 'src/services/role.guard';
 import { PdfService } from 'src/services/pdf.service';
 
 @Component({
@@ -98,6 +99,8 @@ export class AgendaComponent implements OnInit {
   }
 
   loadDossiers(): void {
+    // Le module Dossiers est exclu pour SECRETAIRE : on evite un appel 403 inutile
+    if (!hasRole(['ADMIN', 'HUISSIER', 'CLERC', 'ASSISTANT'])) { this.dossiers = []; return; }
     this.http.get<any>(`${environment.apiUrl}/dossiers`, { headers: this.getHeaders() }).subscribe({
       next: (data) => this.dossiers = (data.dossiers || []),
       error: () => {}
